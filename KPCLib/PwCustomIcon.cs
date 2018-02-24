@@ -21,6 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+#if KPCLib
+using Image = Splat.IBitmap;
+#endif
+
 #if !KeePassUAP
 using System.Drawing;
 #endif
@@ -57,10 +61,10 @@ namespace KeePassLib
 		[Obsolete("Use GetImage instead.")]
 		public Image Image
 		{
-#if (!KeePassLibSD && !KeePassUAP)
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 			get { return GetImage(16, 16); } // Backward compatibility
 #else
-			get { return GetImage(); } // Backward compatibility
+            get { return GetImage(); } // Backward compatibility
 #endif
 		}
 
@@ -81,10 +85,11 @@ namespace KeePassLib
 			// ms.Close();
 			try { m_imgOrg = GfxUtil.LoadImage(m_pbImageDataPng); }
 			catch(Exception) { Debug.Assert(false); m_imgOrg = null; }
-
-			if(m_imgOrg != null)
+#if !KPCLib
+            if(m_imgOrg != null)
 				m_dImageCache[GetID(m_imgOrg.Width, m_imgOrg.Height)] =
 					m_imgOrg;
+#endif // KPCLib
 		}
 
 		private static long GetID(int w, int h)
@@ -100,7 +105,7 @@ namespace KeePassLib
 			return m_imgOrg;
 		}
 
-#if (!KeePassLibSD && !KeePassUAP)
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 		/// <summary>
 		/// Get the icon as an <c>Image</c> (with the specified size).
 		/// </summary>

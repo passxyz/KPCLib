@@ -22,6 +22,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
+#if KPCLib
+using Image = Splat.IBitmap;
+#endif
+
 #if !KeePassUAP
 using System.Drawing;
 #endif
@@ -1629,7 +1633,7 @@ namespace KeePassLib
 			return -1;
 		}
 
-#if KeePassUAP
+#if KeePassUAP || KPCLib
 		public Image GetCustomIcon(PwUuid pwIconId)
 		{
 			int nIndex = GetCustomIconIndex(pwIconId);

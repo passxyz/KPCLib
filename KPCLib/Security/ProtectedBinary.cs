@@ -109,20 +109,23 @@ namespace KeePassLib.Security
 					// blocks, but not introduce a power of 2 as factor
 					byte[] pb = new byte[ProtectedBinary.BlockSize * 3];
 					for(int i = 0; i < pb.Length; ++i) pb[i] = (byte)i;
-
-					ProtectedMemory.Protect(pb, MemoryProtectionScope.SameProcess);
-
-					for(int i = 0; i < pb.Length; ++i)
+#if KPCLib
+                    // System.Security.Cryptography.ProtectedMemory is not supported on Android, iOS and UWP
+                    throw new NotSupportedException();
+#else
+                    ProtectedMemory.Protect(pb, MemoryProtectionScope.SameProcess);
+                    for (int i = 0; i < pb.Length; ++i)
 					{
 						if(pb[i] != (byte)i) { ob = true; break; }
 					}
-				}
-				catch(Exception) { } // Windows 98 / ME
+#endif // KPCLib
+                }
+                catch (Exception) { } // Windows 98 / ME
 
 				g_obProtectedMemorySupported = ob;
 				return ob.Value;
 #endif
-			}
+                }
 		}
 
 		private static long g_lCurID = 0;
@@ -270,16 +273,17 @@ namespace KeePassLib.Security
 				m_mp = PbMemProt.ExtCrypt;
 				return;
 			}
-
-			if(ProtectedBinary.ProtectedMemorySupported)
+#if !KPCLib
+            // ProtectedMemory is not supported on Android, iOS and UWP
+            if(ProtectedBinary.ProtectedMemorySupported)
 			{
 				ProtectedMemory.Protect(m_pbData, MemoryProtectionScope.SameProcess);
 
 				m_mp = PbMemProt.ProtectedMemory;
 				return;
 			}
-
-			byte[] pbKey32 = g_pbKey32;
+#endif // KPCLib
+            byte[] pbKey32 = g_pbKey32;
 			if(pbKey32 == null)
 			{
 				pbKey32 = CryptoRandom.Instance.GetRandomBytes(32);
@@ -300,9 +304,10 @@ namespace KeePassLib.Security
 		private void Decrypt()
 		{
 			if(m_pbData.Length == 0) return;
-
-			if(m_mp == PbMemProt.ProtectedMemory)
+#if !KPCLib
+            if(m_mp == PbMemProt.ProtectedMemory)
 				ProtectedMemory.Unprotect(m_pbData, MemoryProtectionScope.SameProcess);
+#endif // KPCLib
 			else if(m_mp == PbMemProt.ChaCha20)
 			{
 				byte[] pbIV = new byte[12];

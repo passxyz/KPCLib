@@ -1301,7 +1301,12 @@ namespace KeePassLib.Utility
 
 			try
 			{
-				byte[] pbPlain = StrUtil.Utf8.GetBytes(strPlainText);
+#if KPCLib
+                // ProtectedData is supported in Xamarin.Android and Xamarin.iOS, but not UWP
+                // EncryptString can be implemented in platform specific implementation.
+                throw new NotSupportedException();
+#else
+                byte[] pbPlain = StrUtil.Utf8.GetBytes(strPlainText);
 				byte[] pbEnc = ProtectedData.Protect(pbPlain, m_pbOptEnt,
 					DataProtectionScope.CurrentUser);
 
@@ -1310,7 +1315,8 @@ namespace KeePassLib.Utility
 #else
 				return Convert.ToBase64String(pbEnc);
 #endif
-			}
+#endif // KPCLib
+            }
 			catch(Exception) { Debug.Assert(false); }
 
 			return strPlainText;
@@ -1323,12 +1329,16 @@ namespace KeePassLib.Utility
 			try
 			{
 				byte[] pbEnc = Convert.FromBase64String(strCipherText);
-				byte[] pbPlain = ProtectedData.Unprotect(pbEnc, m_pbOptEnt,
+#if KPCLib
+                throw new NotSupportedException();
+#else
+                byte[] pbPlain = ProtectedData.Unprotect(pbEnc, m_pbOptEnt,
 					DataProtectionScope.CurrentUser);
 
 				return StrUtil.Utf8.GetString(pbPlain, 0, pbPlain.Length);
-			}
-			catch(Exception) { Debug.Assert(false); }
+#endif // KPCLib
+            }
+            catch (Exception) { Debug.Assert(false); }
 
 			return strCipherText;
 		}

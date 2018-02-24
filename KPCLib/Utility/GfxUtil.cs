@@ -23,11 +23,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
+#if KPCLib
+using Splat;
+#else
 #if !KeePassUAP
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 #endif
+#endif // KPCLib
 
 namespace KeePassLib.Utility
 {
@@ -58,6 +62,15 @@ namespace KeePassLib.Utility
 		}
 #endif
 
+#if KPCLib
+        public static IBitmap LoadImage(byte[] pb)
+        {
+            using (var ms = new MemoryStream(pb, false))
+            {
+                return BitmapLoader.Current.Load(ms, null, null).Result;
+            }
+        }
+#else
 #if KeePassUAP
 		public static Image LoadImage(byte[] pb)
 		{
@@ -68,7 +81,7 @@ namespace KeePassLib.Utility
 			finally { ms.Close(); }
 		}
 #else
-		public static Image LoadImage(byte[] pb)
+        public static Image LoadImage(byte[] pb)
 		{
 			if(pb == null) throw new ArgumentNullException("pb");
 
@@ -423,5 +436,6 @@ namespace KeePassLib.Utility
 #endif // DEBUG
 #endif // !KeePassLibSD
 #endif // KeePassUAP
-	}
+#endif // KPCLib
+    }
 }

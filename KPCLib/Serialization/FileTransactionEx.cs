@@ -145,11 +145,13 @@ namespace KeePassLib.Serialization
 			bool bMadeUnhidden = UrlUtil.UnhideFile(m_iocBase.Path);
 
 #if (!KeePassLibSD && !KeePassUAP)
-			FileSecurity bkSecurity = null;
+#if !KPCLib
+            FileSecurity bkSecurity = null;
+#endif // KPCLib
 			bool bEfsEncrypted = false;
 #endif
 
-			if(g_bExtraSafe)
+            if(g_bExtraSafe)
 			{
 				if(!IOConnection.FileExists(m_iocTemp))
 					throw new FileNotFoundException(m_iocTemp.Path +
@@ -169,7 +171,7 @@ namespace KeePassLib.Serialization
 #endif
 						DateTime tCreation = File.GetCreationTimeUtc(m_iocBase.Path);
 						File.SetCreationTimeUtc(m_iocTemp.Path, tCreation);
-#if !KeePassUAP
+#if (!KeePassUAP && !KPCLib)
 						// May throw with Mono
 						bkSecurity = File.GetAccessControl(m_iocBase.Path);
 #endif
@@ -193,15 +195,16 @@ namespace KeePassLib.Serialization
 						try { File.Encrypt(m_iocBase.Path); }
 						catch(Exception) { Debug.Assert(false); }
 					}
-
-					if(bkSecurity != null)
+#if !KPCLib
+                    if(bkSecurity != null)
 						File.SetAccessControl(m_iocBase.Path, bkSecurity);
+#endif // KPCLib
 				}
 				catch(Exception) { Debug.Assert(false); }
 			}
 #endif
 
-			if(bMadeUnhidden) UrlUtil.HideFile(m_iocBase.Path, true); // Hide again
+                    if (bMadeUnhidden) UrlUtil.HideFile(m_iocBase.Path, true); // Hide again
 		}
 
 		// For plugins

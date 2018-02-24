@@ -66,9 +66,11 @@ namespace KeePassLib.Keys
 			// Test if ProtectedData is supported -- throws an exception
 			// when running on an old system (Windows 98 / ME).
 			byte[] pbDummyData = new byte[128];
-			ProtectedData.Protect(pbDummyData, m_pbEntropy,
+#if !KPCLib
+            // ProtectedData is not supported on Android, iOS and UWP
+            ProtectedData.Protect(pbDummyData, m_pbEntropy,
 				DataProtectionScope.CurrentUser);
-
+#endif // KPCLib
 			byte[] pbKey = LoadUserKey(false);
 			if(pbKey == null) pbKey = CreateUserKey();
 			if(pbKey == null) // Should never happen
@@ -114,9 +116,11 @@ namespace KeePassLib.Keys
 			{
 				string strFilePath = GetUserKeyFilePath(false);
 				byte[] pbProtectedKey = File.ReadAllBytes(strFilePath);
-
-				pbKey = ProtectedData.Unprotect(pbProtectedKey, m_pbEntropy,
+#if !KPCLib
+                // ProtectedData is not supported on Android, iOS and UWP
+                pbKey = ProtectedData.Unprotect(pbProtectedKey, m_pbEntropy,
 					DataProtectionScope.CurrentUser);
+#endif // KPCLib
 			}
 			catch(Exception)
 			{
@@ -125,12 +129,12 @@ namespace KeePassLib.Keys
 			}
 #endif
 
-			return pbKey;
+                return pbKey;
 		}
 
 		private static byte[] CreateUserKey()
 		{
-#if KeePassLibSD
+#if (KeePassLibSD || KPCLib)
 			return null;
 #else
 			string strFilePath = GetUserKeyFilePath(true);
