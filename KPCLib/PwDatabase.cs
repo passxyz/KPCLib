@@ -694,20 +694,36 @@ namespace KeePassLib
 			m_bModified = false;
 		}
 
-		/// <summary>
-		/// Save the currently opened database to a different location. If
-		/// <paramref name="bIsPrimaryNow" /> is <c>true</c>, the specified
-		/// location is made the default location for future saves
-		/// using <c>SaveDatabase</c>.
-		/// </summary>
-		/// <param name="ioConnection">New location to serialize the database to.</param>
-		/// <param name="bIsPrimaryNow">If <c>true</c>, the new location is made the
-		/// standard location for the database. If <c>false</c>, a copy of the currently
-		/// opened database is saved to the specified location, but it isn't
-		/// made the default location (i.e. no lock files will be moved for
-		/// example).</param>
-		/// <param name="slLogger">Logger that recieves status information.</param>
-		public void SaveAs(IOConnectionInfo ioConnection, bool bIsPrimaryNow,
+        /// <summary>
+        /// Save the currently opened database. The file is written to the given stream which is expected to be the original location.
+        /// </summary>
+        /// This allows to save to cloud locations etc. 
+        public void Save(Stream streamOfOriginalLocation, IStatusLogger slLogger)
+        {
+            Stream s = streamOfOriginalLocation;
+            KdbxFile kdb = new KdbxFile(this);
+            kdb.Save(s, null, KdbxFormat.Default, slLogger);
+
+            m_pbHashOfLastIO = kdb.HashOfFileOnDisk;
+            m_pbHashOfFileOnDisk = kdb.HashOfFileOnDisk;
+            Debug.Assert(m_pbHashOfFileOnDisk != null);
+            m_bModified = false;
+        }
+
+        /// <summary>
+        /// Save the currently opened database to a different location. If
+        /// <paramref name="bIsPrimaryNow" /> is <c>true</c>, the specified
+        /// location is made the default location for future saves
+        /// using <c>SaveDatabase</c>.
+        /// </summary>
+        /// <param name="ioConnection">New location to serialize the database to.</param>
+        /// <param name="bIsPrimaryNow">If <c>true</c>, the new location is made the
+        /// standard location for the database. If <c>false</c>, a copy of the currently
+        /// opened database is saved to the specified location, but it isn't
+        /// made the default location (i.e. no lock files will be moved for
+        /// example).</param>
+        /// <param name="slLogger">Logger that recieves status information.</param>
+        public void SaveAs(IOConnectionInfo ioConnection, bool bIsPrimaryNow,
 			IStatusLogger slLogger)
 		{
 			Debug.Assert(ioConnection != null);
