@@ -480,13 +480,11 @@ namespace KeePassLib
 		public byte[] HashOfFileOnDisk
 		{
 			get { return m_pbHashOfFileOnDisk; }
-			set { m_pbHashOfFileOnDisk = value; }
 		}
 
 		public byte[] HashOfLastIO
 		{
 			get { return m_pbHashOfLastIO; }
-			set { m_pbHashOfLastIO = value; }
 		}
 
 		public bool UseFileTransactions
@@ -625,28 +623,8 @@ namespace KeePassLib
 		/// <param name="pwKey">Key used to open the specified database.</param>
 		/// <param name="slLogger">Logger, which gets all status messages.</param>
 		public void Open(IOConnectionInfo ioSource, CompositeKey pwKey,
-			IStatusLogger slLogger, IDatabaseFormat format)
-
+			IStatusLogger slLogger)
 		{
-			Open(IOConnection.OpenRead(ioSource), UrlUtil.StripExtension(
-					UrlUtil.GetFileName(ioSource.Path)), ioSource, pwKey, slLogger, format);
-
-		}
-
-		/// <summary>
-		/// Open a database. The URL may point to any supported data source.
-		/// </summary>
-		/// <param name="ioSource">IO connection to load the database from.</param>
-		/// <param name="pwKey">Key used to open the specified database.</param>
-		/// <param name="slLogger">Logger, which gets all status messages.</param>
-		public void Open(Stream s, string fileNameWithoutPathAndExt, IOConnectionInfo ioSource, CompositeKey pwKey,
-			IStatusLogger slLogger, IDatabaseFormat format)
-		{
-			Debug.Assert(s != null);
-			if (s == null) throw new ArgumentNullException("s");
-			Debug.Assert(fileNameWithoutPathAndExt != null);
-			if (fileNameWithoutPathAndExt == null) throw new ArgumentException("fileNameWithoutPathAndExt");
-			Debug.Assert(pwKey != null);
 			Debug.Assert(ioSource != null);
 			if(ioSource == null) throw new ArgumentNullException("ioSource");
 			Debug.Assert(pwKey != null);
@@ -656,18 +634,23 @@ namespace KeePassLib
 
 			try
 			{
-				m_pgRootGroup = new PwGroup(true, true, fileNameWithoutPathAndExt, PwIcon.FolderOpen);
+				m_pgRootGroup = new PwGroup(true, true, UrlUtil.StripExtension(
+					UrlUtil.GetFileName(ioSource.Path)), PwIcon.FolderOpen);
 				m_pgRootGroup.IsExpanded = true;
 
 				m_pwUserKey = pwKey;
 
 				m_bModified = false;
 
-				format.PopulateDatabaseFromStream(this, s, slLogger);
+				KdbxFile kdbx = new KdbxFile(this);
+				kdbx.DetachBinaries = m_strDetachBins;
 
-				m_pbHashOfLastIO = format.HashOfLastStream;
-				m_pbHashOfFileOnDisk = format.HashOfLastStream;	
+				Stream s = IOConnection.OpenRead(ioSource);
+				kdbx.Load(s, KdbxFormat.Default, slLogger);
+				s.Close();
 
+				m_pbHashOfLastIO = kdbx.HashOfFileOnDisk;
+				m_pbHashOfFileOnDisk = kdbx.HashOfFileOnDisk;
 				Debug.Assert(m_pbHashOfFileOnDisk != null);
 
 				m_bDatabaseOpened = true;
@@ -698,7 +681,7 @@ namespace KeePassLib
 				Stream s = ft.OpenWrite();
 
 				KdbxFile kdb = new KdbxFile(this);
-				kdb.Save(s, null, KdbpFile.GetFormatToUse(m_ioSource), slLogger);
+				kdb.Save(s, null, KdbxFormat.Default, slLogger);
 
 				ft.CommitWrite();
 

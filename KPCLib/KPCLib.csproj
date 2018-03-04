@@ -5,6 +5,16 @@
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.3</Version>
+    <Authors>Roger Ye</Authors>
+    <Company></Company>
+    <Description>A library to be built as .NET Standard Library to be used for Android, iOS and UWP</Description>
+    <Copyright>Roger Ye</Copyright>
+    <PackageLicenseUrl>https://github.com/passxyz/KPCLib/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
+    <AssemblyVersion>1.0.0.3</AssemblyVersion>
+    <FileVersion>1.0.0.3</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -16,6 +26,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="protobuf-net" Version="2.3.7" />
     <PackageReference Include="Splat" Version="2.1.0" />
   </ItemGroup>
 

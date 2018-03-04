@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>KPCLib</id>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
         <authors>Roger Ye</authors>
         <description>.NET Standard Library for KeePass</description>
         <summary>A library to be built as .NET Standard Library to be used for Android, iOS and UWP</summary>
