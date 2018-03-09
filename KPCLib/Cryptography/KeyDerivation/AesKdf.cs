@@ -119,10 +119,11 @@ namespace KeePassLib.Cryptography.KeyDerivation
 
 			try
 			{
+#if !KPCLib
 				// Try to use the native library first
 				if(NativeLib.TransformKey256(pbNewKey, pbKeySeed32, uNumRounds))
 					return CryptoUtil.HashSha256(pbNewKey);
-
+#endif // KPCLib
 				if(TransformKeyManaged(pbNewKey, pbKeySeed32, uNumRounds))
 					return CryptoUtil.HashSha256(pbNewKey);
 			}
