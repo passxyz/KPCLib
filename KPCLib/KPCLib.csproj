@@ -6,7 +6,7 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.1.4</Version>
+    <Version>1.1.5</Version>
     <PackageLicenseUrl>https://github.com/passxyz/KPCLib/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
