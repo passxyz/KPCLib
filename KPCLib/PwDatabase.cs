@@ -1676,6 +1676,17 @@ namespace KeePassLib
 
 			return null;
 		}
+
+        public PwCustomIcon GetPwCustomIcon(PwUuid pwIconId)
+        {
+            int nIndex = GetCustomIconIndex(pwIconId);
+            if (nIndex >= 0)
+                return m_vCustomIcons[nIndex];
+            else { Debug.Assert(false); }
+
+            return null;
+        }
+
 #elif !KeePassLibSD
 		[Obsolete("Additionally specify the size.")]
 		public Image GetCustomIcon(PwUuid pwIconId)
@@ -1707,7 +1718,7 @@ namespace KeePassLib
 		}
 #endif
 
-		public bool DeleteCustomIcons(List<PwUuid> vUuidsToDelete)
+        public bool DeleteCustomIcons(List<PwUuid> vUuidsToDelete)
 		{
 			Debug.Assert(vUuidsToDelete != null);
 			if(vUuidsToDelete == null) throw new ArgumentNullException("vUuidsToDelete");

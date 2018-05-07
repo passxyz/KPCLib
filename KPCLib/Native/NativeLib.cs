@@ -43,7 +43,7 @@ namespace KeePassLib.Native
 	/// </summary>
 	public static class NativeLib
 	{
-		private static bool m_bAllowNative = true;
+		private static bool m_bAllowNative = false;
 
 		/// <summary>
 		/// If this property is set to <c>true</c>, the native library is used.
@@ -116,6 +116,7 @@ namespace KeePassLib.Native
 		/// <returns>Returns <c>true</c>, if the native library is installed.</returns>
 		public static bool IsLibraryInstalled()
 		{
+#if !KPCLib
 			byte[] pDummy0 = new byte[32];
 			byte[] pDummy1 = new byte[32];
 
@@ -129,7 +130,10 @@ namespace KeePassLib.Native
 			// Pop native state and return result
 			m_bAllowNative = bCachedNativeState;
 			return bResult;
-		}
+#else
+            return false;
+#endif // KPCLib
+        }
 
 		private static bool? m_bIsUnix = null;
 		public static bool IsUnix()

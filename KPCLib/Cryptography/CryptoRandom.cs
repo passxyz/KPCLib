@@ -196,10 +196,13 @@ namespace KeePassLib.Cryptography
 #if !KeePassUAP
 				AddStrHash(ms, Environment.CommandLine);
 
-				pb = MemUtil.Int64ToBytes(Environment.WorkingSet);
+#if !KPCLib
+                // This is not supported in UWP.
+                pb = MemUtil.Int64ToBytes(Environment.WorkingSet);
 				MemUtil.Write(ms, pb);
+#endif // KPCLib
 #endif
-			}
+            }
 			catch(Exception) { Debug.Assert(false); }
 
 			try
@@ -223,9 +226,12 @@ namespace KeePassLib.Cryptography
 
 				pb = MemUtil.Int64ToBytes(p.Handle.ToInt64());
 				MemUtil.Write(ms, pb);
-				pb = MemUtil.Int32ToBytes(p.HandleCount);
-				MemUtil.Write(ms, pb);
-				pb = MemUtil.Int32ToBytes(p.Id);
+                pb = MemUtil.Int32ToBytes(p.Id);
+                MemUtil.Write(ms, pb);
+                pb = MemUtil.Int64ToBytes(p.StartTime.ToBinary());
+                MemUtil.Write(ms, pb);
+#if !KPCLib
+                pb = MemUtil.Int32ToBytes(p.HandleCount);
 				MemUtil.Write(ms, pb);
 				pb = MemUtil.Int64ToBytes(p.NonpagedSystemMemorySize64);
 				MemUtil.Write(ms, pb);
@@ -241,17 +247,15 @@ namespace KeePassLib.Cryptography
 				MemUtil.Write(ms, pb);
 				pb = MemUtil.Int64ToBytes(p.PrivateMemorySize64);
 				MemUtil.Write(ms, pb);
-				pb = MemUtil.Int64ToBytes(p.StartTime.ToBinary());
-				MemUtil.Write(ms, pb);
 				pb = MemUtil.Int64ToBytes(p.VirtualMemorySize64);
 				MemUtil.Write(ms, pb);
 				pb = MemUtil.Int64ToBytes(p.WorkingSet64);
 				MemUtil.Write(ms, pb);
-
-				// Not supported in Mono 1.2.6:
-				// pb = MemUtil.UInt32ToBytes((uint)p.SessionId);
-				// MemUtil.Write(ms, pb);
-			}
+#endif // KPCLib
+                // Not supported in Mono 1.2.6:
+                // pb = MemUtil.UInt32ToBytes((uint)p.SessionId);
+                // MemUtil.Write(ms, pb);
+            }
 			catch(Exception) { Debug.Assert(NativeLib.IsUnix()); }
 			finally
 			{

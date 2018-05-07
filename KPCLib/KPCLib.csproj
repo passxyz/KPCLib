@@ -6,15 +6,13 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.3</Version>
-    <Authors>Roger Ye</Authors>
-    <Company></Company>
-    <Description>A library to be built as .NET Standard Library to be used for Android, iOS and UWP</Description>
-    <Copyright>Roger Ye</Copyright>
+    <Version>1.1.5</Version>
     <PackageLicenseUrl>https://github.com/passxyz/KPCLib/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
-    <AssemblyVersion>1.0.0.3</AssemblyVersion>
-    <FileVersion>1.0.0.3</FileVersion>
+    <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
+    <Description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</Description>
+    <Copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye created this for UWP, Android and iOS platforms.</Copyright>
+    <Authors>Roger Ye</Authors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -26,8 +24,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="protobuf-net" Version="2.3.7" />
-    <PackageReference Include="Splat" Version="2.1.0" />
+    <Folder Include="Splat\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Xamarin.Forms" Version="2.5.0.122203" />
   </ItemGroup>
 
 </Project>
