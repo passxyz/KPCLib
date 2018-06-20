@@ -313,7 +313,7 @@ namespace KeePassLib.Utility
 					return strTargetFile;
 			}
 
-#if (!KeePassLibSD && !KeePassUAP)
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 			if(NativeLib.IsUnix())
 			{
 #endif
@@ -344,7 +344,7 @@ namespace KeePassLib.Utility
 				}
 
 				return sbRel.ToString();
-#if (!KeePassLibSD && !KeePassUAP)
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 			}
 
 			try // Windows

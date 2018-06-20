@@ -373,7 +373,7 @@ namespace KeePassLib.Native
 		public static bool TransformKey256(byte[] pBuf256, byte[] pKey256,
 			ulong uRounds)
 		{
-#if KeePassUAP
+#if KeePassUAP || KPCLib
 			return false;
 #else
 			if(!m_bAllowNative) return false;
@@ -404,7 +404,7 @@ namespace KeePassLib.Native
 		{
 			puRounds = 0;
 
-#if KeePassUAP
+#if KeePassUAP || KPCLib
 			return false;
 #else
 			if(!m_bAllowNative) return false;
