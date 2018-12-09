@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.IO;
 
 #if KPCLib
-using Image = Splat.IBitmap;
+using Image = SkiaSharp.SKBitmap;
 #endif
 
 #if !KeePassUAP

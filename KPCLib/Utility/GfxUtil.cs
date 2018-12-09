@@ -24,7 +24,7 @@ using System.IO;
 using System.Text;
 
 #if KPCLib
-using Splat;
+using SkiaSharp;
 #else
 #if !KeePassUAP
 using System.Drawing;
@@ -63,11 +63,11 @@ namespace KeePassLib.Utility
 #endif
 
 #if KPCLib
-        public static IBitmap LoadImage(byte[] pb)
+        public static SKBitmap LoadImage(byte[] pb)
         {
             using (var ms = new MemoryStream(pb, false))
             {
-                return BitmapLoader.Current.Load(ms, null, null).Result;
+                return SKBitmap.Decode(ms);
             }
         }
 #else
