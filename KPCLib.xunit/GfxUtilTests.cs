@@ -8,7 +8,7 @@ namespace KPCLib.xunit
 {
     public class GfxUtilTests
     {
-        const string TEST_IMAGE = "test.jpg";
+        const string TEST_IMAGE = "../../../test.jpg";
         const string TEST_OUPTIMAGE = "test_output.png";
 
         void ScaleImage(string path, int w, int h)
