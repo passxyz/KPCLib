@@ -4,7 +4,7 @@ This is a port of KeePassLib to PCL and .netstandard so that it can be used to b
 
 
 ### Setup
-* Available on NuGet: https://www.nuget.org/packages/KPCLib [![NuGet](https://img.shields.io/nuget/v/Xam.Plugin.Media.svg?label=NuGet)](https://www.nuget.org/packages/KPCLib/)
+* Available on NuGet: https://www.nuget.org/packages/KPCLib [![NuGet](https://img.shields.io/nuget/v/Xam.Plugin.Media.svg?label=NuGet)][![Build status](https://ci.appveyor.com/api/projects/status/ugxm1im7nsl634uy/branch/develop?svg=true)](https://ci.appveyor.com/project/shugaoye/kpclib/branch/develop)(https://www.nuget.org/packages/KPCLib/)
 * Install into your PCL/.NET Standard project and Client projects.
 
 ## Changes:
