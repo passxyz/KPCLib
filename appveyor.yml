@@ -20,8 +20,8 @@ after_build:
   # For once the build has completed
   - cmd: dotnet pack ./KPCLib/KPCLib.csproj
 artifacts:
-# - path: '\src\bin\Debug\netcoreapp1.1\publish'
-#   name: WebSite
+  - path: 'KPCLib\bin\Debug\KPCLib.*.nupkg'
+    name: KPCLib
 #   type: WebDeployPackage
 clone_depth: 1
 test_script:
