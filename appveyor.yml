@@ -15,7 +15,7 @@ before_build:
   - cmd: dotnet restore ./KPCLib/KPCLib.csproj --verbosity m
 build_script:
   # output will be in ./src/bin/debug/netcoreapp2.0/publish
-  - cmd: dotnet publish ./KPCLib/KPCLib.csproj
+  - cmd: dotnet build ./KPCLib/KPCLib.csproj
 after_build:
   # For once the build has completed
   - cmd: dotnet pack ./KPCLib/KPCLib.csproj
