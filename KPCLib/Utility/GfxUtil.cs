@@ -24,7 +24,8 @@ using System.IO;
 using System.Text;
 
 #if KPCLib
-using Splat;
+using SkiaSharp;
+using Image = SkiaSharp.SKBitmap;
 #else
 #if !KeePassUAP
 using System.Drawing;
@@ -63,11 +64,32 @@ namespace KeePassLib.Utility
 #endif
 
 #if KPCLib
-        public static IBitmap LoadImage(byte[] pb)
+        public static Image LoadImage(byte[] pb)
         {
+            if(pb == null) { return null; }
+
             using (var ms = new MemoryStream(pb, false))
             {
-                return BitmapLoader.Current.Load(ms, null, null).Result;
+                return Image.Decode(ms);
+            }
+        }
+
+        public static Image ScaleImage(Image img, int w, int h)
+        {
+            if (img == null) { return null; }
+
+            return img.Resize(new SKImageInfo(w, h), SKFilterQuality.High);
+        }
+
+        public static void SaveImage(Image img, string path)
+        {
+            if (img == null || path == null) { return; }
+            SKImage image = SKImage.FromBitmap(img);
+            SKData png = image.Encode(SKEncodedImageFormat.Png, 100);
+
+            using (var filestream = File.OpenWrite(path))
+            {
+                png.SaveTo(filestream);
             }
         }
 #else

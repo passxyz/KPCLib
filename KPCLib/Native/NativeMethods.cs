@@ -72,39 +72,39 @@ namespace KeePassLib.Native
 				return TransformKeyTimed32(pBuf256, pKey256, ref puRounds, uSeconds);
 		} */
 
-#if !KeePassUAP
-		[DllImport("KeePassLibC32.dll", EntryPoint = "TransformKey256")]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool TransformKey32(IntPtr pBuf256,
-			IntPtr pKey256, UInt64 uRounds);
+//#if !KeePassUAP
+//		[DllImport("KeePassLibC32.dll", EntryPoint = "TransformKey256")]
+//		[return: MarshalAs(UnmanagedType.Bool)]
+//		private static extern bool TransformKey32(IntPtr pBuf256,
+//			IntPtr pKey256, UInt64 uRounds);
 
-		[DllImport("KeePassLibC64.dll", EntryPoint = "TransformKey256")]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool TransformKey64(IntPtr pBuf256,
-			IntPtr pKey256, UInt64 uRounds);
+//		[DllImport("KeePassLibC64.dll", EntryPoint = "TransformKey256")]
+//		[return: MarshalAs(UnmanagedType.Bool)]
+//		private static extern bool TransformKey64(IntPtr pBuf256,
+//			IntPtr pKey256, UInt64 uRounds);
 
-		internal static bool TransformKey(IntPtr pBuf256, IntPtr pKey256,
-			UInt64 uRounds)
-		{
-			if(NativeLib.PointerSize == 8)
-				return TransformKey64(pBuf256, pKey256, uRounds);
-			else
-				return TransformKey32(pBuf256, pKey256, uRounds);
-		}
+//		internal static bool TransformKey(IntPtr pBuf256, IntPtr pKey256,
+//			UInt64 uRounds)
+//		{
+//			if(NativeLib.PointerSize == 8)
+//				return TransformKey64(pBuf256, pKey256, uRounds);
+//			else
+//				return TransformKey32(pBuf256, pKey256, uRounds);
+//		}
 
-		[DllImport("KeePassLibC32.dll", EntryPoint = "TransformKeyBenchmark256")]
-		private static extern UInt64 TransformKeyBenchmark32(UInt32 uTimeMs);
+//		[DllImport("KeePassLibC32.dll", EntryPoint = "TransformKeyBenchmark256")]
+//		private static extern UInt64 TransformKeyBenchmark32(UInt32 uTimeMs);
 
-		[DllImport("KeePassLibC64.dll", EntryPoint = "TransformKeyBenchmark256")]
-		private static extern UInt64 TransformKeyBenchmark64(UInt32 uTimeMs);
+//		[DllImport("KeePassLibC64.dll", EntryPoint = "TransformKeyBenchmark256")]
+//		private static extern UInt64 TransformKeyBenchmark64(UInt32 uTimeMs);
 
-		internal static UInt64 TransformKeyBenchmark(UInt32 uTimeMs)
-		{
-			if(NativeLib.PointerSize == 8)
-				return TransformKeyBenchmark64(uTimeMs);
-			return TransformKeyBenchmark32(uTimeMs);
-		}
-#endif
+//		internal static UInt64 TransformKeyBenchmark(UInt32 uTimeMs)
+//		{
+//			if(NativeLib.PointerSize == 8)
+//				return TransformKeyBenchmark64(uTimeMs);
+//			return TransformKeyBenchmark32(uTimeMs);
+//		}
+//#endif
 
 		/* [DllImport("KeePassLibC32.dll", EntryPoint = "TF_ShowLangBar")]
 		[return: MarshalAs(UnmanagedType.Bool)]
@@ -121,46 +121,46 @@ namespace KeePassLib.Native
 			return TF_ShowLangBar32(dwFlags);
 		} */
 
-#if (!KeePassLibSD && !KeePassUAP)
-		[DllImport("ShlWApi.dll", CharSet = CharSet.Auto)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		internal static extern bool PathRelativePathTo([Out] StringBuilder pszPath,
-			[In] string pszFrom, uint dwAttrFrom, [In] string pszTo, uint dwAttrTo);
+//#if (!KeePassLibSD && !KeePassUAP)
+//		[DllImport("ShlWApi.dll", CharSet = CharSet.Auto)]
+//		[return: MarshalAs(UnmanagedType.Bool)]
+//		internal static extern bool PathRelativePathTo([Out] StringBuilder pszPath,
+//			[In] string pszFrom, uint dwAttrFrom, [In] string pszTo, uint dwAttrTo);
 
-		[DllImport("ShlWApi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-		private static extern int StrCmpLogicalW(string x, string y);
+//		[DllImport("ShlWApi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+//		private static extern int StrCmpLogicalW(string x, string y);
 
-		private static bool? m_obSupportsLogicalCmp = null;
+//		private static bool? m_obSupportsLogicalCmp = null;
 
-		private static void TestNaturalComparisonsSupport()
-		{
-			try
-			{
-				StrCmpLogicalW("0", "0"); // Throws exception if unsupported
-				m_obSupportsLogicalCmp = true;
-			}
-			catch(Exception) { m_obSupportsLogicalCmp = false; }
-		}
-#endif
+//		private static void TestNaturalComparisonsSupport()
+//		{
+//			try
+//			{
+//				StrCmpLogicalW("0", "0"); // Throws exception if unsupported
+//				m_obSupportsLogicalCmp = true;
+//			}
+//			catch(Exception) { m_obSupportsLogicalCmp = false; }
+//		}
+//#endif
 
 		internal static bool SupportsStrCmpNaturally
 		{
 			get
 			{
-#if (!KeePassLibSD && !KeePassUAP)
-				if(!m_obSupportsLogicalCmp.HasValue)
-					TestNaturalComparisonsSupport();
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
+                if (!m_obSupportsLogicalCmp.HasValue)
+                    TestNaturalComparisonsSupport();
 
-				return m_obSupportsLogicalCmp.Value;
+                return m_obSupportsLogicalCmp.Value;
 #else
-				return false;
+                return false;
 #endif
 			}
 		}
 
 		internal static int StrCmpNaturally(string x, string y)
 		{
-#if (!KeePassLibSD && !KeePassUAP)
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 			if(!NativeMethods.SupportsStrCmpNaturally)
 			{
 				Debug.Assert(false);
@@ -169,7 +169,7 @@ namespace KeePassLib.Native
 
 			return StrCmpLogicalW(x, y);
 #else
-			Debug.Assert(false);
+            Debug.Assert(false);
 			return string.Compare(x, y, true);
 #endif
 		}
