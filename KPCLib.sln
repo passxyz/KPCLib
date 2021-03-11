@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KPCLib", "KPCLib\KPCLib.csproj", "{3F08B816-6E5F-4DB5-9BF5-4EDF9E662855}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KPCLib.xunit", "KPCLib.xunit\KPCLib.xunit.csproj", "{4764BB09-267A-4760-AE2D-6979BDA5FB88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KPCLib.xunit", "KPCLib.xunit\KPCLib.xunit.csproj", "{4764BB09-267A-4760-AE2D-6979BDA5FB88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PassXYZLib", "PassXYZLib\PassXYZLib.csproj", "{E6F6B65A-6474-4978-9F9C-F22194688240}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,22 @@ Global
 		{4764BB09-267A-4760-AE2D-6979BDA5FB88}.Release|x64.Build.0 = Release|Any CPU
 		{4764BB09-267A-4760-AE2D-6979BDA5FB88}.Release|x86.ActiveCfg = Release|Any CPU
 		{4764BB09-267A-4760-AE2D-6979BDA5FB88}.Release|x86.Build.0 = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|ARM.Build.0 = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|x64.Build.0 = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Debug|x86.Build.0 = Debug|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|ARM.ActiveCfg = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|ARM.Build.0 = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|x64.ActiveCfg = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|x64.Build.0 = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|x86.ActiveCfg = Release|Any CPU
+		{E6F6B65A-6474-4978-9F9C-F22194688240}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
