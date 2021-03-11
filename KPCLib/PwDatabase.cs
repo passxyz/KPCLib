@@ -48,7 +48,7 @@ namespace KeePassLib
 	/// The core password manager class. It contains a number of groups, which
 	/// contain the actual entries.
 	/// </summary>
-	public sealed class PwDatabase
+	public class PwDatabase
 	{
 		internal const int DefaultHistoryMaxItems = 10; // -1 = unlimited
 		internal const long DefaultHistoryMaxSize = 6 * 1024 * 1024; // -1 = unlimited
