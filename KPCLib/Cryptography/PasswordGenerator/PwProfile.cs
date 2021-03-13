@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -237,10 +237,9 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 		public static PwProfile DeriveFromPassword(ProtectedString psPassword)
 		{
 			PwProfile pp = new PwProfile();
-			Debug.Assert(psPassword != null); if(psPassword == null) return pp;
+			if(psPassword == null) { Debug.Assert(false); return pp; }
 
-			byte[] pbUtf8 = psPassword.ReadUtf8();
-			char[] vChars = StrUtil.Utf8.GetChars(pbUtf8);
+			char[] vChars = psPassword.ReadChars();
 
 			pp.GeneratorType = PasswordGeneratorType.CharSet;
 			pp.Length = (uint)vChars.Length;
@@ -253,20 +252,19 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 				if((ch >= 'A') && (ch <= 'Z')) pcs.Add(PwCharSet.UpperCase);
 				else if((ch >= 'a') && (ch <= 'z')) pcs.Add(PwCharSet.LowerCase);
 				else if((ch >= '0') && (ch <= '9')) pcs.Add(PwCharSet.Digits);
-				else if(PwCharSet.SpecialChars.IndexOf(ch) >= 0)
-					pcs.Add(PwCharSet.SpecialChars);
+				else if(PwCharSet.Special.IndexOf(ch) >= 0)
+					pcs.Add(PwCharSet.Special);
 				else if(ch == ' ') pcs.Add(' ');
 				else if(ch == '-') pcs.Add('-');
 				else if(ch == '_') pcs.Add('_');
 				else if(PwCharSet.Brackets.IndexOf(ch) >= 0)
 					pcs.Add(PwCharSet.Brackets);
-				else if(PwCharSet.HighAnsiChars.IndexOf(ch) >= 0)
-					pcs.Add(PwCharSet.HighAnsiChars);
+				else if(PwCharSet.Latin1S.IndexOf(ch) >= 0)
+					pcs.Add(PwCharSet.Latin1S);
 				else pcs.Add(ch);
 			}
 
 			MemUtil.ZeroArray<char>(vChars);
-			MemUtil.ZeroByteArray(pbUtf8);
 			return pp;
 		}
 

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,13 +47,19 @@ namespace KeePassLib.Translation
 	[XmlRoot("Translation")]
 	public sealed class KPTranslation
 	{
-		public const string FileExtension = "lngx";
+		public static readonly string FileExtension = "lngx";
+		internal const string FileExtension1x = "lng";
 
 		private KPTranslationProperties m_props = new KPTranslationProperties();
 		public KPTranslationProperties Properties
 		{
 			get { return m_props; }
-			set { m_props = value; }
+			set
+			{
+				if(value == null) throw new ArgumentNullException("value");
+
+				m_props = value;
+			}
 		}
 
 		private List<KPStringTable> m_vStringTables = new List<KPStringTable>();
@@ -70,7 +76,7 @@ namespace KeePassLib.Translation
 			}
 		}
 #if !KPCLib
-        private List<KPFormCustomization> m_vForms = new List<KPFormCustomization>();
+		private List<KPFormCustomization> m_vForms = new List<KPFormCustomization>();
 
 		[XmlArrayItem("Form")]
 		public List<KPFormCustomization> Forms
@@ -113,23 +119,17 @@ namespace KeePassLib.Translation
 			if(xs == null) throw new ArgumentNullException("xs");
 
 #if !KeePassLibSD
-			GZipStream gz = new GZipStream(sOut, CompressionMode.Compress);
+			using(GZipStream gz = new GZipStream(sOut, CompressionMode.Compress))
 #else
-			GZipOutputStream gz = new GZipOutputStream(sOut);
+			using(GZipOutputStream gz = new GZipOutputStream(sOut))
 #endif
+			{
+				using(XmlWriter xw = XmlUtilEx.CreateXmlWriter(gz))
+				{
+					xs.Serialize(xw, kpTrl);
+				}
+			}
 
-			XmlWriterSettings xws = new XmlWriterSettings();
-			xws.CheckCharacters = true;
-			xws.Encoding = StrUtil.Utf8;
-			xws.Indent = true;
-			xws.IndentChars = "\t";
-
-			XmlWriter xw = XmlWriter.Create(gz, xws);
-
-			xs.Serialize(xw, kpTrl);
-
-			xw.Close();
-			gz.Close();
 			sOut.Close();
 		}
 
@@ -150,15 +150,17 @@ namespace KeePassLib.Translation
 		{
 			if(xs == null) throw new ArgumentNullException("xs");
 
+			KPTranslation kpTrl = null;
+
 #if !KeePassLibSD
-			GZipStream gz = new GZipStream(s, CompressionMode.Decompress);
+			using(GZipStream gz = new GZipStream(s, CompressionMode.Decompress))
 #else
-			GZipInputStream gz = new GZipInputStream(s);
+			using(GZipInputStream gz = new GZipInputStream(s))
 #endif
+			{
+				kpTrl = (xs.Deserialize(gz) as KPTranslation);
+			}
 
-			KPTranslation kpTrl = (xs.Deserialize(gz) as KPTranslation);
-
-			gz.Close();
 			s.Close();
 			return kpTrl;
 		}
@@ -226,11 +228,40 @@ namespace KeePassLib.Translation
 					((TrackBar)c).RightToLeftLayout = true;
 				else if(c is TreeView)
 					((TreeView)c).RightToLeftLayout = true;
-				else if(c is ToolStrip)
-					RtlApplyToToolStripItems(((ToolStrip)c).Items);
+				// else if(c is ToolStrip)
+				//	RtlApplyToToolStripItems(((ToolStrip)c).Items);
+				/* else if(c is Button) // Also see Label
+				{
+					Button btn = (c as Button);
+					Image img = btn.Image;
+					if(img != null)
+					{
+						Image imgNew = (Image)img.Clone();
+						imgNew.RotateFlip(RotateFlipType.RotateNoneFlipX);
+						btn.Image = imgNew;
+					}
+				}
+				else if(c is Label) // Also see Button
+				{
+					Label lbl = (c as Label);
+					Image img = lbl.Image;
+					if(img != null)
+					{
+						Image imgNew = (Image)img.Clone();
+						imgNew.RotateFlip(RotateFlipType.RotateNoneFlipX);
+						lbl.Image = imgNew;
+					}
+				} */
 
-				if((c is GroupBox) || (c is Panel)) RtlMoveChildControls(c);
+				if(IsRtlMoveChildsRequired(c)) RtlMoveChildControls(c);
 			}
+		}
+
+		internal static bool IsRtlMoveChildsRequired(Control c)
+		{
+			if(c == null) { Debug.Assert(false); return false; }
+
+			return ((c is GroupBox) || (c is Panel));
 		}
 
 		private static void RtlMoveChildControls(Control cParent)
@@ -239,18 +270,34 @@ namespace KeePassLib.Translation
 
 			foreach(Control c in cParent.Controls)
 			{
-				Point ptCur = c.Location;
-				c.Location = new Point(nParentWidth - c.Size.Width - ptCur.X, ptCur.Y);
+				DockStyle ds = c.Dock;
+				if(ds == DockStyle.Left)
+					c.Dock = DockStyle.Right;
+				else if(ds == DockStyle.Right)
+					c.Dock = DockStyle.Left;
+				else
+				{
+					Point ptCur = c.Location;
+					c.Location = new Point(nParentWidth - c.Size.Width - ptCur.X, ptCur.Y);
+				}
 			}
 		}
 
+		/* private static readonly string[] g_vRtlMirrorItemNames = new string[] { };
 		private static void RtlApplyToToolStripItems(ToolStripItemCollection tsic)
 		{
 			foreach(ToolStripItem tsi in tsic)
 			{
-				tsi.RightToLeftAutoMirrorImage = true;
+				if(tsi == null) { Debug.Assert(false); continue; }
+
+				if(Array.IndexOf<string>(g_vRtlMirrorItemNames, tsi.Name) >= 0)
+					tsi.RightToLeftAutoMirrorImage = true;
+
+				ToolStripDropDownItem tsdd = (tsi as ToolStripDropDownItem);
+				if(tsdd != null)
+					RtlApplyToToolStripItems(tsdd.DropDownItems);
 			}
-		}
+		} */
 
 		public void ApplyTo(string strTableName, ToolStripItemCollection tsic)
 		{
@@ -269,5 +316,13 @@ namespace KeePassLib.Translation
 			if(kpst != null) kpst.ApplyTo(tsic);
 		}
 #endif
+
+		internal bool IsFor(string strIso6391Code)
+		{
+			if(strIso6391Code == null) { Debug.Assert(false); return false; }
+
+			return string.Equals(strIso6391Code, m_props.Iso6391Code,
+				StrUtil.CaseIgnoreCmp);
+		}
 	}
 }

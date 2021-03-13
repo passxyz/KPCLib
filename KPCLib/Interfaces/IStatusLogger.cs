@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ namespace KeePassLib.Interfaces
 		bool SetText(string strNewText, LogStatusType lsType);
 
 		/// <summary>
-		/// Check if the user cancelled the current work.
+		/// Check whether the user cancelled the current work.
 		/// </summary>
 		/// <returns>Returns <c>true</c> if the caller should continue
 		/// the current work.</returns>

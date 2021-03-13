@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ namespace KeePassLib.Serialization
 		private const string ElemMeta = "Meta";
 		private const string ElemRoot = "Root";
 		private const string ElemGroup = "Group";
-		private const string ElemEntry = "Entry";
+		internal const string ElemEntry = "Entry";
 
 		private const string ElemGenerator = "Generator";
 		private const string ElemHeaderHash = "HeaderHash";
@@ -144,7 +144,7 @@ namespace KeePassLib.Serialization
 
 		private const string ElemName = "Name";
 		private const string ElemNotes = "Notes";
-		private const string ElemUuid = "UUID";
+		internal const string ElemUuid = "UUID";
 		private const string ElemIcon = "IconID";
 		private const string ElemCustomIconID = "CustomIconUUID";
 		private const string ElemFgColor = "ForegroundColor";
@@ -227,7 +227,7 @@ namespace KeePassLib.Serialization
 		private const uint NeutralLanguageOffset = 0x100000; // 2^20, see 32-bit Unicode specs
 		private const uint NeutralLanguageIDSec = 0x7DC5C; // See 32-bit Unicode specs
 		private const uint NeutralLanguageID = NeutralLanguageOffset + NeutralLanguageIDSec;
-		private static bool m_bLocalizedNames = false;
+		private static bool g_bLocalizedNames = false;
 
 		private enum KdbxHeaderFieldID : byte
 		{
@@ -312,8 +312,8 @@ namespace KeePassLib.Serialization
 		public static void DetermineLanguageId()
 		{
 			// Test if localized names should be used. If localized names are used,
-			// the m_bLocalizedNames value must be set to true. By default, localized
-			// names should be used! (Otherwise characters could be corrupted
+			// the g_bLocalizedNames value must be set to true. By default, localized
+			// names should be used (otherwise characters could be corrupted
 			// because of different code pages).
 			unchecked
 			{
@@ -321,7 +321,7 @@ namespace KeePassLib.Serialization
 				foreach(char ch in PwDatabase.LocalizedAppName)
 					uTest = uTest * 5 + ch;
 
-				m_bLocalizedNames = (uTest != NeutralLanguageID);
+				g_bLocalizedNames = (uTest != NeutralLanguageID);
 			}
 		}
 
@@ -331,8 +331,11 @@ namespace KeePassLib.Serialization
 
 			// See also KeePassKdb2x3.Export (KDBX 3.1 export module)
 
+			if(m_pwDatabase.DataCipherUuid.Equals(ChaCha20Engine.ChaCha20Uuid))
+				return FileVersion32;
+
 			AesKdf kdfAes = new AesKdf();
-			if(!kdfAes.Uuid.Equals(m_pwDatabase.KdfParameters.KdfUuid))
+			if(!m_pwDatabase.KdfParameters.KdfUuid.Equals(kdfAes.Uuid))
 				return FileVersion32;
 
 			if(m_pwDatabase.PublicCustomData.Count > 0)
@@ -374,8 +377,8 @@ namespace KeePassLib.Serialization
 
 				Debug.Assert(m_pwDatabase != null);
 				Debug.Assert(m_pwDatabase.MasterKey != null);
-				ProtectedBinary pbinUser = m_pwDatabase.MasterKey.GenerateKey32(
-					m_pwDatabase.KdfParameters);
+				ProtectedBinary pbinUser = m_pwDatabase.MasterKey.GenerateKey32Ex(
+					m_pwDatabase.KdfParameters, m_slLogger);
 				Debug.Assert(pbinUser != null);
 				if(pbinUser == null)
 					throw new SecurityException(KLRes.InvalidCompositeKey);
@@ -488,7 +491,7 @@ namespace KeePassLib.Serialization
 		{
 			if(pb == null) { Debug.Assert(false); return; }
 
-			if(string.IsNullOrEmpty(strName)) strName = "File.bin";
+			strName = UrlUtil.GetSafeFileName(strName);
 
 			string strPath;
 			int iTry = 1;
@@ -496,8 +499,8 @@ namespace KeePassLib.Serialization
 			{
 				strPath = UrlUtil.EnsureTerminatingSeparator(strSaveDir, false);
 
-				string strExt = UrlUtil.GetExtension(strName);
 				string strDesc = UrlUtil.StripExtension(strName);
+				string strExt = UrlUtil.GetExtension(strName);
 
 				strPath += strDesc;
 				if(iTry > 1)
@@ -510,17 +513,9 @@ namespace KeePassLib.Serialization
 			}
 			while(File.Exists(strPath));
 
-#if !KeePassLibSD
 			byte[] pbData = pb.ReadData();
-			File.WriteAllBytes(strPath, pbData);
-			MemUtil.ZeroByteArray(pbData);
-#else
-			FileStream fs = new FileStream(strPath, FileMode.Create,
-				FileAccess.Write, FileShare.None);
-			byte[] pbData = pb.ReadData();
-			fs.Write(pbData, 0, pbData.Length);
-			fs.Close();
-#endif
+			try { File.WriteAllBytes(strPath, pbData); }
+			finally { if(pb.IsProtected) MemUtil.ZeroByteArray(pbData); }
 		}
 	}
 }

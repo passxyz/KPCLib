@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -52,8 +52,6 @@ namespace KeePassLib
 	{
 		internal const int DefaultHistoryMaxItems = 10; // -1 = unlimited
 		internal const long DefaultHistoryMaxSize = 6 * 1024 * 1024; // -1 = unlimited
-
-		private static bool m_bPrimaryCreated = false;
 
 		// Initializations: see Clear()
 		private PwGroup m_pgRootGroup = null;
@@ -112,7 +110,7 @@ namespace KeePassLib
 
 		private IStatusLogger m_slStatus = null;
 
-		private static string m_strLocalizedAppName = string.Empty;
+		private static string g_strLocalizedAppName = string.Empty;
 
 		// private const string StrBackupExtension = ".bak";
 
@@ -120,22 +118,20 @@ namespace KeePassLib
 		/// Get the root group that contains all groups and entries stored in the
 		/// database.
 		/// </summary>
-		/// <returns>Root group. The return value is <c>null</c>, if no database
-		/// has been opened.</returns>
+		/// <returns>Root group. The return value is <c>null</c>, if the database
+		/// is not open.</returns>
 		public PwGroup RootGroup
 		{
 			get { return m_pgRootGroup; }
 			set
 			{
-				Debug.Assert(value != null);
-				if(value == null) throw new ArgumentNullException("value");
-
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_pgRootGroup = value;
 			}
 		}
 
 		/// <summary>
-		/// <c>IOConnection</c> of the currently opened database file.
+		/// <c>IOConnection</c> of the currently open database file.
 		/// Is never <c>null</c>.
 		/// </summary>
 		public IOConnectionInfo IOConnectionInfo
@@ -171,8 +167,7 @@ namespace KeePassLib
 			get { return m_pwUserKey; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
-
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_pwUserKey = value;
 			}
 		}
@@ -191,8 +186,8 @@ namespace KeePassLib
 			get { return m_strName; }
 			set
 			{
-				Debug.Assert(value != null);
-				if(value != null) m_strName = value;
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_strName = value;
 			}
 		}
 
@@ -210,8 +205,8 @@ namespace KeePassLib
 			get { return m_strDesc; }
 			set
 			{
-				Debug.Assert(value != null);
-				if(value != null) m_strDesc = value;
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_strDesc = value;
 			}
 		}
 
@@ -229,8 +224,8 @@ namespace KeePassLib
 			get { return m_strDefaultUserName; }
 			set
 			{
-				Debug.Assert(value != null);
-				if(value != null) m_strDefaultUserName = value;
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_strDefaultUserName = value;
 			}
 		}
 
@@ -288,8 +283,8 @@ namespace KeePassLib
 			get { return m_uuidDataCipher; }
 			set
 			{
-				Debug.Assert(value != null);
-				if(value != null) m_uuidDataCipher = value;
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_uuidDataCipher = value;
 			}
 		}
 
@@ -316,7 +311,7 @@ namespace KeePassLib
 			get { return m_kdfParams; }
 			set
 			{
-				if(value == null) throw new ArgumentNullException("value");
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_kdfParams = value;
 			}
 		}
@@ -329,8 +324,7 @@ namespace KeePassLib
 			get { return m_memProtConfig; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
-				
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_memProtConfig = value;
 			}
 		}
@@ -366,7 +360,7 @@ namespace KeePassLib
 			get { return m_pwLastSelectedGroup; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_pwLastSelectedGroup = value;
 			}
 		}
@@ -376,7 +370,7 @@ namespace KeePassLib
 			get { return m_pwLastTopVisibleGroup; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_pwLastTopVisibleGroup = value;
 			}
 		}
@@ -392,7 +386,7 @@ namespace KeePassLib
 			get { return m_pwRecycleBin; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_pwRecycleBin = value;
 			}
 		}
@@ -412,7 +406,7 @@ namespace KeePassLib
 			get { return m_pwEntryTemplatesGroup; }
 			set
 			{
-				Debug.Assert(value != null); if(value == null) throw new ArgumentNullException("value");
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_pwEntryTemplatesGroup = value;
 			}
 		}
@@ -516,8 +510,12 @@ namespace KeePassLib
 		/// </summary>
 		public static string LocalizedAppName
 		{
-			get { return m_strLocalizedAppName; }
-			set { Debug.Assert(value != null); m_strLocalizedAppName = value; }
+			get { return g_strLocalizedAppName; }
+			set
+			{
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				g_strLocalizedAppName = value;
+			}
 		}
 
 		/// <summary>
@@ -525,8 +523,6 @@ namespace KeePassLib
 		/// </summary>
 		public PwDatabase()
 		{
-			if(m_bPrimaryCreated == false) m_bPrimaryCreated = true;
-
 			Clear();
 		}
 
@@ -593,7 +589,7 @@ namespace KeePassLib
 		/// Initialize the class for managing a new database. Previously loaded
 		/// data is deleted.
 		/// </summary>
-		/// <param name="ioConnection">IO connection of the new database.</param>
+		/// <param name="ioConnection">I/O connection of the new database.</param>
 		/// <param name="pwKey">Key to open the database.</param>
 		public void New(IOConnectionInfo ioConnection, CompositeKey pwKey)
 		{
@@ -610,16 +606,15 @@ namespace KeePassLib
 			m_bDatabaseOpened = true;
 			m_bModified = true;
 
-			m_pgRootGroup = new PwGroup(true, true,
-				UrlUtil.StripExtension(UrlUtil.GetFileName(ioConnection.Path)),
-				PwIcon.FolderOpen);
+			m_pgRootGroup = new PwGroup(true, true, UrlUtil.StripExtension(
+				UrlUtil.GetFileName(ioConnection.Path)), PwIcon.FolderOpen);
 			m_pgRootGroup.IsExpanded = true;
 		}
 
 		/// <summary>
 		/// Open a database. The URL may point to any supported data source.
 		/// </summary>
-		/// <param name="ioSource">IO connection to load the database from.</param>
+		/// <param name="ioSource">I/O connection to load the database from.</param>
 		/// <param name="pwKey">Key used to open the specified database.</param>
 		/// <param name="slLogger">Logger, which gets all status messages.</param>
 		public void Open(IOConnectionInfo ioSource, CompositeKey pwKey,
@@ -639,15 +634,15 @@ namespace KeePassLib
 				m_pgRootGroup.IsExpanded = true;
 
 				m_pwUserKey = pwKey;
-
 				m_bModified = false;
 
 				KdbxFile kdbx = new KdbxFile(this);
 				kdbx.DetachBinaries = m_strDetachBins;
 
-				Stream s = IOConnection.OpenRead(ioSource);
-				kdbx.Load(s, KdbxFormat.Default, slLogger);
-				s.Close();
+				using(Stream s = IOConnection.OpenRead(ioSource))
+				{
+					kdbx.Load(s, KdbxFormat.Default, slLogger);
+				}
 
 				m_pbHashOfLastIO = kdbx.HashOfFileOnDisk;
 				m_pbHashOfFileOnDisk = kdbx.HashOfFileOnDisk;
@@ -664,8 +659,8 @@ namespace KeePassLib
 		}
 
 		/// <summary>
-		/// Save the currently opened database. The file is written to the location
-		/// it has been opened from.
+		/// Save the currently open database. The file is written to the
+		/// location it has been opened from.
 		/// </summary>
 		/// <param name="slLogger">Logger that recieves status information.</param>
 		public void Save(IStatusLogger slLogger)
@@ -676,17 +671,21 @@ namespace KeePassLib
 			if(m_bUseFileLocks) fl = new FileLock(m_ioSource);
 			try
 			{
-				FileTransactionEx ft = new FileTransactionEx(m_ioSource,
-					m_bUseFileTransactions);
-				Stream s = ft.OpenWrite();
+				KdbxFile kdbx = new KdbxFile(this);
 
-				KdbxFile kdb = new KdbxFile(this);
-				kdb.Save(s, null, KdbxFormat.Default, slLogger);
+				using(FileTransactionEx ft = new FileTransactionEx(m_ioSource,
+					m_bUseFileTransactions))
+				{
+					using(Stream s = ft.OpenWrite())
+					{
+						kdbx.Save(s, null, KdbxFormat.Default, slLogger);
+					}
 
-				ft.CommitWrite();
+					ft.CommitWrite();
+				}
 
-				m_pbHashOfLastIO = kdb.HashOfFileOnDisk;
-				m_pbHashOfFileOnDisk = kdb.HashOfFileOnDisk;
+				m_pbHashOfLastIO = kdbx.HashOfFileOnDisk;
+				m_pbHashOfFileOnDisk = kdbx.HashOfFileOnDisk;
 				Debug.Assert(m_pbHashOfFileOnDisk != null);
 			}
 			finally { if(fl != null) fl.Dispose(); }
@@ -695,16 +694,16 @@ namespace KeePassLib
 		}
 
 		/// <summary>
-		/// Save the currently opened database to a different location. If
+		/// Save the currently open database to a different location. If
 		/// <paramref name="bIsPrimaryNow" /> is <c>true</c>, the specified
 		/// location is made the default location for future saves
 		/// using <c>SaveDatabase</c>.
 		/// </summary>
 		/// <param name="ioConnection">New location to serialize the database to.</param>
-		/// <param name="bIsPrimaryNow">If <c>true</c>, the new location is made the
-		/// standard location for the database. If <c>false</c>, a copy of the currently
-		/// opened database is saved to the specified location, but it isn't
-		/// made the default location (i.e. no lock files will be moved for
+		/// <param name="bIsPrimaryNow">If <c>true</c>, the new location is made
+		/// the standard location for the database. If <c>false</c>, a copy of the
+		/// currently open database is saved to the specified location, but it
+		/// isn't made the default location (i.e. no lock files will be moved for
 		/// example).</param>
 		/// <param name="slLogger">Logger that recieves status information.</param>
 		public void SaveAs(IOConnectionInfo ioConnection, bool bIsPrimaryNow,
@@ -736,8 +735,8 @@ namespace KeePassLib
 		}
 
 		/// <summary>
-		/// Closes the currently opened database. No confirmation message is shown
-		/// before closing. Unsaved changes will be lost.
+		/// Closes the currently open database. No confirmation message
+		/// is shown before closing. Unsaved changes will be lost.
 		/// </summary>
 		public void Close()
 		{
@@ -801,6 +800,12 @@ namespace KeePassLib
 					pgNew.Uuid = pg.Uuid;
 					pgNew.AssignProperties(pg, false, true);
 
+					if(!pgLocalContainer.CanAddGroup(pgNew))
+					{
+						Debug.Assert(false);
+						pgLocalContainer = m_pgRootGroup;
+						pgLocalContainer.CheckCanAddGroup(pgNew);
+					}
 					// pgLocalContainer.AddGroup(pgNew, true);
 					InsertObjectAtBestPos<PwGroup>(pgLocalContainer.Groups, pgNew, ppSrc);
 					pgNew.ParentGroup = pgLocalContainer;
@@ -900,18 +905,17 @@ namespace KeePassLib
 				MergeInLocationChanged(m_pgRootGroup, ppOrg, ppSrc);
 				ppOrg = null; // Pools are now invalid, because the location
 				ppSrc = null; // changed times have been merged in
-
-				// Delete *after* relocating, because relocating might
-				// empty some groups that are marked for deletion (and
-				// objects that weren't relocated yet might prevent the
-				// deletion)
-				Dictionary<PwUuid, PwDeletedObject> dOrgDel = CreateDeletedObjectsPool();
-				MergeInDeletionInfo(pdSource.m_vDeletedObjects, dOrgDel);
-				ApplyDeletions(m_pgRootGroup, dOrgDel);
-
-				// The list and the dictionary should be kept in sync
-				Debug.Assert(m_vDeletedObjects.UCount == (uint)dOrgDel.Count);
 			}
+
+			// Delete *after* relocating, because relocating might empty
+			// some groups that are marked for deletion (and objects
+			// that weren't relocated yet might prevent the deletion)
+			Dictionary<PwUuid, PwDeletedObject> dOrgDel = CreateDeletedObjectsPool();
+			if(mm == PwMergeMethod.Synchronize)
+				MergeInDeletionInfo(pdSource.m_vDeletedObjects, dOrgDel);
+			ApplyDeletions(m_pgRootGroup, dOrgDel);
+			// The list and the dictionary should be kept in sync
+			Debug.Assert(m_vDeletedObjects.UCount == (uint)dOrgDel.Count);
 
 			// Must be called *after* merging groups, because group UUIDs
 			// are required for recycle bin and entry template UUIDs
@@ -1087,8 +1091,8 @@ namespace KeePassLib
 
 					if(pgLocal.IsContainedIn(pg)) continue;
 
+					if(!pgLocal.CanAddGroup(pg)) { Debug.Assert(false); continue; }
 					pg.ParentGroup.Groups.Remove(pg);
-
 					// pgLocal.AddGroup(pg, true);
 					InsertObjectAtBestPos<PwGroup>(pgLocal.Groups, pg, ppSrc);
 					pg.ParentGroup = pgLocal;
@@ -1643,17 +1647,6 @@ namespace KeePassLib
 
 			return null;
 		}
-
-        public PwCustomIcon GetPwCustomIcon(PwUuid pwIconId)
-        {
-            int nIndex = GetCustomIconIndex(pwIconId);
-            if (nIndex >= 0)
-                return m_vCustomIcons[nIndex];
-            else { Debug.Assert(false); }
-
-            return null;
-        }
-
 #elif !KeePassLibSD
 		[Obsolete("Additionally specify the size.")]
 		public Image GetCustomIcon(PwUuid pwIconId)
@@ -1685,7 +1678,7 @@ namespace KeePassLib
 		}
 #endif
 
-        public bool DeleteCustomIcons(List<PwUuid> vUuidsToDelete)
+		public bool DeleteCustomIcons(List<PwUuid> vUuidsToDelete)
 		{
 			Debug.Assert(vUuidsToDelete != null);
 			if(vUuidsToDelete == null) throw new ArgumentNullException("vUuidsToDelete");
@@ -1870,10 +1863,7 @@ namespace KeePassLib
 					using(Stream sOut = IOConnection.OpenWrite(iocBk))
 					{
 						MemUtil.CopyStream(sIn, sOut);
-						sOut.Close();
 					}
-
-					sIn.Close();
 				}
 			}
 
@@ -1963,16 +1953,22 @@ namespace KeePassLib
 			return uDeleted;
 		}
 
-		private static List<string> m_lStdFields = null;
+		private static List<string> g_lDupStdFields = null;
 		private static bool DupEntriesEqual(PwEntry a, PwEntry b)
 		{
-			if(m_lStdFields == null) m_lStdFields = PwDefs.GetStandardFields();
-
-			foreach(string strStdKey in m_lStdFields)
+			if(g_lDupStdFields == null)
 			{
-				string strA = a.Strings.ReadSafe(strStdKey);
-				string strB = b.Strings.ReadSafe(strStdKey);
-				if(!strA.Equals(strB)) return false;
+				g_lDupStdFields = PwDefs.GetStandardFields();
+				if(g_lDupStdFields.Remove(PwDefs.PasswordField))
+					g_lDupStdFields.Add(PwDefs.PasswordField); // Move to end (perf. opt.)
+				else { Debug.Assert(false); }
+			}
+
+			foreach(string strStdKey in g_lDupStdFields)
+			{
+				ProtectedString psA = a.Strings.GetSafe(strStdKey);
+				ProtectedString psB = b.Strings.GetSafe(strStdKey);
+				if(!psA.Equals(psB, false)) return false;
 			}
 
 			foreach(KeyValuePair<string, ProtectedString> kvpA in a.Strings)
@@ -1983,7 +1979,7 @@ namespace KeePassLib
 				if(psB == null) return false;
 
 				// Ignore protection setting, compare values only
-				if(!kvpA.Value.ReadString().Equals(psB.ReadString())) return false;
+				if(!psB.Equals(kvpA.Value, false)) return false;
 			}
 
 			foreach(KeyValuePair<string, ProtectedString> kvpB in b.Strings)
@@ -1994,22 +1990,18 @@ namespace KeePassLib
 				if(psA == null) return false;
 
 				// Must be equal by logic
-				Debug.Assert(kvpB.Value.ReadString().Equals(psA.ReadString()));
+				Debug.Assert(psA.Equals(kvpB.Value, false));
 			}
 
 			if(a.Binaries.UCount != b.Binaries.UCount) return false;
 			foreach(KeyValuePair<string, ProtectedBinary> kvpBin in a.Binaries)
 			{
+				ProtectedBinary pbA = kvpBin.Value;
 				ProtectedBinary pbB = b.Binaries.Get(kvpBin.Key);
 				if(pbB == null) return false;
 
 				// Ignore protection setting, compare values only
-				byte[] pbDataA = kvpBin.Value.ReadData();
-				byte[] pbDataB = pbB.ReadData();
-				bool bBinEq = MemUtil.ArraysEqual(pbDataA, pbDataB);
-				MemUtil.ZeroByteArray(pbDataA);
-				MemUtil.ZeroByteArray(pbDataB);
-				if(!bBinEq) return false;
+				if(!pbB.Equals(pbA, false)) return false;
 			}
 
 			return true;
@@ -2090,6 +2082,54 @@ namespace KeePassLib
 
 			if(uDeleted > 0) m_bUINeedsIconUpdate = true;
 			return uDeleted;
+		}
+
+		internal static void CopyCustomIcons(PwDatabase pdFrom, PwDatabase pdTo,
+			PwGroup pgSelect, bool bResetIfUnknown)
+		{
+			if(pgSelect == null) { Debug.Assert(false); return; }
+
+			Dictionary<PwUuid, bool> dIconsTo = new Dictionary<PwUuid, bool>();
+			dIconsTo[PwUuid.Zero] = true;
+			if(pdTo != null)
+			{
+				foreach(PwCustomIcon ci in pdTo.CustomIcons)
+					dIconsTo[ci.Uuid] = true;
+			}
+
+			GFunc<PwUuid, bool> fEnsureIcon = delegate(PwUuid puIcon)
+			{
+				if(dIconsTo.ContainsKey(puIcon)) return true;
+				if(pdFrom == null) { Debug.Assert(false); return false; }
+				if(pdTo == null) { Debug.Assert(false); return false; }
+
+				int i = pdFrom.GetCustomIconIndex(puIcon);
+				if(i < 0) { Debug.Assert(false); return false; }
+
+				pdTo.CustomIcons.Add(pdFrom.CustomIcons[i]);
+				dIconsTo[puIcon] = true;
+
+				pdTo.Modified = true;
+				pdTo.UINeedsIconUpdate = true;
+				return true;
+			};
+
+			GroupHandler gh = delegate(PwGroup pgCur)
+			{
+				bool bTo = fEnsureIcon(pgCur.CustomIconUuid);
+				if(!bTo && bResetIfUnknown) pgCur.CustomIconUuid = PwUuid.Zero;
+				return true;
+			};
+
+			EntryHandler eh = delegate(PwEntry peCur)
+			{
+				bool bTo = fEnsureIcon(peCur.CustomIconUuid);
+				if(!bTo && bResetIfUnknown) peCur.CustomIconUuid = PwUuid.Zero;
+				return true;
+			};
+
+			gh(pgSelect);
+			pgSelect.TraverseTree(TraversalMethod.PreOrder, gh, eh);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 #if KPCLib
@@ -103,7 +104,7 @@ namespace KeePassLib.Utility
 			finally { ms.Close(); }
 		}
 #else
-        public static Image LoadImage(byte[] pb)
+		public static Image LoadImage(byte[] pb)
 		{
 			if(pb == null) throw new ArgumentNullException("pb");
 
@@ -458,6 +459,55 @@ namespace KeePassLib.Utility
 #endif // DEBUG
 #endif // !KeePassLibSD
 #endif // KeePassUAP
+
+		internal static string ImageToDataUri(Image img)
+		{
+			if(img == null) { Debug.Assert(false); return string.Empty; }
+
+			byte[] pb = null;
+			using(MemoryStream ms = new MemoryStream())
+			{
+				img.Save(ms, ImageFormat.Png);
+				pb = ms.ToArray();
+			}
+
+			return StrUtil.DataToDataUri(pb, "image/png");
+		}
+
+		internal static ulong HashImage64(Image img)
+		{
+			Bitmap bmp = (img as Bitmap);
+			if(bmp == null) { Debug.Assert(false); return 0; }
+
+			BitmapData bd = null;
+			try
+			{
+				int w = bmp.Width, h = bmp.Height;
+				if((w <= 0) || (h <= 0)) { Debug.Assert(false); return 0; }
+
+				bd = bmp.LockBits(new Rectangle(0, 0, w, h),
+					ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+				if(bd.Stride != (w * 4)) { Debug.Assert(false); return 0; }
+
+				Debug.Assert(Marshal.SizeOf(typeof(int)) == 4);
+				int cp = w * h;
+				int[] v = new int[cp];
+				Marshal.Copy(bd.Scan0, v, 0, cp);
+
+				ulong u = (ulong)w * 0x50EF39EB5BE34CA9;
+				for(int i = 0; i < cp; ++i)
+					u = (u ^ (uint)v[i]) * 0x6E18585D2D174BD5;
+				return (u ^ (u >> 32));
+			}
+			catch(Exception) { Debug.Assert(false); }
+			finally
+			{
+				if(bd != null) bmp.UnlockBits(bd);
+			}
+
+			return 0;
+		}
 #endif // KPCLib
-    }
+	}
 }

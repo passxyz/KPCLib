@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
+using System.Text;
 
 using KeePassLib.Security;
 using KeePassLib.Utility;
@@ -33,152 +33,141 @@ namespace KeePassLib.Cryptography.PasswordGenerator
 			PwProfile pwProfile, CryptoRandomStream crsRandomSource)
 		{
 			psOut = ProtectedString.Empty;
-			LinkedList<char> vGenerated = new LinkedList<char>();
-			PwCharSet pcsCurrent = new PwCharSet();
-			PwCharSet pcsCustom = new PwCharSet();
-			PwCharSet pcsUsed = new PwCharSet();
-			bool bInCharSetDef = false;
 
-			string strPattern = ExpandPattern(pwProfile.Pattern);
-			if(strPattern.Length == 0) return PwgError.Success;
+			string strPattern = pwProfile.Pattern;
+			if(string.IsNullOrEmpty(strPattern)) return PwgError.Success;
 
-			CharStream csStream = new CharStream(strPattern);
-			char ch = csStream.ReadChar();
-
-			while(ch != char.MinValue)
-			{
-				pcsCurrent.Clear();
-
-				bool bGenerateChar = false;
-
-				if(ch == '\\')
-				{
-					ch = csStream.ReadChar();
-					if(ch == char.MinValue) // Backslash at the end
-					{
-						vGenerated.AddLast('\\');
-						break;
-					}
-
-					if(bInCharSetDef) pcsCustom.Add(ch);
-					else
-					{
-						vGenerated.AddLast(ch);
-						pcsUsed.Add(ch);
-					}
-				}
-				else if(ch == '^')
-				{
-					ch = csStream.ReadChar();
-					if(ch == char.MinValue) // ^ at the end
-					{
-						vGenerated.AddLast('^');
-						break;
-					}
-
-					if(bInCharSetDef) pcsCustom.Remove(ch);
-				}
-				else if(ch == '[')
-				{
-					pcsCustom.Clear();
-					bInCharSetDef = true;
-				}
-				else if(ch == ']')
-				{
-					pcsCurrent.Add(pcsCustom.ToString());
-
-					bInCharSetDef = false;
-					bGenerateChar = true;
-				}
-				else if(bInCharSetDef)
-				{
-					if(pcsCustom.AddCharSet(ch) == false)
-						pcsCustom.Add(ch);
-				}
-				else if(pcsCurrent.AddCharSet(ch) == false)
-				{
-					vGenerated.AddLast(ch);
-					pcsUsed.Add(ch);
-				}
-				else bGenerateChar = true;
-
-				if(bGenerateChar)
-				{
-					PwGenerator.PrepareCharSet(pcsCurrent, pwProfile);
-
-					if(pwProfile.NoRepeatingCharacters)
-						pcsCurrent.Remove(pcsUsed.ToString());
-
-					char chGen = PwGenerator.GenerateCharacter(pwProfile,
-						pcsCurrent, crsRandomSource);
-
-					if(chGen == char.MinValue) return PwgError.TooFewCharacters;
-
-					vGenerated.AddLast(chGen);
-					pcsUsed.Add(chGen);
-				}
-
-				ch = csStream.ReadChar();
-			}
-
-			if(vGenerated.Count == 0) return PwgError.Success;
-
-			char[] vArray = new char[vGenerated.Count];
-			vGenerated.CopyTo(vArray, 0);
-
-			if(pwProfile.PatternPermutePassword)
-				PwGenerator.ShufflePassword(vArray, crsRandomSource);
-
-			byte[] pbUtf8 = StrUtil.Utf8.GetBytes(vArray);
-			psOut = new ProtectedString(true, pbUtf8);
-			MemUtil.ZeroByteArray(pbUtf8);
-			MemUtil.ZeroArray<char>(vArray);
-			vGenerated.Clear();
-
-			return PwgError.Success;
-		}
-
-		private static string ExpandPattern(string strPattern)
-		{
-			Debug.Assert(strPattern != null); if(strPattern == null) return string.Empty;
-			string str = strPattern;
+			CharStream cs = new CharStream(strPattern);
+			LinkedList<char> llGenerated = new LinkedList<char>();
+			PwCharSet pcs = new PwCharSet();
 
 			while(true)
 			{
-				int nOpen = FindFirstUnescapedChar(str, '{');
-				int nClose = FindFirstUnescapedChar(str, '}');
+				char ch = cs.ReadChar();
+				if(ch == char.MinValue) break;
 
-				if((nOpen >= 0) && (nOpen < nClose))
+				pcs.Clear();
+
+				if(ch == '\\')
 				{
-					string strCount = str.Substring(nOpen + 1, nClose - nOpen - 1);
-					str = str.Remove(nOpen, nClose - nOpen + 1);
+					ch = cs.ReadChar();
+					if(ch == char.MinValue) return PwgError.InvalidPattern;
 
-					uint uRepeat;
-					if(StrUtil.TryParseUInt(strCount, out uRepeat) && (nOpen >= 1))
-					{
-						if(uRepeat == 0)
-							str = str.Remove(nOpen - 1, 1);
-						else
-							str = str.Insert(nOpen, new string(str[nOpen - 1], (int)uRepeat - 1));
-					}
+					pcs.Add(ch); // Allow "{...}" support and char check
 				}
-				else break;
+				else if(ch == '[')
+				{
+					if(!ReadCustomCharSet(cs, pcs))
+						return PwgError.InvalidPattern;
+				}
+				else
+				{
+					if(!pcs.AddCharSet(ch))
+						return PwgError.InvalidPattern;
+				}
+
+				int nCount = 1;
+				if(cs.PeekChar() == '{')
+				{
+					nCount = ReadCount(cs);
+					if(nCount < 0) return PwgError.InvalidPattern;
+				}
+
+				for(int i = 0; i < nCount; ++i)
+				{
+					if(!PwGenerator.PrepareCharSet(pcs, pwProfile))
+						return PwgError.InvalidCharSet;
+					if(pwProfile.NoRepeatingCharacters)
+					{
+						foreach(char chUsed in llGenerated)
+							pcs.Remove(chUsed);
+					}
+
+					char chGen = PwGenerator.GenerateCharacter(pcs,
+						crsRandomSource);
+					if(chGen == char.MinValue) return PwgError.TooFewCharacters;
+
+					llGenerated.AddLast(chGen);
+				}
 			}
 
-			return str;
+			if(llGenerated.Count == 0) return PwgError.Success;
+
+			char[] v = new char[llGenerated.Count];
+			llGenerated.CopyTo(v, 0);
+
+			if(pwProfile.PatternPermutePassword)
+				PwGenerator.Shuffle(v, crsRandomSource);
+
+			byte[] pbUtf8 = StrUtil.Utf8.GetBytes(v);
+			psOut = new ProtectedString(true, pbUtf8);
+			MemUtil.ZeroByteArray(pbUtf8);
+
+			MemUtil.ZeroArray<char>(v);
+			return PwgError.Success;
 		}
 
-		private static int FindFirstUnescapedChar(string str, char ch)
+		private static bool ReadCustomCharSet(CharStream cs, PwCharSet pcsOut)
 		{
-			for(int i = 0; i < str.Length; ++i)
-			{
-				char chCur = str[i];
+			Debug.Assert(cs.PeekChar() != '['); // Consumed already
+			Debug.Assert(pcsOut.Size == 0);
 
-				if(chCur == '\\') ++i; // Next is escaped, skip it
-				else if(chCur == ch) return i;
+			bool bAdd = true;
+			while(true)
+			{
+				char ch = cs.ReadChar();
+				if(ch == char.MinValue) return false;
+				if(ch == ']') break;
+
+				if(ch == '\\')
+				{
+					ch = cs.ReadChar();
+					if(ch == char.MinValue) return false;
+
+					if(bAdd) pcsOut.Add(ch);
+					else pcsOut.Remove(ch);
+				}
+				else if(ch == '^')
+				{
+					if(bAdd) bAdd = false;
+					else return false; // '^' toggles the mode only once
+				}
+				else
+				{
+					PwCharSet pcs = new PwCharSet();
+					if(!pcs.AddCharSet(ch)) return false;
+
+					if(bAdd) pcsOut.Add(pcs.ToString());
+					else pcsOut.Remove(pcs.ToString());
+				}
 			}
 
-			return -1;
+			return true;
+		}
+
+		private static int ReadCount(CharStream cs)
+		{
+			if(cs.ReadChar() != '{') { Debug.Assert(false); return -1; }
+
+			// Ensure not empty
+			char chFirst = cs.PeekChar();
+			if((chFirst < '0') || (chFirst > '9')) return -1;
+
+			long n = 0;
+			while(true)
+			{
+				char ch = cs.ReadChar();
+				if(ch == '}') break;
+
+				if((ch >= '0') && (ch <= '9'))
+				{
+					n = (n * 10L) + (long)(ch - '0');
+					if(n > int.MaxValue) return -1;
+				}
+				else return -1;
+			}
+
+			return (int)n;
 		}
 	}
 }

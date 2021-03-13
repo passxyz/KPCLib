@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -57,14 +57,14 @@ namespace KeePassLib.Utility
         Yes, No, Cancel, Retry, Abort
     }
 #endif
-    public sealed class MessageServiceEventArgs : EventArgs
+	public sealed class MessageServiceEventArgs : EventArgs
 	{
 		private string m_strTitle = string.Empty;
 		private string m_strText = string.Empty;
 		private MessageBoxButtons m_msgButtons = MessageBoxButtons.OK;
 		private MessageBoxIcon m_msgIcon = MessageBoxIcon.None;
 
-        public string Title { get { return m_strTitle; } }
+		public string Title { get { return m_strTitle; } }
 		public string Text { get { return m_strText; } }
 #if !KPCLib
 		public MessageBoxButtons Buttons { get { return m_msgButtons; } }
@@ -157,7 +157,7 @@ namespace KeePassLib.Utility
 				{
 					if(bFullExceptions)
 						strAppend = StrUtil.FormatException(exObj);
-					else if((exObj.Message != null) && (exObj.Message.Length > 0))
+					else if(!string.IsNullOrEmpty(exObj.Message))
 						strAppend = exObj.Message;
 				}
 #if !KeePassLibSD
@@ -203,6 +203,8 @@ namespace KeePassLib.Utility
 		internal static DialogResult SafeShowMessageBox(string strText, string strTitle,
 			MessageBoxButtons mb, MessageBoxIcon mi, MessageBoxDefaultButton mdb)
 		{
+			// strText += MessageService.NewParagraph + (new StackTrace(true)).ToString();
+
 #if KeePassLibSD
 			return MessageBox.Show(strText, strTitle, mb, mi, mdb);
 #else
@@ -216,7 +218,7 @@ namespace KeePassLib.Utility
             // Merged from KeePass2Android
             throw new NotImplementedException();
 #else
-            IWin32Window wnd = null;
+			IWin32Window wnd = null;
 			try
 			{
 				Form f = GetTopForm();
@@ -247,10 +249,10 @@ namespace KeePassLib.Utility
 			return MessageBox.Show(strText, strTitle, mb, mi, mdb);
 #endif  // KPCLib
 #endif
-        }
+		}
 
 #if (!KeePassLibSD && !KPCLib)
-        internal delegate DialogResult SafeShowMessageBoxInternalDelegate(IWin32Window iParent,
+		internal delegate DialogResult SafeShowMessageBoxInternalDelegate(IWin32Window iParent,
 			string strText, string strTitle, MessageBoxButtons mb, MessageBoxIcon mi,
 			MessageBoxDefaultButton mdb);
 
@@ -264,7 +266,7 @@ namespace KeePassLib.Utility
 		}
 #endif
 
-        public static void ShowInfo(params object[] vLines)
+		public static void ShowInfo(params object[] vLines)
 		{
 			ShowInfoEx(null, vLines);
 		}
@@ -317,7 +319,7 @@ namespace KeePassLib.Utility
 		{
 			++m_uCurrentMessageCount;
 
-			string strTitle = PwDefs.ShortProductName + @" - " + KLRes.FatalError;
+			string strTitle = PwDefs.ShortProductName + " - " + KLRes.FatalError;
 			string strText = KLRes.FatalErrorText + MessageService.NewParagraph +
 				KLRes.ErrorInClipboard + MessageService.NewParagraph +
 				// Please send it to the KeePass developers.
@@ -332,11 +334,11 @@ namespace KeePassLib.Utility
 				Clipboard.SetDataObject(strDetails);
 #else
 #if !KPCLib
-                Clipboard.Clear();
+				Clipboard.Clear();
 				Clipboard.SetText(strDetails);
 #endif  // KPCLib
 #endif
-            }
+			}
 			catch(Exception) { Debug.Assert(false); }
 
 			if(MessageService.MessageShowing != null)

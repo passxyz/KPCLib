@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -260,13 +260,14 @@ namespace KeePassLib.Serialization
 #endif
 
 		// Web request methods
-		public const string WrmDeleteFile = "DELETEFILE";
-		public const string WrmMoveFile = "MOVEFILE";
+		public static readonly string WrmDeleteFile = "DELETEFILE";
+		public static readonly string WrmMoveFile = "MOVEFILE";
 
 		// Web request headers
-		public const string WrhMoveFileTo = "MoveFileTo";
+		public static readonly string WrhMoveFileTo = "MoveFileTo";
 
 		public static event EventHandler<IOAccessEventArgs> IOAccessPre;
+		public static event EventHandler<IOWebRequestEventArgs> IOWebRequestPre;
 
 #if !KeePassLibSD
 #if !KeePassUAP
@@ -365,6 +366,13 @@ namespace KeePassLib.Serialization
 			bool? ob = p.GetBool(IocKnownProperties.PreAuth);
 			if(ob.HasValue) request.PreAuthenticate = ob.Value;
 #endif
+
+			if(IOConnection.IOWebRequestPre != null)
+			{
+				IOWebRequestEventArgs e = new IOWebRequestEventArgs(request,
+					((ioc != null) ? ioc.CloneDeep() : null));
+				IOConnection.IOWebRequestPre(null, e);
+			}
 		}
 
 		internal static void ConfigureWebClient(WebClient wc)
@@ -427,7 +435,7 @@ namespace KeePassLib.Serialization
 					string strInfo = m_strProxyAddr;
 					if(m_strProxyPort.Length > 0)
 						strInfo += ":" + m_strProxyPort;
-					MessageService.ShowWarning(strInfo, ex.Message);
+					MessageService.ShowWarning(strInfo, ex);
 				}
 #endif
 
@@ -510,10 +518,10 @@ namespace KeePassLib.Serialization
 				string[] vSpt = Enum.GetNames(tSpt);
 				foreach(string strSpt in vSpt)
 				{
-					if(strSpt.Equals("Tls11", StrUtil.CaseIgnoreCmp))
-						spt |= (SecurityProtocolType)Enum.Parse(tSpt, "Tls11", true);
-					else if(strSpt.Equals("Tls12", StrUtil.CaseIgnoreCmp))
-						spt |= (SecurityProtocolType)Enum.Parse(tSpt, "Tls12", true);
+					if(strSpt.Equals("Tls11", StrUtil.CaseIgnoreCmp) ||
+						strSpt.Equals("Tls12", StrUtil.CaseIgnoreCmp) ||
+						strSpt.Equals("Tls13", StrUtil.CaseIgnoreCmp))
+						spt |= (SecurityProtocolType)Enum.Parse(tSpt, strSpt, true);
 				}
 
 				ServicePointManager.SecurityProtocol = spt;
@@ -545,13 +553,13 @@ namespace KeePassLib.Serialization
 			PrepareWebAccess(ioc);
 
 			IOWebClient wc = new IOWebClient(ioc);
-			ConfigureWebClient(wc);
 
 			if((ioc.UserName.Length > 0) || (ioc.Password.Length > 0))
 				wc.Credentials = new NetworkCredential(ioc.UserName, ioc.Password);
-			else if(NativeLib.IsUnix()) // Mono requires credentials
+			else if(MonoWorkarounds.IsRequired(688007))
 				wc.Credentials = new NetworkCredential("anonymous", string.Empty);
 
+			ConfigureWebClient(wc);
 			return wc;
 		}
 
@@ -560,13 +568,13 @@ namespace KeePassLib.Serialization
 			PrepareWebAccess(ioc);
 
 			WebRequest req = WebRequest.Create(ioc.Path);
-			ConfigureWebRequest(req, ioc);
 
 			if((ioc.UserName.Length > 0) || (ioc.Password.Length > 0))
 				req.Credentials = new NetworkCredential(ioc.UserName, ioc.Password);
-			else if(NativeLib.IsUnix()) // Mono requires credentials
+			else if(MonoWorkarounds.IsRequired(688007))
 				req.Credentials = new NetworkCredential("anonymous", string.Empty);
 
+			ConfigureWebRequest(req, ioc);
 			return req;
 		}
 
@@ -723,13 +731,15 @@ namespace KeePassLib.Serialization
 			WebRequest req = CreateWebRequest(iocFrom);
 			if(req != null)
 			{
+				string strToCnc = UrlUtil.GetCanonicalUri(iocTo.Path);
+
 				if(IsHttpWebRequest(req))
 				{
 #if KeePassUAP
 					throw new NotSupportedException();
 #else
 					req.Method = "MOVE";
-					req.Headers.Set("Destination", iocTo.Path); // Full URL supported
+					req.Headers.Set("Destination", strToCnc); // Full URL supported
 #endif
 				}
 				else if(IsFtpWebRequest(req))
@@ -738,13 +748,13 @@ namespace KeePassLib.Serialization
 					throw new NotSupportedException();
 #else
 					req.Method = WebRequestMethods.Ftp.Rename;
-					string strTo = UrlUtil.GetFileName(iocTo.Path);
+					string strToName = UrlUtil.GetFileName(strToCnc);
 
 					// We're affected by .NET bug 621450:
 					// https://connect.microsoft.com/VisualStudio/feedback/details/621450/problem-renaming-file-on-ftp-server-using-ftpwebrequest-in-net-framework-4-0-vs2010-only
 					// Prepending "./", "%2E/" or "Dummy/../" doesn't work.
 
-					((FtpWebRequest)req).RenameTo = strTo;
+					((FtpWebRequest)req).RenameTo = strToName;
 #endif
 				}
 				else if(IsFileWebRequest(req))
@@ -759,7 +769,7 @@ namespace KeePassLib.Serialization
 					throw new NotSupportedException();
 #else
 					req.Method = WrmMoveFile;
-					req.Headers.Set(WrhMoveFileTo, iocTo.Path);
+					req.Headers.Set(WrhMoveFileTo, strToCnc);
 #endif
 				}
 
@@ -817,24 +827,14 @@ namespace KeePassLib.Serialization
 
 		public static byte[] ReadFile(IOConnectionInfo ioc)
 		{
-			Stream sIn = null;
-			MemoryStream ms = null;
 			try
 			{
-				sIn = IOConnection.OpenRead(ioc);
-				if(sIn == null) return null;
-
-				ms = new MemoryStream();
-				MemUtil.CopyStream(sIn, ms);
-
-				return ms.ToArray();
+				using(Stream s = IOConnection.OpenRead(ioc))
+				{
+					return MemUtil.Read(s);
+				}
 			}
-			catch(Exception) { }
-			finally
-			{
-				if(sIn != null) sIn.Close();
-				if(ms != null) ms.Close();
-			}
+			catch(Exception) { Debug.Assert(false); }
 
 			return null;
 		}

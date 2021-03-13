@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -48,9 +48,8 @@ namespace KeePassLib.Security
 		long lID);
 
 	/// <summary>
-	/// Represents a protected binary, i.e. a byte array that is encrypted
-	/// in memory. A <c>ProtectedBinary</c> object is immutable and
-	/// thread-safe.
+	/// A protected binary, i.e. a byte array that is encrypted in memory.
+	/// A <c>ProtectedBinary</c> object is immutable and thread-safe.
 	/// </summary>
 	public sealed class ProtectedBinary : IEquatable<ProtectedBinary>
 	{
@@ -75,7 +74,7 @@ namespace KeePassLib.Security
 		private enum PbMemProt
 		{
 			None = 0,
-			ProtectedMemory,
+			ProtectedMemory, // DPAPI on Windows
 			ChaCha20,
 			ExtCrypt
 		}
@@ -94,7 +93,8 @@ namespace KeePassLib.Security
 				bool? ob = g_obProtectedMemorySupported;
 				if(ob.HasValue) return ob.Value;
 
-				// Mono does not implement any encryption for ProtectedMemory;
+				// Mono does not implement any encryption for ProtectedMemory
+				// on Linux (Mono uses DPAPI on Windows);
 				// https://sourceforge.net/p/keepass/feature-requests/1907/
 				if(NativeLib.IsUnix())
 				{
@@ -113,19 +113,20 @@ namespace KeePassLib.Security
                     // System.Security.Cryptography.ProtectedMemory is not supported on Android, iOS and UWP
                     throw new NotSupportedException();
 #else
-                    ProtectedMemory.Protect(pb, MemoryProtectionScope.SameProcess);
-                    for (int i = 0; i < pb.Length; ++i)
+					ProtectedMemory.Protect(pb, MemoryProtectionScope.SameProcess);
+
+					for(int i = 0; i < pb.Length; ++i)
 					{
 						if(pb[i] != (byte)i) { ob = true; break; }
 					}
 #endif // KPCLib
-                }
-                catch (Exception) { } // Windows 98 / ME
+				}
+				catch(Exception) { } // Windows 98 / ME
 
 				g_obProtectedMemorySupported = ob;
 				return ob.Value;
 #endif
-                }
+			}
 		}
 
 		private static long g_lCurID = 0;
@@ -142,7 +143,7 @@ namespace KeePassLib.Security
 
 		private PbMemProt m_mp = PbMemProt.None; // Actual protection
 
-		private object m_objSync = new object();
+		private readonly object m_objSync = new object();
 
 		private static byte[] g_pbKey32 = null;
 
@@ -184,7 +185,7 @@ namespace KeePassLib.Security
 		/// i.e. the caller is responsible for clearing it.</param>
 		public ProtectedBinary(bool bEnableProtection, byte[] pbData)
 		{
-			if(pbData == null) throw new ArgumentNullException("pbData");
+			if(pbData == null) throw new ArgumentNullException("pbData"); // For .Length
 
 			Init(bEnableProtection, pbData, 0, pbData.Length);
 		}
@@ -208,21 +209,18 @@ namespace KeePassLib.Security
 		}
 
 		/// <summary>
-		/// Construct a new protected binary data object. Copy the data from
-		/// a <c>XorredBuffer</c> object.
+		/// Construct a new protected binary data object.
+		/// Copy the data from a <c>XorredBuffer</c> object.
 		/// </summary>
 		/// <param name="bEnableProtection">Enable protection or not.</param>
-		/// <param name="xbProtected"><c>XorredBuffer</c> object used to
-		/// initialize the <c>ProtectedBinary</c> object.</param>
-		public ProtectedBinary(bool bEnableProtection, XorredBuffer xbProtected)
+		/// <param name="xb"><c>XorredBuffer</c> object containing the data.</param>
+		public ProtectedBinary(bool bEnableProtection, XorredBuffer xb)
 		{
-			Debug.Assert(xbProtected != null);
-			if(xbProtected == null) throw new ArgumentNullException("xbProtected");
+			if(xb == null) { Debug.Assert(false); throw new ArgumentNullException("xb"); }
 
-			byte[] pb = xbProtected.ReadPlainText();
-			Init(bEnableProtection, pb, 0, pb.Length);
-
-			if(bEnableProtection) MemUtil.ZeroByteArray(pb);
+			byte[] pb = xb.ReadPlainText();
+			try { Init(bEnableProtection, pb, 0, pb.Length); }
+			finally { if(bEnableProtection) MemUtil.ZeroByteArray(pb); }
 		}
 
 		private void Init(bool bEnableProtection, byte[] pbData, int iOffset,
@@ -275,7 +273,7 @@ namespace KeePassLib.Security
 			}
 #if !KPCLib
             // ProtectedMemory is not supported on Android, iOS and UWP
-            if(ProtectedBinary.ProtectedMemorySupported)
+			if(ProtectedBinary.ProtectedMemorySupported)
 			{
 				ProtectedMemory.Protect(m_pbData, MemoryProtectionScope.SameProcess);
 
@@ -283,10 +281,10 @@ namespace KeePassLib.Security
 				return;
 			}
 #endif // KPCLib
-            byte[] pbKey32 = g_pbKey32;
+			byte[] pbKey32 = g_pbKey32;
 			if(pbKey32 == null)
 			{
-				pbKey32 = CryptoRandom.Instance.GetRandomBytes(32);
+				pbKey32 = GetRandom32();
 
 				byte[] pbUpd = Interlocked.Exchange<byte[]>(ref g_pbKey32, pbKey32);
 				if(pbUpd != null) pbKey32 = pbUpd;
@@ -305,7 +303,7 @@ namespace KeePassLib.Security
 		{
 			if(m_pbData.Length == 0) return;
 #if !KPCLib
-            if(m_mp == PbMemProt.ProtectedMemory)
+			if(m_mp == PbMemProt.ProtectedMemory)
 				ProtectedMemory.Unprotect(m_pbData, MemoryProtectionScope.SameProcess);
 #endif // KPCLib
 			else if(m_mp == PbMemProt.ChaCha20)
@@ -349,24 +347,22 @@ namespace KeePassLib.Security
 		}
 
 		/// <summary>
-		/// Read the protected data and return it protected with a sequence
-		/// of bytes generated by a random stream.
+		/// Get the data xorred with bytes from a <c>CryptoRandomStream</c>.
 		/// </summary>
-		/// <param name="crsRandomSource">Random number source.</param>
 		public byte[] ReadXorredData(CryptoRandomStream crsRandomSource)
 		{
-			Debug.Assert(crsRandomSource != null);
-			if(crsRandomSource == null) throw new ArgumentNullException("crsRandomSource");
+			if(crsRandomSource == null) { Debug.Assert(false); throw new ArgumentNullException("crsRandomSource"); }
 
 			byte[] pbData = ReadData();
-			uint uLen = (uint)pbData.Length;
+			int cb = pbData.Length;
 
-			byte[] randomPad = crsRandomSource.GetRandomBytes(uLen);
-			Debug.Assert(randomPad.Length == pbData.Length);
+			byte[] pbPad = crsRandomSource.GetRandomBytes((uint)cb);
+			Debug.Assert(pbPad.Length == cb);
 
-			for(uint i = 0; i < uLen; ++i)
-				pbData[i] ^= randomPad[i];
+			for(int i = 0; i < cb; ++i)
+				pbData[i] ^= pbPad[i];
 
+			MemUtil.ZeroByteArray(pbPad);
 			return pbData;
 		}
 
@@ -383,7 +379,7 @@ namespace KeePassLib.Security
 				for(int i = 0; i < pb.Length; ++i)
 					h = (h << 3) + h + (int)pb[i];
 			}
-			MemUtil.ZeroByteArray(pb);
+			if(m_bProtected) MemUtil.ZeroByteArray(pb);
 
 			m_hash = h;
 			return h;
@@ -391,27 +387,85 @@ namespace KeePassLib.Security
 
 		public override bool Equals(object obj)
 		{
-			return Equals(obj as ProtectedBinary);
+			return this.Equals(obj as ProtectedBinary, true);
 		}
 
 		public bool Equals(ProtectedBinary other)
 		{
-			if(other == null) return false; // No assert
+			return this.Equals(other, true);
+		}
 
-			if(m_bProtected != other.m_bProtected) return false;
+		public bool Equals(ProtectedBinary other, bool bCheckProtEqual)
+		{
+			if(other == null) return false; // No assert
+			if(object.ReferenceEquals(this, other)) return true; // Perf. opt.
+
+			if(bCheckProtEqual && (m_bProtected != other.m_bProtected))
+				return false;
+
 			if(m_uDataLen != other.m_uDataLen) return false;
 
-			byte[] pbL = ReadData();
-			byte[] pbR = other.ReadData();
-			bool bEq = MemUtil.ArraysEqual(pbL, pbR);
-			MemUtil.ZeroByteArray(pbL);
-			MemUtil.ZeroByteArray(pbR);
-
-#if DEBUG
-			if(bEq) { Debug.Assert(GetHashCode() == other.GetHashCode()); }
-#endif
+			byte[] pbL = ReadData(), pbR = null;
+			bool bEq;
+			try
+			{
+				pbR = other.ReadData();
+				bEq = MemUtil.ArraysEqual(pbL, pbR);
+			}
+			finally
+			{
+				if(m_bProtected) MemUtil.ZeroByteArray(pbL);
+				if(other.m_bProtected && (pbR != null)) MemUtil.ZeroByteArray(pbR);
+			}
 
 			return bEq;
+		}
+
+		private static byte[] GetRandom32()
+		{
+			// Do not use CryptoRandom here, as it uses ProtectedBinary;
+			// we would have an infinite recursion when trying to
+			// construct a ProtectedBinary object
+			// return CryptoRandom.Instance.GetRandomBytes(32);
+
+			byte[] pbAll = new byte[32 + 16 + 8 + 4];
+			int i = 0;
+
+			try
+			{
+				RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+				byte[] pb = new byte[32];
+				rng.GetBytes(pb);
+
+				Array.Copy(pb, 0, pbAll, i, 32);
+				i += 32;
+
+				MemUtil.ZeroByteArray(pb);
+				// In .NET 2.0, RNGCryptoServiceProvider does not
+				// implement IDisposable; in later .NET versions it does
+				MemUtil.DisposeIfPossible(rng);
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			try // In case RNGCryptoServiceProvider doesn't work properly
+			{
+				byte[] pb = Guid.NewGuid().ToByteArray();
+				Array.Copy(pb, 0, pbAll, i, 16);
+				i += 16;
+
+				MemUtil.Int64ToBytesEx(DateTime.UtcNow.ToBinary(), pbAll, i);
+				i += 8;
+
+				MemUtil.Int32ToBytesEx(Environment.TickCount, pbAll, i);
+				i += 4;
+			}
+			catch(Exception) { Debug.Assert(false); }
+
+			Debug.Assert(i == pbAll.Length);
+
+			byte[] pbHash = CryptoUtil.HashSha256(pbAll);
+			MemUtil.ZeroByteArray(pbAll);
+			return pbHash;
 		}
 	}
 }
