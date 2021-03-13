@@ -13,7 +13,7 @@ namespace KPCLib.xunit
 {
     public class PwDatabaseTests
     {
-        const string TEST_DB = "testdb.kdbx";
+        const string TEST_DB = "utdb.kdbx";
         const string TEST_DB_KEY = "12345";
 
         private PwDatabase OpenDatabaseInternal()
@@ -22,6 +22,7 @@ namespace KPCLib.xunit
             IOConnectionInfo ioc = IOConnectionInfo.FromPath(TEST_DB);
             CompositeKey cmpKey = new CompositeKey();
             cmpKey.AddUserKey(new KcpPassword(TEST_DB_KEY));
+            Debug.WriteLine($"TEST_DB={TEST_DB} TEST_DB_KEY={TEST_DB_KEY}");
             pwDb.Open(ioc, cmpKey, null);
             return pwDb;
         }

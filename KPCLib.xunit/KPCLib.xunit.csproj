@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -17,8 +17,14 @@
     <ProjectReference Include="..\PassXYZLib\PassXYZLib.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy .\utdb.kdbx $(OutDir)\testdb.kdbx" />
-  </Target>
+  <Target Name="CopyDataFiles" AfterTargets="Build">
+    <ItemGroup>
+      <DataFiles Include="$(ProjectDir)\utdb.kdbx"/>
+    </ItemGroup>
 
+    <Copy
+      SourceFiles="@(DataFiles)"
+      DestinationFolder="$(TargetDir)\"
+      SkipUnchangedFiles="true" />
+  </Target>
 </Project>

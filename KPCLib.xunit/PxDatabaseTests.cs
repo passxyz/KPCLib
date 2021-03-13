@@ -14,7 +14,7 @@ namespace KPCLib.xunit
 {
     public class PxDatabaseTests
     {
-        const string TEST_DB = "testdb.kdbx";
+        const string TEST_DB = "utdb.kdbx";
         const string TEST_DB_KEY = "12345";
 
         private PxDatabase OpenDatabaseInternal()
@@ -31,8 +31,7 @@ namespace KPCLib.xunit
         public void IsOpenDbTest() 
         {
             PxDatabase pwDb = new PxDatabase();
-            var status = pwDb.IsOpen;
-            Debug.WriteLine($"IsOpen={status}");
+            Assert.True((pwDb.IsOpen));
         }
 
         [Fact]
