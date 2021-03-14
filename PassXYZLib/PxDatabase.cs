@@ -180,17 +180,20 @@ namespace PassXYZLib
 		/// Delete a group.
 		/// </summary>
 		/// <param name="pg">Group to be added. Must not be <c>null</c>.</param>
-		public void DeleteGroup(PwGroup pg)
+        /// <param name="permanent">Permanent delete or move to recycle bin</param>
+		public void DeleteGroup(PwGroup pg, bool permanent = false)
 		{
 			if (pg == null) throw new ArgumentNullException("pg");
 
 			PwGroup pgParent = pg.ParentGroup;
-			if (pgParent == null) return; // Can't remove virtual or root group
+			if (pgParent == null)  throw new ArgumentNullException("pgParent"); // Can't remove virtual or root group
 
 			PwGroup pgRecycleBin = RootGroup.FindGroup(RecycleBinUuid, true);
+
 			bool bPermanent = false;
 			if (RecycleBinEnabled == false) bPermanent = true;
-			else if (pgRecycleBin == null) { }
+			else if (permanent) bPermanent = true;
+			else if (pgRecycleBin == null) { } // if we cannot find it, we will create it later
 			else if (pg == pgRecycleBin) bPermanent = true;
 			else if (pg.IsContainedIn(pgRecycleBin)) bPermanent = true;
 			else if (pgRecycleBin.IsContainedIn(pg)) bPermanent = true;
@@ -221,10 +224,11 @@ namespace PassXYZLib
 
 
 		/// <summary>
-		/// Delete an entry in this group.
+		/// Delete an entry.
 		/// </summary>
-		/// <param name="pe">Entry to be added. Must not be <c>null</c>.</param>
-		public void DeleteEntry(PwEntry pe)
+		/// <param name="pe">The entry to be deleted. Must not be <c>null</c>.</param>	
+        /// <param name="permanent">Permanent delete or move to recycle bin</param>
+		public void DeleteEntry(PwEntry pe, bool permanent = false)
         {
 			if (pe == null) throw new ArgumentNullException("pe");
 
@@ -237,7 +241,8 @@ namespace PassXYZLib
 
 			bool bPermanent = false;
 			if (RecycleBinEnabled == false) bPermanent = true;
-			else if (pgRecycleBin == null) { } // Recycle
+			else if (permanent) bPermanent = true;
+			else if (pgRecycleBin == null) { } // if we cannot find it, we will create it later
 			else if (pgParent == pgRecycleBin) bPermanent = true;
 			else if (pgParent.IsContainedIn(pgRecycleBin)) bPermanent = true;
 

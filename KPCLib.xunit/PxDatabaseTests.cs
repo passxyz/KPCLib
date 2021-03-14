@@ -62,7 +62,7 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void ListGroups()
+        public void ListGroupsTests()
         {
             PwGroup pg = passxyz.PxDb.RootGroup;
             foreach (var group in pg.Groups)
@@ -72,7 +72,7 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void ListEntries()
+        public void ListEntriesTests()
         {
             PwGroup pg = passxyz.PxDb.RootGroup;
             int count = 0;
@@ -87,32 +87,72 @@ namespace KPCLib.xunit
             }
         }
 
-        private void PrintGroups(PwGroup pg)
+        [Fact]
+        public void DeleteEmptyEntryTest()
         {
-            foreach (var group in pg.Groups)
+            try 
+            { 
+                passxyz.PxDb.DeleteEntry(null);
+                Assert.True(false);
+            }
+            catch (System.ArgumentNullException e) 
             {
-                Debug.WriteLine($"Name={group.Name}, Note={group.Notes}");
+                Debug.WriteLine($"{e}");
+            }            
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        /// <summary>
+        /// Delete the first entry in the list.
+        /// </summary>
+        public void DeleteEntryTests(bool permanent)
+        {
+            PwGroup rootGroup = passxyz.PxDb.RootGroup;
+
+            var entry1 = rootGroup.Entries.GetAt(0);
+            var uuid = entry1.Uuid;
+            Debug.WriteLine($"Entry {entry1.Strings.ReadSafe("Title")} is deleted.");
+            passxyz.PxDb.DeleteEntry(entry1, permanent);
+            var entry2 = rootGroup.FindEntry(uuid, true);
+            if(permanent) { Assert.Null(entry2); }
+            else { Assert.NotNull(entry2); }
+            
+        }
+
+
+        [Fact]
+        public void DeleteEmptyGroupTest()
+        {
+            try
+            {
+                passxyz.PxDb.DeleteGroup(null);
+                Assert.True(false);
+            }
+            catch (System.ArgumentNullException e)
+            {
+                Debug.WriteLine($"{e}");
             }
         }
 
-        [Fact]
-        public void DeleteEntry()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        /// <summary>
+        /// Delete a group.
+        /// </summary>
+        public void DeleteGroupTests(bool permanent)
         {
-            PwGroup pg = passxyz.PxDb.RootGroup;
+            PwGroup rootGroup = passxyz.PxDb.RootGroup;
 
-            PrintGroups(passxyz.PxDb.RootGroup);
-            var entry = pg.Entries.GetAt(0);
-            passxyz.PxDb.DeleteEntry(entry);
-            Debug.WriteLine($"Entry {entry.Strings.ReadSafe("Title")} is deleted.");
-            PrintGroups(passxyz.PxDb.RootGroup);
-        }
-
-        [Fact]
-        public void DeleteGroup() 
-        {
-            PwGroup pg = passxyz.PxDb.RootGroup;
-            var gp = pg.Groups.GetAt(0);
-            passxyz.PxDb.DeleteGroup(gp);
+            var gp1 = rootGroup.Groups.GetAt(0);
+            var uuid = gp1.Uuid;
+            Debug.WriteLine($"Deleting '{gp1.Name}'");
+            passxyz.PxDb.DeleteGroup(gp1, permanent);
+            var gp2 = rootGroup.FindGroup(uuid, true);
+            if (permanent) { Assert.Null(gp2); }
+            else { Assert.NotNull(gp2); }
         }
     }
 }
