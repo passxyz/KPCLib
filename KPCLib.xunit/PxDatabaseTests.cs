@@ -12,41 +12,59 @@ using PassXYZLib;
 
 namespace KPCLib.xunit
 {
-    public class PxDatabaseTests
+    public class PassXYZFixture : IDisposable
     {
         const string TEST_DB = "utdb.kdbx";
         const string TEST_DB_KEY = "12345";
 
-        private PxDatabase OpenDatabaseInternal()
+        public PassXYZFixture() 
         {
-            PxDatabase pwDb = new PxDatabase();
+            Logger = new KPCLibLogger();
+            PxDb = new PxDatabase();
             IOConnectionInfo ioc = IOConnectionInfo.FromPath(TEST_DB);
             CompositeKey cmpKey = new CompositeKey();
             cmpKey.AddUserKey(new KcpPassword(TEST_DB_KEY));
-            pwDb.Open(ioc, cmpKey, null);
-            return pwDb;
+            PxDb.Open(ioc, cmpKey, Logger);
+        }
+
+        public void Dispose() 
+        {
+            PxDb.Close();
+        }
+
+        public PxDatabase PxDb { get; private set; }
+        public KPCLibLogger Logger { get; private set; }
+    }
+
+    [CollectionDefinition("PxDatabase collection")]
+    public class PxDatabaseCollection : ICollectionFixture<PassXYZFixture>
+    {
+        // This class has no code, and is never created. Its purpose is simply
+        // to be the place to apply [CollectionDefinition] and all the
+        // ICollectionFixture<> interfaces.
+    }
+
+    [Collection("PxDatabase collection")]
+    public class PxDatabaseTests
+    {
+        PassXYZFixture passxyz;
+
+        public PxDatabaseTests(PassXYZFixture passXYZFixture) 
+        {
+            this.passxyz = passXYZFixture;
         }
 
         [Fact]
         public void IsOpenDbTest() 
         {
-            PxDatabase pwDb = new PxDatabase();
-            Assert.True((pwDb.IsOpen));
-        }
-
-        [Fact]
-        public void OpenDatabaseTest()
-        {
-            PxDatabase pwDb = OpenDatabaseInternal();
-            Debug.WriteLine($"Name={pwDb.Name}, Description={pwDb.Description}");
-            Assert.True((pwDb.IsOpen));
+            Debug.WriteLine($"{passxyz.PxDb}");
+            Assert.True((passxyz.PxDb.IsOpen));
         }
 
         [Fact]
         public void ListGroups()
         {
-            PxDatabase pwDb = OpenDatabaseInternal();
-            PwGroup pg = pwDb.RootGroup;
+            PwGroup pg = passxyz.PxDb.RootGroup;
             foreach (var group in pg.Groups)
             {
                 Debug.WriteLine($"Name={group.Name}, Note={group.Notes}");
@@ -56,8 +74,7 @@ namespace KPCLib.xunit
         [Fact]
         public void ListEntries()
         {
-            PxDatabase pwDb = OpenDatabaseInternal();
-            PwGroup pg = pwDb.RootGroup;
+            PwGroup pg = passxyz.PxDb.RootGroup;
             int count = 0;
             foreach (var entry in pg.Entries)
             {
@@ -81,23 +98,21 @@ namespace KPCLib.xunit
         [Fact]
         public void DeleteEntry()
         {
-            PxDatabase pxDb = OpenDatabaseInternal();
-            PwGroup pg = pxDb.RootGroup;
+            PwGroup pg = passxyz.PxDb.RootGroup;
 
-            PrintGroups(pxDb.RootGroup);
+            PrintGroups(passxyz.PxDb.RootGroup);
             var entry = pg.Entries.GetAt(0);
-            pxDb.DeleteEntry(entry);
+            passxyz.PxDb.DeleteEntry(entry);
             Debug.WriteLine($"Entry {entry.Strings.ReadSafe("Title")} is deleted.");
-            PrintGroups(pxDb.RootGroup);
+            PrintGroups(passxyz.PxDb.RootGroup);
         }
 
         [Fact]
         public void DeleteGroup() 
         {
-            PxDatabase pxDb = OpenDatabaseInternal();
-            PwGroup pg = pxDb.RootGroup;
+            PwGroup pg = passxyz.PxDb.RootGroup;
             var gp = pg.Groups.GetAt(0);
-            pxDb.DeleteGroup(gp);
+            passxyz.PxDb.DeleteGroup(gp);
         }
     }
 }
