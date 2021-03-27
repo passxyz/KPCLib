@@ -153,6 +153,17 @@ namespace PassXYZLib
 			set { base.UseFileLocks = value; }
 		}
 
+		public PwGroup CurrentGroup
+		{
+			get { 
+				if(this.RootGroup.Uuid == this.LastSelectedGroup) 
+					{ return this.RootGroup; }
+				else
+					return this.RootGroup.FindGroup(this.LastSelectedGroup, true); 
+			}
+			set { this.LastSelectedGroup = value.Uuid; }
+		}
+
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
 		{
 			if (pgRecycleBin == this.RootGroup)
@@ -175,12 +186,99 @@ namespace PassXYZLib
 			else { Debug.Assert(pgRecycleBin.Uuid.Equals(this.RecycleBinUuid)); }
 		}
 
+		/// <summary>
+		/// Find an entry or a group.
+		/// </summary>
+		/// <param name="path">The path of an entry or a group. If it is null, return the root group</param>
+		public T FindByPath<T>(string path = "/") where T : new()
+        {
+			if (this.IsOpen)
+			{ 
+				if (path == null) throw new ArgumentNullException("path");
+				string[] paths = path.Split('/');
+				var lastSelectedGroup = this.CurrentGroup;
+				if(paths.Length > 0) 
+				{
+					if (typeof(T).Name == "PwGroup") 
+					{
+						foreach (var item in paths)
+						{
+							if (!String.IsNullOrEmpty(item))
+							{
+								if (lastSelectedGroup != null)
+								{
+									lastSelectedGroup = FindSubgroup(lastSelectedGroup, item);
+								}
+								else
+									break;
+							}
+						}
+						Debug.WriteLine($"Found group: {lastSelectedGroup}");
+						return (T)Convert.ChangeType(lastSelectedGroup, typeof(T));
+					}
+					else if(typeof(T).Name == "PwEntry")
+					{
+						int i;
+						string item;
+
+						for (i = 0; i < paths.Length - 1; i++)
+						{
+							item = paths[i];
+							if (!String.IsNullOrEmpty(item))
+							{
+								if (lastSelectedGroup != null)
+								{
+									lastSelectedGroup = FindSubgroup(lastSelectedGroup, item);
+								}
+								else
+									break;
+							}
+						}
+						if(lastSelectedGroup != null) 
+						{
+							var entry = FindEntry(lastSelectedGroup, paths[paths.Length - 1]);
+							Debug.WriteLine($"Found entry: {entry}");
+							return (T)Convert.ChangeType(entry, typeof(T));
+						}
+					}
+				}
+			}
+
+			return default(T);
+
+			PwEntry FindEntry(PwGroup group, string name) 
+			{
+				if (group == null) throw new ArgumentNullException("group");
+				if (name == null) throw new ArgumentNullException("name");
+
+				foreach (var entry in group.Entries)
+                {
+					if(entry.Strings.ReadSafe("Title") == name) { return entry; }
+                }
+				return null;
+			}
+
+			PwGroup FindSubgroup(PwGroup group, string name)
+			{
+				if (group == null) throw new ArgumentNullException("group");
+				if (name == null) throw new ArgumentNullException("name");
+
+				foreach (var gp in group.Groups) 
+				{ 
+					if(gp.Name == name) 
+					{ return gp; }
+				}
+
+				return null;
+			}
+		}
+
 
 		/// <summary>
 		/// Delete a group.
 		/// </summary>
 		/// <param name="pg">Group to be added. Must not be <c>null</c>.</param>
-        /// <param name="permanent">Permanent delete or move to recycle bin</param>
+		/// <param name="permanent">Permanent delete or move to recycle bin</param>
 		public void DeleteGroup(PwGroup pg, bool permanent = false)
 		{
 			if (pg == null) throw new ArgumentNullException("pg");

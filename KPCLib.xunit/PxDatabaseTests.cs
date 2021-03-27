@@ -154,5 +154,80 @@ namespace KPCLib.xunit
             if (permanent) { Assert.Null(gp2); }
             else { Assert.NotNull(gp2); }
         }
+
+        [Theory]
+        [InlineData("General/G1/G21/G21E1")]
+        [InlineData("General/G1/G21/")]
+        [InlineData("General/G1/G21")]
+        /// <summary>
+        /// Find group or entry test.
+        /// </summary>
+        public void FindByPathTests(string path)
+        {
+            passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+            if (path.EndsWith("/"))
+            {
+                Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwGroup>(path)}");
+            }
+            else 
+            {
+                Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwEntry>(path)}");
+            }
+        }
+
+        [Theory]
+        [InlineData("General/G1/G21/")]
+        /// <summary>
+        /// Find an entry using a group path.
+        /// </summary>
+        public void FindEntryByPathTests(string path)
+        {
+            passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+            Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwEntry>(path)}");
+            Assert.Null(passxyz.PxDb.FindByPath<PwEntry>(path));
+        }
+
+        [Theory]
+        [InlineData("General/G1/G21/G21E1")]
+        /// <summary>
+        /// Find group using an entry pass.
+        /// </summary>
+        public void FindGroupByPathTests(string path)
+        {
+            passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+            Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwGroup>(path)}");
+            Assert.Null(passxyz.PxDb.FindByPath<PwGroup>(path));
+        }
+
+        [Fact]
+        public void FindByPathDefaultTests() 
+        {
+            Assert.Null(passxyz.PxDb.FindByPath<PwEntry>());
+            Assert.Equal(passxyz.PxDb.FindByPath<PwGroup>().ToString(), passxyz.PxDb.CurrentGroup.ToString());
+        }
+
+        [Fact]
+        public void CurrentGroupTests()
+        {
+            Debug.WriteLine($"{passxyz.PxDb.CurrentGroup}");
+            Assert.NotNull(passxyz.PxDb.CurrentGroup);
+        }
+    }
+
+    public class PxLibInfoTests 
+    { 
+        [Fact]
+        public void PxLibVersion() 
+        {
+            Debug.WriteLine($"{PxLibInfo.Version}");
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.0.1.1"));
+        }
+
+        [Fact]
+        public void PxLibName()
+        {
+            Debug.WriteLine($"{PxLibInfo.Name}");
+            Assert.NotNull(PxLibInfo.Name);
+        }
     }
 }

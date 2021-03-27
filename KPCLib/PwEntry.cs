@@ -296,6 +296,15 @@ namespace KeePassLib
 		public static EventHandler<ObjectTouchedEventArgs> EntryTouched;
 		public EventHandler<ObjectTouchedEventArgs> Touched;
 
+		public PwEntry()
+		{
+			DateTime dtNow = DateTime.UtcNow;
+			m_tCreation = dtNow;
+			m_tLastMod = dtNow;
+			m_tLastAccess = dtNow;
+			m_tParentGroupLastMod = dtNow;
+		}
+
 		/// <summary>
 		/// Construct a new, empty password entry. Member variables will be initialized
 		/// to their default values.
