@@ -159,6 +159,7 @@ namespace KPCLib.xunit
         [InlineData("General/G1/G21/G21E1")]
         [InlineData("General/G1/G21/")]
         [InlineData("General/G1/G21")]
+        [InlineData("/G1/G21")]
         /// <summary>
         /// Find group or entry test.
         /// </summary>
@@ -171,7 +172,8 @@ namespace KPCLib.xunit
             }
             else 
             {
-                Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwEntry>(path)}");
+                if(path.StartsWith("/")) { Assert.Null(passxyz.PxDb.FindByPath<PwGroup>(path)); }
+                else Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwEntry>(path)}");
             }
         }
 
@@ -189,21 +191,40 @@ namespace KPCLib.xunit
 
         [Theory]
         [InlineData("General/G1/G21/G21E1")]
+        [InlineData("/utdb/General/G1/G21")]
+        [InlineData("../..")]
+        [InlineData("..")]
         /// <summary>
         /// Find group using an entry pass.
         /// </summary>
         public void FindGroupByPathTests(string path)
         {
-            passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
-            Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwGroup>(path)}");
-            Assert.Null(passxyz.PxDb.FindByPath<PwGroup>(path));
+            PwGroup group;
+
+            if (path.StartsWith("/")) {
+                group = passxyz.PxDb.FindByPath<PwGroup>(path);
+                Assert.NotNull(group);
+            }
+            else if(path.StartsWith(".."))
+            {
+                passxyz.PxDb.CurrentGroup = passxyz.PxDb.FindByPath<PwGroup>("/utdb/General/G1/G21");
+                Debug.WriteLine($"Current group is: {passxyz.PxDb.CurrentGroup}");
+                group = passxyz.PxDb.FindByPath<PwGroup>(path);
+            }
+            else 
+            {
+                passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+                group = passxyz.PxDb.FindByPath<PwGroup>(path);
+                Debug.WriteLine($"Cannot find group {path}");
+                Assert.Null(group);
+            }
         }
 
         [Fact]
         public void FindByPathDefaultTests() 
         {
             Assert.Null(passxyz.PxDb.FindByPath<PwEntry>());
-            Assert.Equal(passxyz.PxDb.FindByPath<PwGroup>().ToString(), passxyz.PxDb.CurrentGroup.ToString());
+            Assert.Equal(passxyz.PxDb.FindByPath<PwGroup>().ToString(), passxyz.PxDb.RootGroup.ToString());
         }
 
         [Fact]
@@ -211,6 +232,13 @@ namespace KPCLib.xunit
         {
             Debug.WriteLine($"{passxyz.PxDb.CurrentGroup}");
             Assert.NotNull(passxyz.PxDb.CurrentGroup);
+        }
+
+        [Fact]
+        public void CurrentPathTests()
+        {
+            Debug.WriteLine($"Current path is {passxyz.PxDb.CurrentPath}.");
+            Assert.NotNull(passxyz.PxDb.CurrentPath);
         }
     }
 

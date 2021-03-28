@@ -164,6 +164,22 @@ namespace PassXYZLib
 			set { this.LastSelectedGroup = value.Uuid; }
 		}
 
+		public string CurrentPath 
+		{ 
+			get {
+				var group = this.CurrentGroup;
+				string path = this.CurrentGroup.Name + "/";
+
+				while (this.RootGroup.Uuid != group.Uuid)
+				{
+					group = group.ParentGroup;
+					path = group.Name + "/" + path;
+				}
+
+				return path;
+			}
+		}
+
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
 		{
 			if (pgRecycleBin == this.RootGroup)
@@ -195,8 +211,27 @@ namespace PassXYZLib
 			if (this.IsOpen)
 			{ 
 				if (path == null) throw new ArgumentNullException("path");
+
 				string[] paths = path.Split('/');
 				var lastSelectedGroup = this.CurrentGroup;
+
+				if (path.StartsWith("/"))
+				{
+					//
+					// if the path start with "/", we have to remove "/root" and
+					// search from the root group
+					//
+					if(path.StartsWith("/" + this.RootGroup.Name))
+					{
+						lastSelectedGroup = this.RootGroup;
+						paths = String.Join("/", paths, 2, paths.Length - 2).Split('/');
+					}
+					else 
+					{
+						return default(T);
+					}
+				}
+
 				if(paths.Length > 0) 
 				{
 					if (typeof(T).Name == "PwGroup") 
@@ -262,6 +297,12 @@ namespace PassXYZLib
 			{
 				if (group == null) throw new ArgumentNullException("group");
 				if (name == null) throw new ArgumentNullException("name");
+
+				if(name == "..") 
+				{
+					if (this.RootGroup.Uuid != group.Uuid) { return group.ParentGroup; }
+					else { return null; }
+				}
 
 				foreach (var gp in group.Groups) 
 				{ 
