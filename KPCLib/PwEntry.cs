@@ -296,6 +296,21 @@ namespace KeePassLib
 		public static EventHandler<ObjectTouchedEventArgs> EntryTouched;
 		public EventHandler<ObjectTouchedEventArgs> Touched;
 
+#if KPCLib
+		/// <summary>
+		/// The name of this group. Cannot be <c>null</c>.
+		/// </summary>
+		public string Name
+		{
+			get { return Strings.ReadSafe(PwDefs.TitleField); }
+			set
+			{
+				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				Strings.Set(PwDefs.TitleField, new ProtectedString(
+						false, value));
+			}
+		}
+
 		public PwEntry()
 		{
 			DateTime dtNow = DateTime.UtcNow;
@@ -303,8 +318,9 @@ namespace KeePassLib
 			m_tLastMod = dtNow;
 			m_tLastAccess = dtNow;
 			m_tParentGroupLastMod = dtNow;
+			m_uuid = new PwUuid(true);
 		}
-
+#endif
 		/// <summary>
 		/// Construct a new, empty password entry. Member variables will be initialized
 		/// to their default values.

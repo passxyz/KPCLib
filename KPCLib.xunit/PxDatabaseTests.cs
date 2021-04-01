@@ -224,7 +224,7 @@ namespace KPCLib.xunit
         public void FindByPathDefaultTests() 
         {
             Assert.Null(passxyz.PxDb.FindByPath<PwEntry>());
-            Assert.Equal(passxyz.PxDb.FindByPath<PwGroup>().ToString(), passxyz.PxDb.RootGroup.ToString());
+            Assert.Null(passxyz.PxDb.FindByPath<PwGroup>());
         }
 
         [Fact]
@@ -248,7 +248,7 @@ namespace KPCLib.xunit
         public void PxLibVersion() 
         {
             Debug.WriteLine($"{PxLibInfo.Version}");
-            Assert.Equal(PxLibInfo.Version, new System.Version("1.0.1.1"));
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.2.0.0"));
         }
 
         [Fact]

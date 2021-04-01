@@ -61,7 +61,7 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void ListGroups()
+        public void ListGroupsTests()
         {
             PwGroup pg = keepass.PwDb.RootGroup;
             foreach (var group in pg.Groups)
@@ -71,7 +71,7 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void ListEntries()
+        public void ListEntriesTests()
         {
             PwGroup pg = keepass.PwDb.RootGroup;
             int count = 0;
@@ -84,6 +84,14 @@ namespace KPCLib.xunit
                     Debug.WriteLine($"    {kp.Key}={kp.Value.ReadString()}");
                 }
             }
+        }
+
+        [Fact]
+        public void AddEntryTests()
+        {
+            var entry = new PwEntry();
+            entry.Name = "New Entry";
+            Debug.WriteLine($"Uuid={entry.Uuid}");
         }
     }
 }
