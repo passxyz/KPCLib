@@ -399,5 +399,77 @@ namespace PassXYZLib
 				pe.Touch(false);
 			}
 		}
+
+		/// <summary>
+		/// Check whether the source group is the parent of destination group
+		/// </summary>
+		/// <param name="srcGroup">The entry to be moved. Must not be <c>null</c>.</param>	
+		/// <param name="dstGroup">New group for the entry</param>
+		/// <returns>Success or failure.</returns>
+		public bool IsParentGroup(PwGroup srcGroup, PwGroup dstGroup)
+		{
+			if (srcGroup == null) throw new ArgumentNullException("srcGroup");
+			if (dstGroup == null) throw new ArgumentNullException("dstGroup");
+
+			// If the source group is the root group, return true.
+			if (srcGroup.Uuid == this.RootGroup.Uuid) return true;
+
+			PwGroup group = dstGroup.ParentGroup;
+			while (this.RootGroup.Uuid != group.Uuid)
+			{
+				if (group.Uuid == srcGroup.Uuid) return true;
+				group = group.ParentGroup;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Move an entry to a new location.
+		/// </summary>
+		/// <param name="pe">The entry to be moved. Must not be <c>null</c>.</param>	
+		/// <param name="group">New group for the entry</param>
+		/// <returns>Success or failure.</returns>
+		public bool MoveEntry(PwEntry pe, PwGroup group)
+        {
+			if (pe == null) throw new ArgumentNullException("pe");
+			if (group == null) throw new ArgumentNullException("group");
+
+			PwGroup pgParent = pe.ParentGroup;
+			if (pgParent == group) return false;
+
+			if (pgParent != null) // Remove from parent
+			{
+				if (!pgParent.Entries.Remove(pe)) { Debug.Assert(false); }
+			}
+			group.AddEntry(pe, true, true);
+			return true;
+		}
+
+		/// <summary>
+		/// Move a group to a new location.
+		/// The source group cannot be the parent of destination group
+		/// </summary>
+		/// <param name="srcGroup">The entry to be moved. Must not be <c>null</c>.</param>	
+		/// <param name="dstGroup">New group for the entry</param>
+		/// <returns>Success or failure.</returns>
+		public bool MoveGroup(PwGroup srcGroup, PwGroup dstGroup)
+		{
+			if (srcGroup == null) throw new ArgumentNullException("srcGroup");
+			if (dstGroup == null) throw new ArgumentNullException("dstGroup");
+
+			if (srcGroup == dstGroup) return false;
+
+			PwGroup pgParent = srcGroup.ParentGroup;
+			if (pgParent == dstGroup) return false;
+
+			if (IsParentGroup(srcGroup, dstGroup)) return false;
+
+			if (pgParent != null) // Remove from parent
+			{
+				if (!pgParent.Groups.Remove(srcGroup)) { Debug.Assert(false); }
+			}
+			dstGroup.AddGroup(srcGroup, true, true);
+			return true;
+		}
 	}
 }

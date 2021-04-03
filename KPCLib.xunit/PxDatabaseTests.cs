@@ -121,7 +121,6 @@ namespace KPCLib.xunit
             
         }
 
-
         [Fact]
         public void DeleteEmptyGroupTest()
         {
@@ -240,7 +239,142 @@ namespace KPCLib.xunit
             Debug.WriteLine($"Current path is {passxyz.PxDb.CurrentPath}.");
             Assert.NotNull(passxyz.PxDb.CurrentPath);
         }
+
+        [Theory]
+        [InlineData("/utdb")]
+        [InlineData("/utdb/General/G1")]
+        /// <summary>
+        /// IsParentGroup test cases
+        /// source:      "/utdb/Windows/W1/W2/W3/W4/W5"
+        /// destination: "/utdb/General/G1/G21"
+        /// </summary>
+        /// <param name="path">Source path. Must not be <c>null</c>.</param>	
+        public void IsParentGroupG1Tests(string path)
+        {
+            var dstPath = "/utdb/General/G1";
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(dstPath);
+            var srcGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+            if (passxyz.PxDb.IsParentGroup(srcGroup, dstGroup))
+            {
+                Debug.WriteLine($"{path} is the parent of {dstPath}.");
+                Assert.Equal("/utdb", path);
+            }
+            else
+            {
+                Debug.WriteLine($"{path} is not the parent of {dstPath}.");
+                Assert.Equal("/utdb/General/G1", path);
+            }
+        }
+
+        [Theory]
+        [InlineData("/utdb/Windows/W1")]
+        [InlineData("/utdb/General")]
+        /// <summary>
+        /// IsParentGroup test cases
+        /// source:      "/utdb/Windows/W1/W2/W3/W4/W5"
+        /// destination: "/utdb/General/G1/G21"
+        /// </summary>
+        /// <param name="path">Source path. Must not be <c>null</c>.</param>	
+        public void IsParentGroupG21Tests(string path)
+        {
+            var dstPath = "/utdb/General/G1/G21";
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(dstPath);
+            var srcGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+            if(passxyz.PxDb.IsParentGroup(srcGroup, dstGroup))
+            {
+                Debug.WriteLine($"{path} is the parent of {dstPath}.");
+                Assert.Equal("/utdb/General", path);
+            }
+            else 
+            {
+                Debug.WriteLine($"{path} is not the parent of {dstPath}.");
+                Assert.Equal("/utdb/Windows/W1", path);
+            }
+        }
+
+        [Theory]
+        [InlineData("/utdb/General")]
+        [InlineData("/utdb")]
+        /// <summary>
+        /// MoveEntry test cases
+        /// Test case 1: srcEntry: "/utdb/General",   dstGroup: "/utdb/General"
+        /// Test case 2: srcEntry: "/utdb/TestEntry", dstGroup: "/utdb"
+        /// </summary>
+        /// <param name="path">Destination path. Must not be <c>null</c>.</param>
+        public void MoveEntryTests(string path)
+        {
+            string srcPath;
+
+            if (path == "/utdb/General") 
+            {
+                srcPath = "/utdb/General";
+            }
+            else
+            {
+                srcPath = "/utdb/TestEntry";
+            }
+
+            var srcEntry = passxyz.PxDb.FindByPath<PwEntry>(srcPath);
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+
+            if(passxyz.PxDb.MoveEntry(srcEntry, dstGroup))
+            {
+                Debug.WriteLine($"Moved entry {srcPath} to {path}.");
+                Assert.Equal("/utdb/General", path);
+            }
+            else
+            {
+                Debug.WriteLine($"Cannot move {srcPath} to {path}.");
+                Assert.Equal("/utdb", path);
+            }
+        }
+
+        [Theory]
+        [InlineData("/utdb/Windows/W1/W2/W3/")]
+        [InlineData("/utdb/General/G1/G21/")]
+        [InlineData("/utdb/General/")]
+        /// <summary>
+        /// MoveGroup test cases
+        /// Test case 1: srcGroup: "/utdb/Windows/W1/W2/W3/W4/W5/", dstGroup: "/utdb/Windows/W1/W2/W3/"
+        ///              Move sub-group to the parent group, this is a successful case
+        /// Test case 2: srcGroup: "/utdb/General/", dstGroup: "/utdb/General/G1/G21/"
+        ///              Move parent group to the sub-group, this is a failure case
+        /// Test case 2: srcGroup: "/utdb/General/", dstGroup: "/utdb/General/"
+        ///              Move group to the same location, this is a failure case
+        /// </summary>
+        /// <param name="path">Destination path. Must not be <c>null</c>.</param>
+        public void MoveGroupTests(string path)
+        {
+            string srcPath;
+
+            if (path == "/utdb/General/")
+            {
+                srcPath = "/utdb/General/";
+            }
+            else if (path == "/utdb/General/G1/G21/")
+            {
+                srcPath = "/utdb/General/";
+            }
+            else
+            {
+                srcPath = "/utdb/Windows/W1/W2/W3/W4/W5/";
+            }
+
+            var srcGroup = passxyz.PxDb.FindByPath<PwGroup>(srcPath);
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+
+            if (passxyz.PxDb.MoveGroup(srcGroup, dstGroup))
+            {
+                Debug.WriteLine($"Moved entry {srcPath} to {path}.");
+                Assert.Equal("/utdb/Windows/W1/W2/W3/", path);
+            }
+            else
+            {
+                Debug.WriteLine($"Cannot move {srcPath} to {path}.");
+            }
+        }
     }
+
 
     public class PxLibInfoTests 
     { 
