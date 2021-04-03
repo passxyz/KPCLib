@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -63,14 +63,9 @@ namespace KeePassLib.Keys
 		/// </summary>
 		public KcpUserAccount()
 		{
-			// Test if ProtectedData is supported -- throws an exception
-			// when running on an old system (Windows 98 / ME).
-			byte[] pbDummyData = new byte[128];
-#if !KPCLib
-            // ProtectedData is not supported on Android, iOS and UWP
-            ProtectedData.Protect(pbDummyData, m_pbEntropy,
-				DataProtectionScope.CurrentUser);
-#endif // KPCLib
+			if(!CryptoUtil.IsProtectedDataSupported)
+				throw new PlatformNotSupportedException(); // Windows 98/ME
+
 			byte[] pbKey = LoadUserKey(false);
 			if(pbKey == null) pbKey = CreateUserKey();
 			if(pbKey == null) // Should never happen
@@ -117,8 +112,7 @@ namespace KeePassLib.Keys
 				string strFilePath = GetUserKeyFilePath(false);
 				byte[] pbProtectedKey = File.ReadAllBytes(strFilePath);
 #if !KPCLib
-                // ProtectedData is not supported on Android, iOS and UWP
-                pbKey = ProtectedData.Unprotect(pbProtectedKey, m_pbEntropy,
+				pbKey = CryptoUtil.UnprotectData(pbProtectedKey, m_pbEntropy,
 					DataProtectionScope.CurrentUser);
 #endif // KPCLib
 			}
@@ -129,7 +123,7 @@ namespace KeePassLib.Keys
 			}
 #endif
 
-                return pbKey;
+			return pbKey;
 		}
 
 		private static byte[] CreateUserKey()
@@ -140,7 +134,7 @@ namespace KeePassLib.Keys
 			string strFilePath = GetUserKeyFilePath(true);
 
 			byte[] pbRandomKey = CryptoRandom.Instance.GetRandomBytes(64);
-			byte[] pbProtectedKey = ProtectedData.Protect(pbRandomKey,
+			byte[] pbProtectedKey = CryptoUtil.ProtectData(pbRandomKey,
 				m_pbEntropy, DataProtectionScope.CurrentUser);
 
 			File.WriteAllBytes(strFilePath, pbProtectedKey);

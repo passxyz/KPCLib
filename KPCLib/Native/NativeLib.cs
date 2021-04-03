@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -33,6 +34,7 @@ using System.Windows.Forms;
 #endif  // KPCLib
 #endif
 
+using KeePassLib.Resources;
 using KeePassLib.Utility;
 
 namespace KeePassLib.Native
@@ -43,7 +45,7 @@ namespace KeePassLib.Native
 	/// </summary>
 	public static class NativeLib
 	{
-		private static bool m_bAllowNative = false;
+		private static bool m_bAllowNative = true;
 
 		/// <summary>
 		/// If this property is set to <c>true</c>, the native library is used.
@@ -53,24 +55,6 @@ namespace KeePassLib.Native
 		{
 			get { return m_bAllowNative; }
 			set { m_bAllowNative = value; }
-		}
-
-		private static int? g_oiPointerSize = null;
-		/// <summary>
-		/// Size of a native pointer (in bytes).
-		/// </summary>
-		public static int PointerSize
-		{
-			get
-			{
-				if(!g_oiPointerSize.HasValue)
-#if KeePassUAP
-					g_oiPointerSize = Marshal.SizeOf<IntPtr>();
-#else
-					g_oiPointerSize = Marshal.SizeOf(typeof(IntPtr));
-#endif
-				return g_oiPointerSize.Value;
-			}
 		}
 
 		private static ulong? m_ouMonoVersion = null;
@@ -133,7 +117,7 @@ namespace KeePassLib.Native
 #else
             return false;
 #endif // KPCLib
-        }
+		}
 
 		private static bool? m_bIsUnix = null;
 		public static bool IsUnix()
@@ -201,19 +185,21 @@ namespace KeePassLib.Native
 							t = DesktopType.Xfce;
 						else if(strXdg.Equals("MATE", sc))
 							t = DesktopType.Mate;
-						else if(strXdg.Equals("X-Cinnamon", sc))
+						else if(strXdg.Equals("X-Cinnamon", sc)) // Mint 18.3
 							t = DesktopType.Cinnamon;
 						else if(strXdg.Equals("Pantheon", sc)) // Elementary OS
 							t = DesktopType.Pantheon;
-						else if(strXdg.Equals("KDE", sc) || // Mint 16
+						else if(strXdg.Equals("KDE", sc) || // Mint 16, Kubuntu 17.10
 							strGdm.Equals("kde-plasma", sc)) // Ubuntu 12.04
 							t = DesktopType.Kde;
 						else if(strXdg.Equals("GNOME", sc))
 						{
 							if(strGdm.Equals("cinnamon", sc)) // Mint 13
 								t = DesktopType.Cinnamon;
-							else t = DesktopType.Gnome;
+							else t = DesktopType.Gnome; // Fedora 27
 						}
+						else if(strXdg.Equals("ubuntu:GNOME", sc))
+							t = DesktopType.Gnome;
 					}
 					catch(Exception) { Debug.Assert(false); }
 				}
@@ -222,6 +208,26 @@ namespace KeePassLib.Native
 			}
 
 			return m_tDesktop.Value;
+		}
+
+		private static bool? g_obWayland = null;
+		internal static bool IsWayland()
+		{
+			if(!g_obWayland.HasValue)
+			{
+				bool b = false;
+				try
+				{
+					// https://www.freedesktop.org/software/systemd/man/pam_systemd.html
+					b = ((Environment.GetEnvironmentVariable("XDG_SESSION_TYPE") ??
+						string.Empty).Trim().Equals("wayland", StrUtil.CaseIgnoreCmp));
+				}
+				catch(Exception) { Debug.Assert(false); }
+
+				g_obWayland = b;
+			}
+
+			return g_obWayland.Value;
 		}
 
 #if (!KeePassLibSD && !KeePassUAP && !KPCLib)
@@ -249,21 +255,23 @@ namespace KeePassLib.Native
 
 			RunProcessDelegate fnRun = delegate()
 			{
+				Process pToDispose = null;
 				try
 				{
 					ProcessStartInfo psi = new ProcessStartInfo();
 
-					psi.CreateNoWindow = true;
 					psi.FileName = strAppPath;
-					psi.WindowStyle = ProcessWindowStyle.Hidden;
-					psi.UseShellExecute = false;
-					psi.RedirectStandardOutput = bStdOut;
-
-					if(strStdInput != null) psi.RedirectStandardInput = true;
-
 					if(!string.IsNullOrEmpty(strParams)) psi.Arguments = strParams;
 
-					Process p = Process.Start(psi);
+					psi.CreateNoWindow = true;
+					psi.WindowStyle = ProcessWindowStyle.Hidden;
+					psi.UseShellExecute = false;
+
+					psi.RedirectStandardOutput = bStdOut;
+					if(strStdInput != null) psi.RedirectStandardInput = true;
+
+					Process p = StartProcessEx(psi);
+					pToDispose = p;
 
 					if(strStdInput != null)
 					{
@@ -280,9 +288,11 @@ namespace KeePassLib.Native
 						p.WaitForExit();
 					else if((f & AppRunFlags.GCKeepAlive) != AppRunFlags.None)
 					{
+						pToDispose = null; // Thread disposes it
+
 						Thread th = new Thread(delegate()
 						{
-							try { p.WaitForExit(); }
+							try { p.WaitForExit(); p.Dispose(); }
 							catch(Exception) { Debug.Assert(false); }
 						});
 						th.Start();
@@ -290,7 +300,22 @@ namespace KeePassLib.Native
 
 					return strOutput;
 				}
+#if DEBUG
+				catch(ThreadAbortException) { }
+				catch(Win32Exception exW)
+				{
+					Debug.Assert((strAppPath == ClipboardU.XSel) &&
+						(exW.NativeErrorCode == 2)); // XSel not found
+				}
 				catch(Exception) { Debug.Assert(false); }
+#else
+				catch(Exception) { }
+#endif
+				finally
+				{
+					try { if(pToDispose != null) pToDispose.Dispose(); }
+					catch(Exception) { Debug.Assert(false); }
+				}
 
 				return null;
 			};
@@ -453,6 +478,221 @@ namespace KeePassLib.Native
 
 			if(kvpPointers.Value != IntPtr.Zero)
 				Marshal.FreeHGlobal(kvpPointers.Value);
+		}
+
+		// internal static Type GetUwpType(string strType)
+		// {
+		//	if(string.IsNullOrEmpty(strType)) { Debug.Assert(false); return null; }
+		//	// https://referencesource.microsoft.com/#mscorlib/system/runtime/interopservices/windowsruntime/winrtclassactivator.cs
+		//	return Type.GetType(strType + ", Windows, ContentType=WindowsRuntime", false);
+		// }
+
+		// Cf. DecodeArgsToData
+		internal static string EncodeDataToArgs(string strData)
+		{
+			if(strData == null) { Debug.Assert(false); return string.Empty; }
+
+			if(MonoWorkarounds.IsRequired(3471228285U) && IsUnix())
+			{
+				string str = strData;
+
+				str = str.Replace("\\", "\\\\");
+				str = str.Replace("\"", "\\\"");
+
+				// Whether '\'' needs to be encoded depends on the context
+				// (e.g. surrounding quotes); as we do not know what the
+				// caller does with the returned string, we assume that
+				// it will be used in a context where '\'' must not be
+				// encoded; this behavior is documented
+				// str = str.Replace("\'", "\\\'");
+
+				return str;
+			}
+
+			// SHELLEXECUTEINFOW structure documentation:
+			// https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/ns-shellapi-shellexecuteinfow
+			// return strData.Replace("\"", "\"\"\"");
+
+			// Microsoft C/C++ startup code:
+			// https://docs.microsoft.com/en-us/cpp/cpp/parsing-cpp-command-line-arguments
+			// CommandLineToArgvW function:
+			// https://docs.microsoft.com/en-us/windows/desktop/api/shellapi/nf-shellapi-commandlinetoargvw
+
+			StringBuilder sb = new StringBuilder();
+			int i = 0;
+			while(i < strData.Length)
+			{
+				char ch = strData[i++];
+
+				if(ch == '\\')
+				{
+					int cBackslashes = 1;
+					while((i < strData.Length) && (strData[i] == '\\'))
+					{
+						++cBackslashes;
+						++i;
+					}
+
+					if(i == strData.Length)
+						sb.Append('\\', cBackslashes); // Assume no quote follows
+					else if(strData[i] == '\"')
+					{
+						sb.Append('\\', (cBackslashes * 2) + 1);
+						sb.Append('\"');
+						++i;
+					}
+					else sb.Append('\\', cBackslashes);
+				}
+				else if(ch == '\"') sb.Append("\\\"");
+				else sb.Append(ch);
+			}
+
+			return sb.ToString();
+		}
+
+		// Cf. EncodeDataToArgs
+		internal static string DecodeArgsToData(string strArgs)
+		{
+			if(strArgs == null) { Debug.Assert(false); return string.Empty; }
+
+			Debug.Assert(StrUtil.Count(strArgs, "\"") == StrUtil.Count(strArgs, "\\\""));
+
+			if(MonoWorkarounds.IsRequired(3471228285U) && IsUnix())
+			{
+				string str = strArgs;
+
+				str = str.Replace("\\\"", "\"");
+				str = str.Replace("\\\\", "\\");
+
+				return str;
+			}
+
+			StringBuilder sb = new StringBuilder();
+			int i = 0;
+			while(i < strArgs.Length)
+			{
+				char ch = strArgs[i++];
+
+				if(ch == '\\')
+				{
+					int cBackslashes = 1;
+					while((i < strArgs.Length) && (strArgs[i] == '\\'))
+					{
+						++cBackslashes;
+						++i;
+					}
+
+					if(i == strArgs.Length)
+						sb.Append('\\', cBackslashes); // Assume no quote follows
+					else if(strArgs[i] == '\"')
+					{
+						Debug.Assert((cBackslashes & 1) == 1);
+						sb.Append('\\', (cBackslashes - 1) / 2);
+						sb.Append('\"');
+						++i;
+					}
+					else sb.Append('\\', cBackslashes);
+				}
+				else sb.Append(ch);
+			}
+
+			return sb.ToString();
+		}
+
+		internal static void StartProcess(string strFile)
+		{
+			StartProcess(strFile, null);
+		}
+
+		internal static void StartProcess(string strFile, string strArgs)
+		{
+			ProcessStartInfo psi = new ProcessStartInfo();
+			if(!string.IsNullOrEmpty(strFile)) psi.FileName = strFile;
+			if(!string.IsNullOrEmpty(strArgs)) psi.Arguments = strArgs;
+			psi.UseShellExecute = true;
+
+			StartProcess(psi);
+		}
+
+		internal static void StartProcess(ProcessStartInfo psi)
+		{
+			Process p = StartProcessEx(psi);
+
+			try { if(p != null) p.Dispose(); }
+			catch(Exception) { Debug.Assert(false); }
+		}
+
+		internal static Process StartProcessEx(ProcessStartInfo psi)
+		{
+			if(psi == null) { Debug.Assert(false); return null; }
+
+			string strFileOrg = psi.FileName;
+			if(string.IsNullOrEmpty(strFileOrg)) { Debug.Assert(false); return null; }
+			string strArgsOrg = psi.Arguments;
+
+			Process p;
+			try
+			{
+				CustomizeProcessStartInfo(psi);
+				p = Process.Start(psi);
+			}
+			finally
+			{
+				psi.FileName = strFileOrg; // Restore
+				psi.Arguments = strArgsOrg;
+			}
+
+			return p;
+		}
+
+		private static void CustomizeProcessStartInfo(ProcessStartInfo psi)
+		{
+			string strFile = psi.FileName, strArgs = psi.Arguments;
+
+			string[] vUrlEncSchemes = new string[] {
+				"file:", "ftp:", "ftps:", "http:", "https:",
+				"mailto:", "scp:", "sftp:"
+			};
+			foreach(string strPfx in vUrlEncSchemes)
+			{
+				if(strFile.StartsWith(strPfx, StrUtil.CaseIgnoreCmp))
+				{
+					Debug.Assert(string.IsNullOrEmpty(strArgs));
+
+					strFile = strFile.Replace("\"", "%22");
+					strFile = strFile.Replace("\'", "%27");
+					strFile = strFile.Replace("\\", "%5C");
+					break;
+				}
+			}
+
+			if(IsUnix())
+			{
+				if(MonoWorkarounds.IsRequired(19836) && string.IsNullOrEmpty(strArgs))
+				{
+					if(Regex.IsMatch(strFile, "^[a-zA-Z][a-zA-Z0-9\\+\\-\\.]*:",
+						RegexOptions.Singleline) ||
+						strFile.EndsWith(".html", StrUtil.CaseIgnoreCmp))
+					{
+						bool bMacOSX = (GetPlatformID() == PlatformID.MacOSX);
+
+						strArgs = "\"" + EncodeDataToArgs(strFile) + "\"";
+						strFile = (bMacOSX ? "open" : "xdg-open");
+					}
+				}
+
+				// Mono's Process.Start method replaces '\\' by '/',
+				// which may cause a different file to be executed;
+				// therefore, we refuse to start such files
+				if(strFile.Contains("\\") && MonoWorkarounds.IsRequired(190417))
+					throw new ArgumentException(KLRes.PathBackslash);
+
+				strFile = strFile.Replace("\\", "\\\\"); // If WA not required
+				strFile = strFile.Replace("\"", "\\\"");
+			}
+
+			psi.FileName = strFile;
+			psi.Arguments = strArgs;
 		}
 	}
 }

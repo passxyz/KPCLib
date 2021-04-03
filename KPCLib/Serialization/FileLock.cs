@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -125,9 +125,12 @@ namespace KeePassLib.Serialization
 				{
 					s = IOConnection.OpenRead(iocLockFile);
 					if(s == null) return null;
-					StreamReader sr = new StreamReader(s, StrUtil.Utf8);
-					string str = sr.ReadToEnd();
-					sr.Close();
+
+					string str = null;
+					using(StreamReader sr = new StreamReader(s, StrUtil.Utf8))
+					{
+						str = sr.ReadToEnd();
+					}
 					if(str == null) { Debug.Assert(false); return null; }
 
 					str = StrUtil.NormalizeNewLines(str, false);

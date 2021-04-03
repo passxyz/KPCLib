@@ -12,42 +12,59 @@ using PassXYZLib;
 
 namespace KPCLib.xunit
 {
-    public class PxDatabaseTests
+    public class PassXYZFixture : IDisposable
     {
-        const string TEST_DB = "testdb.kdbx";
+        const string TEST_DB = "utdb.kdbx";
         const string TEST_DB_KEY = "12345";
 
-        private PxDatabase OpenDatabaseInternal()
+        public PassXYZFixture() 
         {
-            PxDatabase pwDb = new PxDatabase();
+            Logger = new KPCLibLogger();
+            PxDb = new PxDatabase();
             IOConnectionInfo ioc = IOConnectionInfo.FromPath(TEST_DB);
             CompositeKey cmpKey = new CompositeKey();
             cmpKey.AddUserKey(new KcpPassword(TEST_DB_KEY));
-            pwDb.Open(ioc, cmpKey, null);
-            return pwDb;
+            PxDb.Open(ioc, cmpKey, Logger);
+        }
+
+        public void Dispose() 
+        {
+            PxDb.Close();
+        }
+
+        public PxDatabase PxDb { get; private set; }
+        public KPCLibLogger Logger { get; private set; }
+    }
+
+    [CollectionDefinition("PxDatabase collection")]
+    public class PxDatabaseCollection : ICollectionFixture<PassXYZFixture>
+    {
+        // This class has no code, and is never created. Its purpose is simply
+        // to be the place to apply [CollectionDefinition] and all the
+        // ICollectionFixture<> interfaces.
+    }
+
+    [Collection("PxDatabase collection")]
+    public class PxDatabaseTests
+    {
+        PassXYZFixture passxyz;
+
+        public PxDatabaseTests(PassXYZFixture passXYZFixture) 
+        {
+            this.passxyz = passXYZFixture;
         }
 
         [Fact]
         public void IsOpenDbTest() 
         {
-            PxDatabase pwDb = new PxDatabase();
-            var status = pwDb.IsOpen;
-            Debug.WriteLine($"IsOpen={status}");
+            Debug.WriteLine($"{passxyz.PxDb}");
+            Assert.True((passxyz.PxDb.IsOpen));
         }
 
         [Fact]
-        public void OpenDatabaseTest()
+        public void ListGroupsTests()
         {
-            PxDatabase pwDb = OpenDatabaseInternal();
-            Debug.WriteLine($"Name={pwDb.Name}, Description={pwDb.Description}");
-            Assert.True((pwDb.IsOpen));
-        }
-
-        [Fact]
-        public void ListGroups()
-        {
-            PxDatabase pwDb = OpenDatabaseInternal();
-            PwGroup pg = pwDb.RootGroup;
+            PwGroup pg = passxyz.PxDb.RootGroup;
             foreach (var group in pg.Groups)
             {
                 Debug.WriteLine($"Name={group.Name}, Note={group.Notes}");
@@ -55,10 +72,9 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void ListEntries()
+        public void ListEntriesTests()
         {
-            PxDatabase pwDb = OpenDatabaseInternal();
-            PwGroup pg = pwDb.RootGroup;
+            PwGroup pg = passxyz.PxDb.RootGroup;
             int count = 0;
             foreach (var entry in pg.Entries)
             {
@@ -71,34 +87,309 @@ namespace KPCLib.xunit
             }
         }
 
-        private void PrintGroups(PwGroup pg)
+        [Fact]
+        public void DeleteEmptyEntryTest()
         {
-            foreach (var group in pg.Groups)
+            try 
+            { 
+                passxyz.PxDb.DeleteEntry(null);
+                Assert.True(false);
+            }
+            catch (System.ArgumentNullException e) 
             {
-                Debug.WriteLine($"Name={group.Name}, Note={group.Notes}");
+                Debug.WriteLine($"{e}");
+            }            
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        /// <summary>
+        /// Delete the first entry in the list.
+        /// </summary>
+        public void DeleteEntryTests(bool permanent)
+        {
+            PwGroup rootGroup = passxyz.PxDb.RootGroup;
+
+            var entry1 = rootGroup.Entries.GetAt(0);
+            var uuid = entry1.Uuid;
+            Debug.WriteLine($"Entry {entry1.Strings.ReadSafe("Title")} is deleted.");
+            passxyz.PxDb.DeleteEntry(entry1, permanent);
+            var entry2 = rootGroup.FindEntry(uuid, true);
+            if(permanent) { Assert.Null(entry2); }
+            else { Assert.NotNull(entry2); }
+            
+        }
+
+        [Fact]
+        public void DeleteEmptyGroupTest()
+        {
+            try
+            {
+                passxyz.PxDb.DeleteGroup(null);
+                Assert.True(false);
+            }
+            catch (System.ArgumentNullException e)
+            {
+                Debug.WriteLine($"{e}");
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        /// <summary>
+        /// Delete a group.
+        /// </summary>
+        public void DeleteGroupTests(bool permanent)
+        {
+            PwGroup rootGroup = passxyz.PxDb.RootGroup;
+
+            var gp1 = rootGroup.Groups.GetAt(0);
+            var uuid = gp1.Uuid;
+            Debug.WriteLine($"Deleting '{gp1.Name}'");
+            passxyz.PxDb.DeleteGroup(gp1, permanent);
+            var gp2 = rootGroup.FindGroup(uuid, true);
+            if (permanent) { Assert.Null(gp2); }
+            else { Assert.NotNull(gp2); }
+        }
+
+        [Theory]
+        [InlineData("General/G1/G21/G21E1")]
+        [InlineData("General/G1/G21/")]
+        [InlineData("General/G1/G21")]
+        [InlineData("/G1/G21")]
+        /// <summary>
+        /// Find group or entry test.
+        /// </summary>
+        public void FindByPathTests(string path)
+        {
+            passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+            if (path.EndsWith("/"))
+            {
+                Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwGroup>(path)}");
+            }
+            else 
+            {
+                if(path.StartsWith("/")) { Assert.Null(passxyz.PxDb.FindByPath<PwGroup>(path)); }
+                else Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwEntry>(path)}");
+            }
+        }
+
+        [Theory]
+        [InlineData("General/G1/G21/")]
+        /// <summary>
+        /// Find an entry using a group path.
+        /// </summary>
+        public void FindEntryByPathTests(string path)
+        {
+            passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+            Debug.WriteLine($"{passxyz.PxDb.FindByPath<PwEntry>(path)}");
+            Assert.Null(passxyz.PxDb.FindByPath<PwEntry>(path));
+        }
+
+        [Theory]
+        [InlineData("General/G1/G21/G21E1")]
+        [InlineData("/utdb/General/G1/G21")]
+        [InlineData("../..")]
+        [InlineData("..")]
+        /// <summary>
+        /// Find group using an entry pass.
+        /// </summary>
+        public void FindGroupByPathTests(string path)
+        {
+            PwGroup group;
+
+            if (path.StartsWith("/")) {
+                group = passxyz.PxDb.FindByPath<PwGroup>(path);
+                Assert.NotNull(group);
+            }
+            else if(path.StartsWith(".."))
+            {
+                passxyz.PxDb.CurrentGroup = passxyz.PxDb.FindByPath<PwGroup>("/utdb/General/G1/G21");
+                Debug.WriteLine($"Current group is: {passxyz.PxDb.CurrentGroup}");
+                group = passxyz.PxDb.FindByPath<PwGroup>(path);
+            }
+            else 
+            {
+                passxyz.PxDb.CurrentGroup = passxyz.PxDb.RootGroup;
+                group = passxyz.PxDb.FindByPath<PwGroup>(path);
+                Debug.WriteLine($"Cannot find group {path}");
+                Assert.Null(group);
             }
         }
 
         [Fact]
-        public void DeleteEntry()
+        public void FindByPathDefaultTests() 
         {
-            PxDatabase pxDb = OpenDatabaseInternal();
-            PwGroup pg = pxDb.RootGroup;
-
-            PrintGroups(pxDb.RootGroup);
-            var entry = pg.Entries.GetAt(0);
-            pxDb.DeleteEntry(entry);
-            Debug.WriteLine($"Entry {entry.Strings.ReadSafe("Title")} is deleted.");
-            PrintGroups(pxDb.RootGroup);
+            Assert.Null(passxyz.PxDb.FindByPath<PwEntry>());
+            Assert.Null(passxyz.PxDb.FindByPath<PwGroup>());
         }
 
         [Fact]
-        public void DeleteGroup() 
+        public void CurrentGroupTests()
         {
-            PxDatabase pxDb = OpenDatabaseInternal();
-            PwGroup pg = pxDb.RootGroup;
-            var gp = pg.Groups.GetAt(0);
-            pxDb.DeleteGroup(gp);
+            Debug.WriteLine($"{passxyz.PxDb.CurrentGroup}");
+            Assert.NotNull(passxyz.PxDb.CurrentGroup);
+        }
+
+        [Fact]
+        public void CurrentPathTests()
+        {
+            Debug.WriteLine($"Current path is {passxyz.PxDb.CurrentPath}.");
+            Assert.NotNull(passxyz.PxDb.CurrentPath);
+        }
+
+        [Theory]
+        [InlineData("/utdb")]
+        [InlineData("/utdb/General/G1")]
+        /// <summary>
+        /// IsParentGroup test cases
+        /// source:      "/utdb/Windows/W1/W2/W3/W4/W5"
+        /// destination: "/utdb/General/G1/G21"
+        /// </summary>
+        /// <param name="path">Source path. Must not be <c>null</c>.</param>	
+        public void IsParentGroupG1Tests(string path)
+        {
+            var dstPath = "/utdb/General/G1";
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(dstPath);
+            var srcGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+            if (passxyz.PxDb.IsParentGroup(srcGroup, dstGroup))
+            {
+                Debug.WriteLine($"{path} is the parent of {dstPath}.");
+                Assert.Equal("/utdb", path);
+            }
+            else
+            {
+                Debug.WriteLine($"{path} is not the parent of {dstPath}.");
+                Assert.Equal("/utdb/General/G1", path);
+            }
+        }
+
+        [Theory]
+        [InlineData("/utdb/Windows/W1")]
+        [InlineData("/utdb/General")]
+        /// <summary>
+        /// IsParentGroup test cases
+        /// source:      "/utdb/Windows/W1/W2/W3/W4/W5"
+        /// destination: "/utdb/General/G1/G21"
+        /// </summary>
+        /// <param name="path">Source path. Must not be <c>null</c>.</param>	
+        public void IsParentGroupG21Tests(string path)
+        {
+            var dstPath = "/utdb/General/G1/G21";
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(dstPath);
+            var srcGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+            if(passxyz.PxDb.IsParentGroup(srcGroup, dstGroup))
+            {
+                Debug.WriteLine($"{path} is the parent of {dstPath}.");
+                Assert.Equal("/utdb/General", path);
+            }
+            else 
+            {
+                Debug.WriteLine($"{path} is not the parent of {dstPath}.");
+                Assert.Equal("/utdb/Windows/W1", path);
+            }
+        }
+
+        [Theory]
+        [InlineData("/utdb/General")]
+        [InlineData("/utdb")]
+        /// <summary>
+        /// MoveEntry test cases
+        /// Test case 1: srcEntry: "/utdb/General",   dstGroup: "/utdb/General"
+        /// Test case 2: srcEntry: "/utdb/TestEntry", dstGroup: "/utdb"
+        /// </summary>
+        /// <param name="path">Destination path. Must not be <c>null</c>.</param>
+        public void MoveEntryTests(string path)
+        {
+            string srcPath;
+
+            if (path == "/utdb/General") 
+            {
+                srcPath = "/utdb/General";
+            }
+            else
+            {
+                srcPath = "/utdb/TestEntry";
+            }
+
+            var srcEntry = passxyz.PxDb.FindByPath<PwEntry>(srcPath);
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+
+            if(passxyz.PxDb.MoveEntry(srcEntry, dstGroup))
+            {
+                Debug.WriteLine($"Moved entry {srcPath} to {path}.");
+                Assert.Equal("/utdb/General", path);
+            }
+            else
+            {
+                Debug.WriteLine($"Cannot move {srcPath} to {path}.");
+                Assert.Equal("/utdb", path);
+            }
+        }
+
+        [Theory]
+        [InlineData("/utdb/Windows/W1/W2/W3/")]
+        [InlineData("/utdb/General/G1/G21/")]
+        [InlineData("/utdb/General/")]
+        /// <summary>
+        /// MoveGroup test cases
+        /// Test case 1: srcGroup: "/utdb/Windows/W1/W2/W3/W4/W5/", dstGroup: "/utdb/Windows/W1/W2/W3/"
+        ///              Move sub-group to the parent group, this is a successful case
+        /// Test case 2: srcGroup: "/utdb/General/", dstGroup: "/utdb/General/G1/G21/"
+        ///              Move parent group to the sub-group, this is a failure case
+        /// Test case 2: srcGroup: "/utdb/General/", dstGroup: "/utdb/General/"
+        ///              Move group to the same location, this is a failure case
+        /// </summary>
+        /// <param name="path">Destination path. Must not be <c>null</c>.</param>
+        public void MoveGroupTests(string path)
+        {
+            string srcPath;
+
+            if (path == "/utdb/General/")
+            {
+                srcPath = "/utdb/General/";
+            }
+            else if (path == "/utdb/General/G1/G21/")
+            {
+                srcPath = "/utdb/General/";
+            }
+            else
+            {
+                srcPath = "/utdb/Windows/W1/W2/W3/W4/W5/";
+            }
+
+            var srcGroup = passxyz.PxDb.FindByPath<PwGroup>(srcPath);
+            var dstGroup = passxyz.PxDb.FindByPath<PwGroup>(path);
+
+            if (passxyz.PxDb.MoveGroup(srcGroup, dstGroup))
+            {
+                Debug.WriteLine($"Moved entry {srcPath} to {path}.");
+                Assert.Equal("/utdb/Windows/W1/W2/W3/", path);
+            }
+            else
+            {
+                Debug.WriteLine($"Cannot move {srcPath} to {path}.");
+            }
+        }
+    }
+
+
+    public class PxLibInfoTests 
+    { 
+        [Fact]
+        public void PxLibVersion() 
+        {
+            Debug.WriteLine($"{PxLibInfo.Version}");
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.2.0.0"));
+        }
+
+        [Fact]
+        public void PxLibName()
+        {
+            Debug.WriteLine($"{PxLibInfo.Name}");
+            Assert.NotNull(PxLibInfo.Name);
         }
     }
 }

@@ -153,6 +153,33 @@ namespace PassXYZLib
 			set { base.UseFileLocks = value; }
 		}
 
+		public PwGroup CurrentGroup
+		{
+			get { 
+				if(this.RootGroup.Uuid == this.LastSelectedGroup) 
+					{ return this.RootGroup; }
+				else
+					return this.RootGroup.FindGroup(this.LastSelectedGroup, true); 
+			}
+			set { this.LastSelectedGroup = value.Uuid; }
+		}
+
+		public string CurrentPath 
+		{ 
+			get {
+				var group = this.CurrentGroup;
+				string path = this.CurrentGroup.Name + "/";
+
+				while (this.RootGroup.Uuid != group.Uuid)
+				{
+					group = group.ParentGroup;
+					path = group.Name + "/" + path;
+				}
+
+				return path;
+			}
+		}
+
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
 		{
 			if (pgRecycleBin == this.RootGroup)
@@ -175,22 +202,137 @@ namespace PassXYZLib
 			else { Debug.Assert(pgRecycleBin.Uuid.Equals(this.RecycleBinUuid)); }
 		}
 
+		/// <summary>
+		/// Find an entry or a group.
+		/// </summary>
+		/// <param name="path">The path of an entry or a group. If it is null, return the root group</param>
+		public T FindByPath<T>(string path = "/") where T : new()
+        {
+			if (this.IsOpen)
+			{ 
+				if (path == null) throw new ArgumentNullException("path");
+
+				string[] paths = path.Split('/');
+				var lastSelectedGroup = this.CurrentGroup;
+
+				if (path.StartsWith("/"))
+				{
+					//
+					// if the path start with "/", we have to remove "/root" and
+					// search from the root group
+					//
+					if(path.StartsWith("/" + this.RootGroup.Name))
+					{
+						lastSelectedGroup = this.RootGroup;
+						paths = String.Join("/", paths, 2, paths.Length - 2).Split('/');
+					}
+					else 
+					{
+						return default(T);
+					}
+				}
+
+				if(paths.Length > 0) 
+				{
+					if (typeof(T).Name == "PwGroup") 
+					{
+						foreach (var item in paths)
+						{
+							if (!String.IsNullOrEmpty(item))
+							{
+								if (lastSelectedGroup != null)
+								{
+									lastSelectedGroup = FindSubgroup(lastSelectedGroup, item);
+								}
+								else
+									break;
+							}
+						}
+						Debug.WriteLine($"Found group: {lastSelectedGroup}");
+						return (T)Convert.ChangeType(lastSelectedGroup, typeof(T));
+					}
+					else if(typeof(T).Name == "PwEntry")
+					{
+						int i;
+						string item;
+
+						for (i = 0; i < paths.Length - 1; i++)
+						{
+							item = paths[i];
+							if (!String.IsNullOrEmpty(item))
+							{
+								if (lastSelectedGroup != null)
+								{
+									lastSelectedGroup = FindSubgroup(lastSelectedGroup, item);
+								}
+								else
+									break;
+							}
+						}
+						if(lastSelectedGroup != null) 
+						{
+							var entry = FindEntry(lastSelectedGroup, paths[paths.Length - 1]);
+							Debug.WriteLine($"Found entry: {entry}");
+							return (T)Convert.ChangeType(entry, typeof(T));
+						}
+					}
+				}
+			}
+
+			return default(T);
+
+			PwEntry FindEntry(PwGroup group, string name) 
+			{
+				if (group == null) throw new ArgumentNullException("group");
+				if (name == null) throw new ArgumentNullException("name");
+
+				foreach (var entry in group.Entries)
+                {
+					if(entry.Strings.ReadSafe("Title") == name) { return entry; }
+                }
+				return null;
+			}
+
+			PwGroup FindSubgroup(PwGroup group, string name)
+			{
+				if (group == null) throw new ArgumentNullException("group");
+				if (name == null) throw new ArgumentNullException("name");
+
+				if(name == "..") 
+				{
+					if (this.RootGroup.Uuid != group.Uuid) { return group.ParentGroup; }
+					else { return null; }
+				}
+
+				foreach (var gp in group.Groups) 
+				{ 
+					if(gp.Name == name) 
+					{ return gp; }
+				}
+
+				return null;
+			}
+		}
+
 
 		/// <summary>
 		/// Delete a group.
 		/// </summary>
 		/// <param name="pg">Group to be added. Must not be <c>null</c>.</param>
-		public void DeleteGroup(PwGroup pg)
+		/// <param name="permanent">Permanent delete or move to recycle bin</param>
+		public void DeleteGroup(PwGroup pg, bool permanent = false)
 		{
 			if (pg == null) throw new ArgumentNullException("pg");
 
 			PwGroup pgParent = pg.ParentGroup;
-			if (pgParent == null) return; // Can't remove virtual or root group
+			if (pgParent == null)  throw new ArgumentNullException("pgParent"); // Can't remove virtual or root group
 
 			PwGroup pgRecycleBin = RootGroup.FindGroup(RecycleBinUuid, true);
+
 			bool bPermanent = false;
 			if (RecycleBinEnabled == false) bPermanent = true;
-			else if (pgRecycleBin == null) { }
+			else if (permanent) bPermanent = true;
+			else if (pgRecycleBin == null) { } // if we cannot find it, we will create it later
 			else if (pg == pgRecycleBin) bPermanent = true;
 			else if (pg.IsContainedIn(pgRecycleBin)) bPermanent = true;
 			else if (pgRecycleBin.IsContainedIn(pg)) bPermanent = true;
@@ -221,10 +363,11 @@ namespace PassXYZLib
 
 
 		/// <summary>
-		/// Delete an entry in this group.
+		/// Delete an entry.
 		/// </summary>
-		/// <param name="pe">Entry to be added. Must not be <c>null</c>.</param>
-		public void DeleteEntry(PwEntry pe)
+		/// <param name="pe">The entry to be deleted. Must not be <c>null</c>.</param>	
+        /// <param name="permanent">Permanent delete or move to recycle bin</param>
+		public void DeleteEntry(PwEntry pe, bool permanent = false)
         {
 			if (pe == null) throw new ArgumentNullException("pe");
 
@@ -237,7 +380,8 @@ namespace PassXYZLib
 
 			bool bPermanent = false;
 			if (RecycleBinEnabled == false) bPermanent = true;
-			else if (pgRecycleBin == null) { } // Recycle
+			else if (permanent) bPermanent = true;
+			else if (pgRecycleBin == null) { } // if we cannot find it, we will create it later
 			else if (pgParent == pgRecycleBin) bPermanent = true;
 			else if (pgParent.IsContainedIn(pgRecycleBin)) bPermanent = true;
 
@@ -254,6 +398,78 @@ namespace PassXYZLib
 				pgRecycleBin.AddEntry(pe, true, true);
 				pe.Touch(false);
 			}
+		}
+
+		/// <summary>
+		/// Check whether the source group is the parent of destination group
+		/// </summary>
+		/// <param name="srcGroup">The entry to be moved. Must not be <c>null</c>.</param>	
+		/// <param name="dstGroup">New group for the entry</param>
+		/// <returns>Success or failure.</returns>
+		public bool IsParentGroup(PwGroup srcGroup, PwGroup dstGroup)
+		{
+			if (srcGroup == null) throw new ArgumentNullException("srcGroup");
+			if (dstGroup == null) throw new ArgumentNullException("dstGroup");
+
+			// If the source group is the root group, return true.
+			if (srcGroup.Uuid == this.RootGroup.Uuid) return true;
+
+			PwGroup group = dstGroup.ParentGroup;
+			while (this.RootGroup.Uuid != group.Uuid)
+			{
+				if (group.Uuid == srcGroup.Uuid) return true;
+				group = group.ParentGroup;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Move an entry to a new location.
+		/// </summary>
+		/// <param name="pe">The entry to be moved. Must not be <c>null</c>.</param>	
+		/// <param name="group">New group for the entry</param>
+		/// <returns>Success or failure.</returns>
+		public bool MoveEntry(PwEntry pe, PwGroup group)
+        {
+			if (pe == null) throw new ArgumentNullException("pe");
+			if (group == null) throw new ArgumentNullException("group");
+
+			PwGroup pgParent = pe.ParentGroup;
+			if (pgParent == group) return false;
+
+			if (pgParent != null) // Remove from parent
+			{
+				if (!pgParent.Entries.Remove(pe)) { Debug.Assert(false); }
+			}
+			group.AddEntry(pe, true, true);
+			return true;
+		}
+
+		/// <summary>
+		/// Move a group to a new location.
+		/// The source group cannot be the parent of destination group
+		/// </summary>
+		/// <param name="srcGroup">The entry to be moved. Must not be <c>null</c>.</param>	
+		/// <param name="dstGroup">New group for the entry</param>
+		/// <returns>Success or failure.</returns>
+		public bool MoveGroup(PwGroup srcGroup, PwGroup dstGroup)
+		{
+			if (srcGroup == null) throw new ArgumentNullException("srcGroup");
+			if (dstGroup == null) throw new ArgumentNullException("dstGroup");
+
+			if (srcGroup == dstGroup) return false;
+
+			PwGroup pgParent = srcGroup.ParentGroup;
+			if (pgParent == dstGroup) return false;
+
+			if (IsParentGroup(srcGroup, dstGroup)) return false;
+
+			if (pgParent != null) // Remove from parent
+			{
+				if (!pgParent.Groups.Remove(srcGroup)) { Debug.Assert(false); }
+			}
+			dstGroup.AddGroup(srcGroup, true, true);
+			return true;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 /*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ namespace KeePassLib
 #if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 			get { return GetImage(16, 16); } // Backward compatibility
 #else
-            get { return GetImage(); } // Backward compatibility
+			get { return GetImage(); } // Backward compatibility
 #endif
 		}
 
@@ -86,7 +86,7 @@ namespace KeePassLib
 			try { m_imgOrg = GfxUtil.LoadImage(m_pbImageDataPng); }
 			catch(Exception) { Debug.Assert(false); m_imgOrg = null; }
 #if !KPCLib
-            if(m_imgOrg != null)
+			if(m_imgOrg != null)
 				m_dImageCache[GetID(m_imgOrg.Width, m_imgOrg.Height)] =
 					m_imgOrg;
 #endif // KPCLib

@@ -1,6 +1,6 @@
 ﻿/*
   KeePass Password Safe - The Open-Source Password Manager
-  Copyright (C) 2003-2017 Dominik Reichl <dominik.reichl@t-online.de>
+  Copyright (C) 2003-2021 Dominik Reichl <dominik.reichl@t-online.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
+using System.Text;
 
 using KeePassLib.Cryptography.PasswordGenerator;
 using KeePassLib.Utility;
@@ -35,19 +35,19 @@ namespace KeePassLib.Cryptography
 	{
 		private static class PatternID
 		{
-			public const char LowerAlpha = 'L';
-			public const char UpperAlpha = 'U';
-			public const char Digit = 'D';
-			public const char Special = 'S';
-			public const char High = 'H';
-			public const char Other = 'X';
+			internal const char LowerAlpha = 'L';
+			internal const char UpperAlpha = 'U';
+			internal const char Digit = 'D';
+			internal const char Special = 'S';
+			internal const char Latin1S = 'H';
+			internal const char Other = 'X';
 
-			public const char Dictionary = 'W';
-			public const char Repetition = 'R';
-			public const char Number = 'N';
-			public const char DiffSeq = 'C';
+			internal const char Dictionary = 'W';
+			internal const char Repetition = 'R';
+			internal const char Number = 'N';
+			internal const char DiffSeq = 'C';
 
-			public const string All = "LUDSHXWRNC";
+			internal const string All = "LUDSHXWRNC";
 		}
 
 		// private static class CharDistrib
@@ -281,7 +281,7 @@ namespace KeePassLib.Cryptography
 			}
 		}
 
-		private static object m_objSyncInit = new object();
+		private static readonly object m_objSyncInit = new object();
 		private static List<QeCharType> m_lCharTypes = null;
 
 		private static void EnsureInitialized()
@@ -295,7 +295,7 @@ namespace KeePassLib.Cryptography
 					else strSpecial = strSpecial + " ";
 
 					int nSp = strSpecial.Length;
-					int nHi = PwCharSet.HighAnsiChars.Length;
+					int nL1S = PwCharSet.Latin1S.Length;
 
 					m_lCharTypes = new List<QeCharType>();
 
@@ -307,10 +307,10 @@ namespace KeePassLib.Cryptography
 						PwCharSet.Digits, true));
 					m_lCharTypes.Add(new QeCharType(PatternID.Special,
 						strSpecial, false));
-					m_lCharTypes.Add(new QeCharType(PatternID.High,
-						PwCharSet.HighAnsiChars, false));
+					m_lCharTypes.Add(new QeCharType(PatternID.Latin1S,
+						PwCharSet.Latin1S, false));
 					m_lCharTypes.Add(new QeCharType(PatternID.Other,
-						0x10000 - (2 * 26) - 10 - nSp - nHi));
+						0x10000 - (2 * 26) - 10 - nSp - nL1S));
 				}
 			}
 		}
@@ -318,30 +318,30 @@ namespace KeePassLib.Cryptography
 		/// <summary>
 		/// Estimate the quality of a password.
 		/// </summary>
-		/// <param name="vPasswordChars">Password to check.</param>
+		/// <param name="vPassword">Password to check.</param>
 		/// <returns>Estimated bit-strength of the password.</returns>
-		public static uint EstimatePasswordBits(char[] vPasswordChars)
+		public static uint EstimatePasswordBits(char[] vPassword)
 		{
-			if(vPasswordChars == null) { Debug.Assert(false); return 0; }
-			if(vPasswordChars.Length == 0) return 0;
+			if(vPassword == null) { Debug.Assert(false); return 0; }
+			if(vPassword.Length == 0) return 0;
 
 			EnsureInitialized();
 
-			int n = vPasswordChars.Length;
+			int n = vPassword.Length;
 			List<QePatternInstance>[] vPatterns = new List<QePatternInstance>[n];
 			for(int i = 0; i < n; ++i)
 			{
 				vPatterns[i] = new List<QePatternInstance>();
 
 				QePatternInstance piChar = new QePatternInstance(i, 1,
-					GetCharType(vPasswordChars[i]));
+					GetCharType(vPassword[i]));
 				vPatterns[i].Add(piChar);
 			}
 
-			FindRepetitions(vPasswordChars, vPatterns);
-			FindNumbers(vPasswordChars, vPatterns);
-			FindDiffSeqs(vPasswordChars, vPatterns);
-			FindPopularPasswords(vPasswordChars, vPatterns);
+			FindRepetitions(vPassword, vPatterns);
+			FindNumbers(vPassword, vPatterns);
+			FindDiffSeqs(vPassword, vPatterns);
+			FindPopularPasswords(vPassword, vPatterns);
 
 			// Encoders must not be static, because the entropy estimation
 			// may run concurrently in multiple threads and the encoders are
@@ -382,7 +382,7 @@ namespace KeePassLib.Cryptography
 				{
 					Debug.Assert(s.Position == n);
 
-					double dblCost = ComputePathCost(s.Path, vPasswordChars,
+					double dblCost = ComputePathCost(s.Path, vPassword,
 						ecPattern, mcData);
 					if(dblCost < dblMinCost) dblMinCost = dblCost;
 				}
@@ -420,11 +420,12 @@ namespace KeePassLib.Cryptography
 		{
 			if(pbUnprotectedUtf8 == null) { Debug.Assert(false); return 0; }
 
-			char[] vChars = StrUtil.Utf8.GetChars(pbUnprotectedUtf8);
-			uint uResult = EstimatePasswordBits(vChars);
-			MemUtil.ZeroArray<char>(vChars);
+			char[] v = StrUtil.Utf8.GetChars(pbUnprotectedUtf8);
+			uint r;
+			try { r = EstimatePasswordBits(v); }
+			finally { MemUtil.ZeroArray<char>(v); }
 
-			return uResult;
+			return r;
 		}
 
 		private static QeCharType GetCharType(char ch)
@@ -482,7 +483,7 @@ namespace KeePassLib.Cryptography
 				vLeet[i] = char.ToLower(DecodeLeetChar(ch));
 			}
 
-			char chErased = default(char);
+			char chErased = default(char); // The value that Array.Clear uses
 			Debug.Assert(chErased == char.MinValue);
 
 			int nMaxLen = Math.Min(n, PopularPasswords.MaxLength);
@@ -515,7 +516,12 @@ namespace KeePassLib.Cryptography
 						Debug.Assert(vLower[i] == chErased);
 					}
 				}
+
+				MemUtil.ZeroArray<char>(vSub);
 			}
+
+			MemUtil.ZeroArray<char>(vLower);
+			MemUtil.ZeroArray<char>(vLeet);
 		}
 
 		private static bool EvalAddPopularPasswordPattern(List<QePatternInstance>[] vPatterns,
@@ -659,6 +665,8 @@ namespace KeePassLib.Cryptography
 					if(bFoundRep) ErasePart(v, x1, m, ref chErased);
 				}
 			}
+
+			MemUtil.ZeroArray<char>(v);
 		}
 
 		private static bool PartsEqual(char[] v, int x1, int x2, int nLength)
@@ -685,23 +693,25 @@ namespace KeePassLib.Cryptography
 		{
 			int n = vPassword.Length;
 			StringBuilder sb = new StringBuilder();
+
 			for(int i = 0; i < n; ++i)
 			{
 				char ch = vPassword[i];
 				if((ch >= '0') && (ch <= '9')) sb.Append(ch);
 				else
 				{
-					AddNumberPattern(vPatterns, sb.ToString(), i - sb.Length);
+					AddNumberPattern(vPatterns, sb, i - sb.Length);
 					sb.Remove(0, sb.Length);
 				}
 			}
-			AddNumberPattern(vPatterns, sb.ToString(), n - sb.Length);
+			AddNumberPattern(vPatterns, sb, n - sb.Length);
 		}
 
 		private static void AddNumberPattern(List<QePatternInstance>[] vPatterns,
-			string strNumber, int i)
+			StringBuilder sb, int i)
 		{
-			if(strNumber.Length <= 2) return;
+			if(sb.Length <= 2) return;
+			string strNumber = sb.ToString();
 
 			int nZeros = 0;
 			for(int j = 0; j < strNumber.Length; ++j)
@@ -733,17 +743,18 @@ namespace KeePassLib.Cryptography
 		private static void FindDiffSeqs(char[] vPassword,
 			List<QePatternInstance>[] vPatterns)
 		{
-			int d = int.MinValue, p = 0;
-			string str = new string(vPassword) + new string(char.MaxValue, 1);
+			int n = vPassword.Length;
+			int d = int.MaxValue, p = 0;
 
-			for(int i = 1; i < str.Length; ++i)
+			for(int i = 1; i <= n; ++i)
 			{
-				int dCur = (int)str[i] - (int)str[i - 1];
+				int dCur = ((i == n) ? int.MinValue :
+					((int)vPassword[i] - (int)vPassword[i - 1]));
 				if(dCur != d)
 				{
 					if((i - p) >= 3) // At least 3 chars involved
 					{
-						QeCharType ct = GetCharType(str[p]);
+						QeCharType ct = GetCharType(vPassword[p]);
 						double dblCost = ct.CharSize + Log2(i - p - 1);
 
 						vPatterns[p].Add(new QePatternInstance(p,

@@ -4,8 +4,13 @@ using System.IO;
 using Xunit;
 using KeePassLib.Utility;
 
+// Need to turn off test parallelization so we can validate the run order
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+[assembly: TestCollectionOrderer("KPCLib.xunit.Orderers.DisplayNameOrderer", "KPCLib.xunit")]
+
 namespace KPCLib.xunit
 {
+    [Collection("Z. GfxUtil Collection")]
     public class GfxUtilTests
     {
         const string TEST_IMAGE = "../../../test.jpg";
