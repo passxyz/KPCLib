@@ -11,6 +11,10 @@ This is a port of KeePassLib to PCL and .netstandard so that it can be used to b
 
 ## Changes:
 
+### Release 1.2.0
+ - Added PassXYZLib
+ - Support KPCLibPy
+
 ### Release 1.1.9
  - Removed dependency of Xamarin.Forms so it can be built with any .Netstandard apps
  - Using SkiaSharp to handle Bitmap which is supported by .Netstandard and .Net Core

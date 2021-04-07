@@ -382,7 +382,7 @@ namespace KPCLib.xunit
         public void PxLibVersion() 
         {
             Debug.WriteLine($"{PxLibInfo.Version}");
-            Assert.Equal(PxLibInfo.Version, new System.Version("1.2.0.0"));
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.2.0.1"));
         }
 
         [Fact]
