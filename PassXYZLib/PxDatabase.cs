@@ -158,10 +158,15 @@ namespace PassXYZLib
 		public PwGroup CurrentGroup
 		{
 			get {
-				if(RootGroup.Uuid == LastSelectedGroup || LastSelectedGroup.Equals(PwUuid.Zero)) 
+				if(RootGroup.Uuid == LastSelectedGroup || LastSelectedGroup.Equals(PwUuid.Zero))
 				{
 					LastSelectedGroup = RootGroup.Uuid;
 					m_pwCurrentGroup = RootGroup;
+				}
+
+				if(m_pwCurrentGroup == null) 
+				{ 
+					if(!LastSelectedGroup.Equals(PwUuid.Zero)) { m_pwCurrentGroup = RootGroup.FindGroup(LastSelectedGroup, true); }
 				}
 				return m_pwCurrentGroup;
 			}
