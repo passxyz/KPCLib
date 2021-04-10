@@ -9,9 +9,3 @@ This is a port of KeePassLib to PCL and .netstandard so that it can be used to b
 * [Branch strategy](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
 * Install into your PCL/.NET Standard project and Client projects.
 
-## Changes:
-
-### Release 1.1.9
- - Removed dependency of Xamarin.Forms so it can be built with any .Netstandard apps
- - Using SkiaSharp to handle Bitmap which is supported by .Netstandard and .Net Core
- - Removed UWP test app and added .Net Core test app

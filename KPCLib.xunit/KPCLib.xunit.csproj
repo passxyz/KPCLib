@@ -24,6 +24,7 @@
   <Target Name="CopyDataFiles" AfterTargets="Build">
     <ItemGroup>
       <DataFiles Include="$(ProjectDir)\utdb.kdbx" />
+      <DataFiles Include="$(ProjectDir)\pass_d_E8f4pEk.xyz" />
     </ItemGroup>
 
     <Copy SourceFiles="@(DataFiles)" DestinationFolder="$(TargetDir)\" SkipUnchangedFiles="true" />

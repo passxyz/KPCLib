@@ -9,7 +9,9 @@ namespace PassXYZLib
 {
     public class PxDatabase : PwDatabase
     {
-		/// <summary>
+		private PwGroup m_pwCurrentGroup = null;
+
+ 		/// <summary>
 		/// If this is <c>true</c>, a database is currently open.
 		/// </summary>
 		public new bool IsOpen
@@ -155,29 +157,60 @@ namespace PassXYZLib
 
 		public PwGroup CurrentGroup
 		{
-			get { 
-				if(this.RootGroup.Uuid == this.LastSelectedGroup) 
-					{ return this.RootGroup; }
-				else
-					return this.RootGroup.FindGroup(this.LastSelectedGroup, true); 
+			get {
+				if(RootGroup.Uuid == LastSelectedGroup || LastSelectedGroup.Equals(PwUuid.Zero))
+				{
+					LastSelectedGroup = RootGroup.Uuid;
+					m_pwCurrentGroup = RootGroup;
+				}
+
+				if(m_pwCurrentGroup == null) 
+				{ 
+					if(!LastSelectedGroup.Equals(PwUuid.Zero)) { m_pwCurrentGroup = RootGroup.FindGroup(LastSelectedGroup, true); }
+				}
+				return m_pwCurrentGroup;
 			}
-			set { this.LastSelectedGroup = value.Uuid; }
+			set {
+				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				LastSelectedGroup = value.Uuid;
+				if (RootGroup.Uuid == LastSelectedGroup || LastSelectedGroup.Equals(PwUuid.Zero))
+				{
+					LastSelectedGroup = RootGroup.Uuid;
+					m_pwCurrentGroup = RootGroup;
+				}
+				else
+					m_pwCurrentGroup = RootGroup.FindGroup(LastSelectedGroup, true);
+			}
 		}
 
 		public string CurrentPath 
 		{ 
 			get {
-				var group = this.CurrentGroup;
-				string path = this.CurrentGroup.Name + "/";
-
-				while (this.RootGroup.Uuid != group.Uuid)
+				if(CurrentGroup == null) 
 				{
-					group = group.ParentGroup;
-					path = group.Name + "/" + path;
+					return null;
 				}
+				else 
+				{
+					var group = CurrentGroup;
+					string path = group.Name + "/";
 
-				return path;
+					while (RootGroup.Uuid != group.Uuid)
+					{
+						group = group.ParentGroup;
+						path = group.Name + "/" + path;
+					}
+
+					return path;
+				}
 			}
+		}
+
+		/// <summary>
+		/// Constructs an empty password manager object.
+		/// </summary>
+		public PxDatabase() : base()
+		{
 		}
 
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)

@@ -12,12 +12,12 @@ using PassXYZLib;
 
 namespace KPCLib.xunit
 {
-    public class PassXYZFixture : IDisposable
+    public class PxDatabaseFixture : IDisposable
     {
         const string TEST_DB = "utdb.kdbx";
         const string TEST_DB_KEY = "12345";
 
-        public PassXYZFixture() 
+        public PxDatabaseFixture() 
         {
             Logger = new KPCLibLogger();
             PxDb = new PxDatabase();
@@ -37,7 +37,7 @@ namespace KPCLib.xunit
     }
 
     [CollectionDefinition("PxDatabase collection")]
-    public class PxDatabaseCollection : ICollectionFixture<PassXYZFixture>
+    public class PxDatabaseCollection : ICollectionFixture<PxDatabaseFixture>
     {
         // This class has no code, and is never created. Its purpose is simply
         // to be the place to apply [CollectionDefinition] and all the
@@ -47,9 +47,9 @@ namespace KPCLib.xunit
     [Collection("PxDatabase collection")]
     public class PxDatabaseTests
     {
-        PassXYZFixture passxyz;
+        PxDatabaseFixture passxyz;
 
-        public PxDatabaseTests(PassXYZFixture passXYZFixture) 
+        public PxDatabaseTests(PxDatabaseFixture passXYZFixture) 
         {
             this.passxyz = passXYZFixture;
         }
@@ -382,7 +382,7 @@ namespace KPCLib.xunit
         public void PxLibVersion() 
         {
             Debug.WriteLine($"{PxLibInfo.Version}");
-            Assert.Equal(PxLibInfo.Version, new System.Version("1.2.0.0"));
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.2.1.0"));
         }
 
         [Fact]
