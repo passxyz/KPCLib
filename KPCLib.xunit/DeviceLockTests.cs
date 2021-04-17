@@ -81,7 +81,7 @@ namespace KPCLib.xunit
         }
 
         [Theory]
-        [InlineData("/test1/WebDAV")]
+        [InlineData("/kpclibpy/Database/Oracle")]
         /// <summary>
         /// Change a protect field
         /// </summary>
