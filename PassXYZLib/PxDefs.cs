@@ -206,6 +206,12 @@ namespace PassXYZLib
             return trimedName;
         }
 
+        public static bool IsDeviceLockEnabled(string filename)
+        {
+            if (filename.StartsWith(head_data)) return true;
+            else return false;
+        }
+
         public static bool IsPxEntry(PwEntry entry)
         {
             if (entry.CustomData.Get(PxCustomDataItemSubType) == ItemSubType.PxEntry.ToString())

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KPCLib", "KPCLib\KPCLib.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KPCLib.xunit", "KPCLib.xunit\KPCLib.xunit.csproj", "{4764BB09-267A-4760-AE2D-6979BDA5FB88}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PassXYZLib", "PassXYZLib\PassXYZLib.csproj", "{E6F6B65A-6474-4978-9F9C-F22194688240}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PassXYZLib", "PassXYZLib\PassXYZLib.csproj", "{E6F6B65A-6474-4978-9F9C-F22194688240}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

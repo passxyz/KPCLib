@@ -6,7 +6,7 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <PackageLicenseUrl>https://github.com/passxyz/KPCLib/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
@@ -14,7 +14,8 @@
     <Copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye created this for UWP, Android and iOS platforms.</Copyright>
     <Authors>Roger Ye</Authors>
     <Company>PassXYZ Inc.</Company>
-    <PackageReleaseNotes>1.2.0 - Enhanced KeePassLib
+    <PackageReleaseNotes>1.2.2 - Release PassXYZLib
+1.2.0 - Enhanced KeePassLib
 1.1.9 - Removed dependency Xamarin.Forms
 1.1.8 - Replaced Splat with SkiaSharp.
 
@@ -22,8 +23,8 @@
 
 1.1.6 - KPCLib has been tested on all three platforms (Android, iOS and UWP).</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>
+    <AssemblyVersion>1.2.2.2</AssemblyVersion>
+    <FileVersion>1.2.2.2</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
