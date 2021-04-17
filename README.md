@@ -10,7 +10,7 @@ To be compatiable with Xamarin.Forms, the current build is an .Net Standard 2.0 
 
 ### Setup
 * Available on NuGet: [![NuGet](https://img.shields.io/nuget/v/Xam.Plugin.Media.svg?label=NuGet)](https://www.nuget.org/packages/KPCLib)
-* Build status: [![Build status](https://ci.appveyor.com/api/projects/status/ugxm1im7nsl634uy/branch/develop?svg=true)](https://ci.appveyor.com/project/shugaoye/kpclib/branch/develop)
+* Build status: [![Build status](https://ci.appveyor.com/api/projects/status/4py18evnh0xxxvi1?svg=true)](https://ci.appveyor.com/project/shugaoye/kpclib-bccwi)
 * [Branch strategy](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
 * Install into your PCL/.NET Standard project and Client projects.
 
