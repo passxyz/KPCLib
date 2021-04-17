@@ -23,8 +23,8 @@
 
 1.1.6 - KPCLib has been tested on all three platforms (Android, iOS and UWP).</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <AssemblyVersion>1.2.2.2</AssemblyVersion>
-    <FileVersion>1.2.2.2</FileVersion>
+    <AssemblyVersion>1.2.2.3</AssemblyVersion>
+    <FileVersion>1.2.2.3</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

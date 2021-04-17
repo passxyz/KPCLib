@@ -1,8 +1,8 @@
-version: '1.0.{build}'
-image: Visual Studio 2017
+version: '1.2.2.{build}'
+image: Visual Studio 2019
 branches:
   only:
-  - develop
+  - master
 init:
   # Good practise, because Windows line endings are different from Unix/Linux ones
   - cmd: git config --global core.autocrlf true
@@ -12,13 +12,13 @@ before_build:
   # Display .NET Core version
   - cmd: dotnet --version
   # Display minimal restore text
-  - cmd: dotnet restore ./KPCLib/KPCLib.csproj --verbosity m
+  - cmd: dotnet restore ./PassXYZLib/PassXYZLib.csproj --verbosity m
 build_script:
   # output will be in ./src/bin/debug/netcoreapp2.0/publish
-  - cmd: dotnet build ./KPCLib/KPCLib.csproj
+  - cmd: dotnet build ./PassXYZLib/PassXYZLib.csproj
 after_build:
   # For once the build has completed
-  - cmd: dotnet pack ./KPCLib/KPCLib.csproj
+  - cmd: dotnet pack ./PassXYZLib/PassXYZLib.csproj
 artifacts:
   - path: 'KPCLib\bin\Debug\KPCLib.*.nupkg'
     name: KPCLib
