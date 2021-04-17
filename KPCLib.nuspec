@@ -2,11 +2,11 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>KPCLib</id>
-        <version>1.2.2</version>
+        <version>1.2.2.8</version>
         <authors>Roger Ye</authors>
 		<owners>Roger Ye</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<licenseUrl>https://github.com/passxyz/KPCLib/blob/master/LICENSE</licenseUrl>
+		<license type="expression">LGPL-3.0-or-later</license>
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</description>
 		<releaseNotes>-Support Markdown in Notes field
