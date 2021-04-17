@@ -248,6 +248,11 @@ namespace PassXYZLib
 		/// <param name="password">The password of data file</param>
 		public void Open(string filename, string password)
 		{
+			if (filename == null || filename == String.Empty) 
+			{ Debug.Assert(false); throw new ArgumentNullException("filename"); }
+			if (password == null || password == String.Empty) 
+			{ Debug.Assert(false); throw new ArgumentNullException("password"); }
+
 			var logger = new KPCLibLogger();
 
 			var file_path = Path.Combine(DefaultFolder, filename);
