@@ -1,5 +1,8 @@
 ## Change log
 
+### Release 1.2.2
+ - Bug fixes
+
 ### Release 1.2.1
  - Support Markdown in Notes field
  - Support PassXYZ data format
