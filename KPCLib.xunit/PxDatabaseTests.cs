@@ -99,7 +99,7 @@ namespace KPCLib.xunit
 
         [Theory]
         [InlineData(true)]
-        [InlineData(false)]
+        //[InlineData(false)]
         /// <summary>
         /// Delete the first entry in the list.
         /// </summary>
