@@ -25,6 +25,8 @@
     <ItemGroup>
       <DataFiles Include="$(ProjectDir)\utdb.kdbx" />
       <DataFiles Include="$(ProjectDir)\pass_d_E8f4pEk.xyz" />
+      <DataFiles Include="$(ProjectDir)\pass_e_JyHzpRxcopt.xyz" />
+      <DataFiles Include="$(ProjectDir)\pass_k_JyHzpRxcopt.k4xyz" />
     </ItemGroup>
 
     <Copy SourceFiles="@(DataFiles)" DestinationFolder="$(TargetDir)\" SkipUnchangedFiles="true" />

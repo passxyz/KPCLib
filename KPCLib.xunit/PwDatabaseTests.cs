@@ -8,6 +8,7 @@ using KeePassLib;
 using KeePassLib.Keys;
 using KeePassLib.Serialization;
 using KeePassLib.Utility;
+using PassXYZLib;
 
 namespace KPCLib.xunit
 {

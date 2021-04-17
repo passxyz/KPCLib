@@ -1,8 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Diagnostics;
 using System.Drawing;
 
 using KeePassLib;
+using KeePassLib.Interfaces;
+using KeePassLib.Keys;
+using KeePassLib.Security;
+using KeePassLib.Serialization;
 using PassXYZLib.Resources;
 
 namespace PassXYZLib
@@ -183,7 +188,10 @@ namespace PassXYZLib
 			}
 		}
 
-		public string CurrentPath 
+		/// <summary>
+		/// This is the string of CurrentGroup
+		/// </summary>
+		public string CurrentPath
 		{ 
 			get {
 				if(CurrentGroup == null) 
@@ -206,11 +214,64 @@ namespace PassXYZLib
 			}
 		}
 
+		private static string m_DefaultFolder = String.Empty;
+		public static string DefaultFolder
+		{
+			get
+			{
+				if (m_DefaultFolder == String.Empty) { m_DefaultFolder = Environment.CurrentDirectory; }
+
+				return m_DefaultFolder;
+			}
+
+			set 
+			{ 
+				m_DefaultFolder = value;
+				PassXYZ.Utils.Settings.DefaultFolder = m_DefaultFolder;
+			}
+		}
+
 		/// <summary>
 		/// Constructs an empty password manager object.
 		/// </summary>
 		public PxDatabase() : base()
 		{
+		}
+
+
+		/// <summary>
+		/// Open database using a filename and password
+		/// This data file has a device lock.
+		/// Need to set DefaultFolder first. This is the folder to store data files.
+		/// </summary>
+		/// <param name="filename">The data file name</param>
+		/// <param name="password">The password of data file</param>
+		public void Open(string filename, string password)
+		{
+			var logger = new KPCLibLogger();
+
+			var file_path = Path.Combine(DefaultFolder, filename);
+			IOConnectionInfo ioc = IOConnectionInfo.FromPath(file_path);
+			CompositeKey cmpKey = new CompositeKey();
+			cmpKey.AddUserKey(new KcpPassword(password));
+
+			if(PxDefs.IsDeviceLockEnabled(filename))
+			{
+				var userName = PxDefs.GetUserNameFromDataFile(filename);
+				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(userName, false);
+				if (pxKeyProvider.IsInitialized)
+				{
+					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+					byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+					cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+				}
+				else
+				{
+					throw new KeePassLib.Keys.InvalidCompositeKeyException();
+				}
+			}
+
+			Open(ioc, cmpKey, logger);
 		}
 
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)

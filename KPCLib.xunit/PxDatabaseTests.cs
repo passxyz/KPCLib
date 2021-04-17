@@ -19,12 +19,8 @@ namespace KPCLib.xunit
 
         public PxDatabaseFixture() 
         {
-            Logger = new KPCLibLogger();
             PxDb = new PxDatabase();
-            IOConnectionInfo ioc = IOConnectionInfo.FromPath(TEST_DB);
-            CompositeKey cmpKey = new CompositeKey();
-            cmpKey.AddUserKey(new KcpPassword(TEST_DB_KEY));
-            PxDb.Open(ioc, cmpKey, Logger);
+            PxDb.Open(TEST_DB, TEST_DB_KEY);
         }
 
         public void Dispose() 

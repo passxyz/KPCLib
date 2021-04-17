@@ -10,17 +10,19 @@ using KeePassLib.Security;
 using KeePassLib.Serialization;
 using KeePassLib.Utility;
 using PassXYZLib;
+//using PassXYZ.Services;
 
 namespace KPCLib.xunit
 {
-    public class PassXYZLibFixture : IDisposable
+    public class DeviceLockFixture : IDisposable
     {
-        const string TEST_DB = "pass_d_E8f4pEk.xyz";
-        const string TEST_DB_KEY = "12345";
+        const string TEST_DB = "pass_e_JyHzpRxcopt.xyz";
+        const string TEST_DB_KEY = "123123";
 
-        public PassXYZLibFixture()
+        public DeviceLockFixture()
         {
-            PxDb = new PxDatabase();
+            PxDb = new PassXYZLib.PxDatabase();
+            PxDatabase.DefaultFolder = "../../..";
             PxDb.Open(TEST_DB, TEST_DB_KEY);
         }
 
@@ -29,30 +31,30 @@ namespace KPCLib.xunit
             PxDb.Close();
         }
 
-        public PxDatabase PxDb { get; private set; }
-        public KPCLibLogger Logger { get; private set; }
+        public PassXYZLib.PxDatabase PxDb { get; private set; }
 
-        public string Username { 
+        public string Username
+        {
             get { return PxDefs.GetUserNameFromDataFile(TEST_DB); }
         }
     }
 
-    [CollectionDefinition("PassXYZLib collection")]
-    public class PassXYZLibCollection : ICollectionFixture<PassXYZLibFixture>
+    [CollectionDefinition("DeviceLock collection")]
+    public class DeviceLockCollection : ICollectionFixture<DeviceLockFixture>
     {
         // This class has no code, and is never created. Its purpose is simply
         // to be the place to apply [CollectionDefinition] and all the
         // ICollectionFixture<> interfaces.
     }
 
-    [Collection("PassXYZLib collection")]
-    public class PassXYZLibTests 
+    [Collection("DeviceLock collection")]
+    public class DeviceLockTests
     {
-        PassXYZLibFixture passxyz;
+        DeviceLockFixture passxyz;
 
-        public PassXYZLibTests(PassXYZLibFixture passXYZLibFixture)
+        public DeviceLockTests(DeviceLockFixture deviceLockFixture)
         {
-            this.passxyz = passXYZLibFixture;
+            this.passxyz = deviceLockFixture;
         }
 
         [Fact]
@@ -84,7 +86,7 @@ namespace KPCLib.xunit
         /// Change a protect field
         /// </summary>
         /// <param name="path">Destination path. Must not be <c>null</c>.</param>
-        public void ChangeProtectedFieldTests(string path) 
+        public void ChangeProtectedFieldTests(string path)
         {
             var entry = passxyz.PxDb.FindByPath<PwEntry>(path);
 
@@ -104,7 +106,7 @@ namespace KPCLib.xunit
 
         }
 
-        // The end of PassXYZLibTests
+        // The end of DeviceLockTests
     }
 
 }
