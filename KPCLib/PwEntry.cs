@@ -37,9 +37,8 @@ namespace KeePassLib
 	/// fields like title, user name, password, etc. Each password entry has a
 	/// unique ID (UUID).
 	/// </summary>
-	public sealed class PwEntry : ITimeLogger, IStructureItem, IDeepCloneable<PwEntry>
+	public class PwEntry : Item, ITimeLogger, IStructureItem, IDeepCloneable<PwEntry>
 	{
-		private PwUuid m_uuid = PwUuid.Zero;
 		private PwGroup m_pParentGroup = null;
 		private DateTime m_tParentGroupLastMod = PwDefs.DtDefaultNow;
 
@@ -66,19 +65,6 @@ namespace KeePassLib
 		private List<string> m_lTags = new List<string>();
 
 		private StringDictionaryEx m_dCustomData = new StringDictionaryEx();
-
-		/// <summary>
-		/// UUID of this entry.
-		/// </summary>
-		public PwUuid Uuid
-		{
-			get { return m_uuid; }
-			set
-			{
-				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
-				m_uuid = value;
-			}
-		}
 
 		/// <summary>
 		/// Reference to a group which contains the current entry.
@@ -300,7 +286,7 @@ namespace KeePassLib
 		/// <summary>
 		/// The name of this group. Cannot be <c>null</c>.
 		/// </summary>
-		public string Name
+		public override string Name
 		{
 			get { return Strings.ReadSafe(PwDefs.TitleField); }
 			set
@@ -318,7 +304,7 @@ namespace KeePassLib
 			m_tLastMod = dtNow;
 			m_tLastAccess = dtNow;
 			m_tParentGroupLastMod = dtNow;
-			m_uuid = new PwUuid(true);
+			Uuid = new PwUuid(true);
 		}
 #endif
 		/// <summary>
@@ -332,7 +318,7 @@ namespace KeePassLib
 		/// and last access times will be set to the current system time.</param>
 		public PwEntry(bool bCreateNewUuid, bool bSetTimes)
 		{
-			if(bCreateNewUuid) m_uuid = new PwUuid(true);
+			if(bCreateNewUuid) Uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -360,7 +346,7 @@ namespace KeePassLib
 		{
 			m_pParentGroup = pwParentGroup;
 
-			if(bCreateNewUuid) m_uuid = new PwUuid(true);
+			if(bCreateNewUuid) Uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -390,7 +376,7 @@ namespace KeePassLib
 		{
 			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.m_uuid = m_uuid; // PwUuid is immutable
+			peNew.Uuid = Uuid; // PwUuid is immutable
 			peNew.m_pParentGroup = m_pParentGroup;
 			peNew.m_tParentGroupLastMod = m_tParentGroupLastMod;
 
@@ -425,7 +411,7 @@ namespace KeePassLib
 		{
 			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.m_uuid = m_uuid; // PwUuid is immutable
+			peNew.Uuid = Uuid; // PwUuid is immutable
 			peNew.m_tParentGroupLastMod = m_tParentGroupLastMod;
 			// Do not assign m_pParentGroup
 
@@ -475,7 +461,7 @@ namespace KeePassLib
 			bool bIgnoreLastMod = ((pwOpt & PwCompareOptions.IgnoreLastMod) !=
 				PwCompareOptions.None);
 
-			if(!m_uuid.Equals(pe.m_uuid)) return false;
+			if(!Uuid.Equals(pe.Uuid)) return false;
 			if((pwOpt & PwCompareOptions.IgnoreParentGroup) == PwCompareOptions.None)
 			{
 				if(m_pParentGroup != pe.m_pParentGroup) return false;
@@ -563,8 +549,8 @@ namespace KeePassLib
 				return;
 
 			// Template UUID should be the same as the current one
-			Debug.Assert(m_uuid.Equals(peTemplate.m_uuid));
-			m_uuid = peTemplate.m_uuid;
+			Debug.Assert(Uuid.Equals(peTemplate.Uuid));
+			Uuid = peTemplate.Uuid;
 
 			if(bAssignLocationChanged)
 				m_tParentGroupLastMod = peTemplate.m_tParentGroupLastMod;
@@ -724,7 +710,7 @@ namespace KeePassLib
 			if(pwSettings == null) { Debug.Assert(false); return false; }
 
 			// Fix UUIDs of history entries; should not be necessary
-			PwUuid pu = m_uuid;
+			PwUuid pu = Uuid;
 			foreach(PwEntry pe in m_lHistory)
 			{
 				if(!pe.Uuid.Equals(pu)) { Debug.Assert(false); pe.Uuid = pu; }

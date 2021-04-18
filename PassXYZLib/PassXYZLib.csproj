@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="PassXYZ" Version="2.1.4.8" />
+    <PackageReference Include="PureOtp" Version="1.0.0.8" />
   </ItemGroup>
 
   <ItemGroup>

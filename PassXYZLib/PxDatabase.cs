@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Drawing;
@@ -450,7 +451,7 @@ namespace PassXYZLib
 				EnsureRecycleBin(ref pgRecycleBin);
 
 				try { pgRecycleBin.AddGroup(pg, true, true); }
-				catch (Exception ex)
+				catch (Exception)
 				{
 					if (pgRecycleBin.Groups.IndexOf(pg) < 0)
 						pgParent.AddGroup(pg, true, true); // Undo removal
@@ -570,5 +571,54 @@ namespace PassXYZLib
 			dstGroup.AddGroup(srcGroup, true, true);
 			return true;
 		}
+
+		/// <summary>
+		/// Find a list of entries with a defined property, such as OTP Url
+		/// The customized properties are stored in CustomData per PxDefs, such as PxCustomDataOtpUrl
+		/// </summary>
+		/// <param name="name">The property name. Must not be <c>null</c>.</param>	
+		/// <returns>a list of entries</returns>
+		public IEnumerable<PwEntry> GetEntryListByProperty(string name)
+		{
+			if (name == null) { Debug.Assert(false); throw new ArgumentNullException("name"); }
+
+			List<PwEntry> resultsList = new List<PwEntry>();
+
+			LinkedList<PwGroup> flatGroupList = RootGroup.GetFlatGroupList();
+
+			foreach (PwEntry entry in RootGroup.Entries)
+			{
+				if (entry.CustomData != null && entry.CustomData.Exists(name))
+				{
+					if (!string.IsNullOrWhiteSpace(entry.CustomData.Get(name)))
+					{
+						resultsList.Add(entry);
+					}
+				}
+			}
+
+			foreach (PwEntry entry in PwGroup.GetFlatEntryList(flatGroupList))
+			{
+				if (entry.CustomData != null && entry.CustomData.Exists(name))
+				{
+					if (!string.IsNullOrWhiteSpace(entry.CustomData.Get(name)))
+					{
+						resultsList.Add(entry);
+					}
+				}
+			}
+			return resultsList;
+		}
+
+		/// <summary>
+		/// Retrieve a list of entries with OTP
+		/// </summary>
+		/// <returns>a list of entries with OTP Url</returns>
+		public IEnumerable<PwEntry> GetOtpEntryList()
+		{
+			return GetEntryListByProperty(PxDefs.PxCustomDataOtpUrl);
+		}
+
+		// The end of PxDatabase
 	}
 }

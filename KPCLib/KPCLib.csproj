@@ -7,7 +7,6 @@
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>1.2.2.9</Version>
-    <PackageLicenseUrl>https://github.com/passxyz/KPCLib/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
     <Description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</Description>
