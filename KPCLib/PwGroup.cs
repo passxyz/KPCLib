@@ -85,6 +85,31 @@ namespace KeePassLib
 			}
 		}
 
+#if KPCLib
+        public override bool IsGroup => true;
+
+		/// <summary>
+		/// Get a list of items in this group.
+		/// </summary>
+		public List<Item> Items
+		{
+			get {
+				List<Item> itemList = new List<Item>();
+
+				foreach( PwEntry entry in m_listEntries) 
+				{
+					itemList.Add((Item)entry);
+				}
+
+				foreach(PwGroup group in m_listGroups) 
+				{
+					itemList.Add((Item)group);
+				}
+				return itemList; 
+			}
+		}
+#endif // KPCLib
+
 		/// <summary>
 		/// Comments about this group. Cannot be <c>null</c>.
 		/// </summary>

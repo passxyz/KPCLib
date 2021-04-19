@@ -283,6 +283,8 @@ namespace KeePassLib
 		public EventHandler<ObjectTouchedEventArgs> Touched;
 
 #if KPCLib
+		public override bool IsGroup => false;
+
 		/// <summary>
 		/// The name of this group. Cannot be <c>null</c>.
 		/// </summary>

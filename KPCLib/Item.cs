@@ -17,6 +17,8 @@ namespace KeePassLib
 
         public abstract string Name { get; set; }
 
+        public abstract bool IsGroup { get; }
+
         /// <summary>
         /// UUID of this item.
         /// </summary>
