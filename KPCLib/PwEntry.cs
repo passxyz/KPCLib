@@ -283,6 +283,13 @@ namespace KeePassLib
 		public EventHandler<ObjectTouchedEventArgs> Touched;
 
 #if KPCLib
+		public override string Description 
+		{ 
+			get { 
+				return $"PwEntry\t{LastModificationTime.ToString("yyyy'-'MM'-'dd")}"; 
+			} 
+		}
+
 		public override bool IsGroup => false;
 
 		/// <summary>

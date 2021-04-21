@@ -17,6 +17,8 @@ namespace KeePassLib
 
         public abstract string Name { get; set; }
 
+        public abstract string Description { get;}
+
         public abstract bool IsGroup { get; }
 
         /// <summary>

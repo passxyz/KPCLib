@@ -35,7 +35,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="PureOtp" Version="1.0.0.8" />
     <PackageReference Include="SkiaSharp" Version="1.68.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PassXYZLib\" />
   </ItemGroup>
 
 </Project>

@@ -63,6 +63,30 @@ namespace KPCLib.xunit
         }
 
         [Fact]
+        public void ListItemsTests()
+        {
+            PwGroup pg = passxyz.PxDb.RootGroup;
+            foreach (var item in pg.Items)
+            {
+                Debug.WriteLine($"{item.Description}\t{item.Name}");
+                if(!item.IsGroup)
+                {
+                    if(PxDefs.IsPxEntry((PwEntry)item))
+                    {
+                        var entry = new PxEntry((PwEntry)item);
+                        if (entry.Totp == null)
+                        {
+                            entry.UpdateOtpUrl("otpauth://totp/Google%3Apxentry_test%40gmail.com?secret=JBSWY3DPEHPK3PXP&issuer=Google");
+                            var Totp = entry.Totp;
+                            Debug.WriteLine($"Token={entry.Token}");
+                            Assert.NotNull(Totp);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Fact]
         public void CurrentGroupTests()
         {
             var currentGroup = passxyz.PxDb.CurrentGroup;
