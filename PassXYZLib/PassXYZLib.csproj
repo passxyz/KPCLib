@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.2.2.9</Version>
-    <AssemblyVersion>1.2.2.9</AssemblyVersion>
-    <FileVersion>1.2.2.9</FileVersion>
+    <Version>1.2.3.0</Version>
+    <AssemblyVersion>1.2.3.0</AssemblyVersion>
+    <FileVersion>1.2.3.0</FileVersion>
     <Company>PassXYZ Inc.</Company>
     <Authors>Roger Ye</Authors>
     <Copyright>Roger Ye</Copyright>
