@@ -2,23 +2,23 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>KPCLib</id>
-        <version>1.2.2.8</version>
+        <version>1.2.3.0</version>
         <authors>Roger Ye</authors>
 		<owners>Roger Ye</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<license type="expression">LGPL-3.0-or-later</license>
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</description>
-		<releaseNotes>-Support Markdown in Notes field
-					- Support PassXYZ data format</releaseNotes>
-		<copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye created this for UWP, Android and iOS platforms.</copyright>
+		<releaseNotes>- Support OTP</releaseNotes>
+		<copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye updated and enhanced this library for .NET Standard.</copyright>
 		<repository url="https://github.com/passxyz/KPCLib" />
 		<dependencies>
 		  <group targetFramework=".NETStandard2.0">
 			<dependency id="SkiaSharp" version="1.68.0" exclude="Build,Analyzers" />
+			<dependency id="PureOtp" version="1.0.0.8" exclude="Build,Analyzers" />
 		  </group>
 		</dependencies>
-        <summary>A library to be built as .NET Standard Library to be used for Android, iOS and UWP</summary>
+        <summary>KeePassLib built as .NET Standard Library</summary>
     </metadata>
   <files>
     <file src="PassXYZLib/bin/Release/netstandard2.0/KPCLib.dll" target="lib/netstandard2.0/KPCLib.dll" />
