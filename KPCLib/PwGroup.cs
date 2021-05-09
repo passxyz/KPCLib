@@ -86,15 +86,9 @@ namespace KeePassLib
 		}
 
 #if KPCLib
-		public override string Description 
-		{ 
-			get { 
-				return $"PwGroup\t{LastModificationTime.ToString("yyyy'-'MM'-'dd")}"; 
-			} 
-		}
+        public override string Description => $"PwGroup\t{LastModificationTime:yyyy'-'MM'-'dd}\t{Notes}";
 
-
-		public override bool IsGroup => true;
+        public override bool IsGroup => true;
 
 		/// <summary>
 		/// Get a list of items in this group.
