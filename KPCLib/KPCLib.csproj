@@ -6,14 +6,15 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.2.3.0</Version>
+    <Version>1.2.4.0</Version>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
     <Description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</Description>
     <Copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye created this for UWP, Android and iOS platforms.</Copyright>
     <Authors>Roger Ye</Authors>
     <Company>PassXYZ Inc.</Company>
-    <PackageReleaseNotes>1.2.3 - OTP support
+    <PackageReleaseNotes>1.2.4 - Updated Item to add an "Id" field
+1.2.3 - OTP support
 1.2.2 - Release PassXYZLib
 1.2.0 - Enhanced KeePassLib
 1.1.9 - Removed dependency Xamarin.Forms
@@ -23,8 +24,8 @@
 
 1.1.6 - KPCLib has been tested on all three platforms (Android, iOS and UWP).</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <AssemblyVersion>1.2.3.0</AssemblyVersion>
-    <FileVersion>1.2.3.0</FileVersion>
+    <AssemblyVersion>1.2.4.0</AssemblyVersion>
+    <FileVersion>1.2.4.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
