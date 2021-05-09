@@ -21,6 +21,8 @@ namespace KeePassLib
 
         public abstract bool IsGroup { get; }
 
+        public string Id { get { return Uuid.ToHexString(); } }
+
         /// <summary>
         /// UUID of this item.
         /// </summary>
