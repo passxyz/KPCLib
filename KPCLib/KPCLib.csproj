@@ -38,7 +38,8 @@
 
   <ItemGroup>
     <PackageReference Include="PureOtp" Version="1.0.0.8" />
-    <PackageReference Include="SkiaSharp" Version="1.68.0" />
+    <PackageReference Include="SkiaSharp" Version="2.80.2" />
+    <PackageReference Include="Svg.Skia" Version="0.5.3" />
   </ItemGroup>
 
   <ItemGroup>

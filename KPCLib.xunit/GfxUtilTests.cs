@@ -1,5 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net;
+
+using HtmlAgilityPack;
+using SkiaSharp;
+using Svg.Skia;
 
 using Xunit;
 using KeePassLib.Utility;
@@ -118,6 +125,183 @@ namespace KPCLib.xunit
         {
             var resizedFile = "test" + value + ".png";
             SaveScaledImage(resizedFile, value, value);
+        }
+
+        private static bool UrlExists(string url)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(url))
+                {
+                    // Check URL format
+                    var uri = new Uri(url);
+                    if(uri.Scheme.Contains("http") || uri.Scheme.Contains("https")) 
+                    {
+                        var webRequest = WebRequest.Create(url);
+                        webRequest.Method = "HEAD";
+                        var webResponse = (HttpWebResponse)webRequest.GetResponse();
+                        return webResponse.StatusCode == HttpStatusCode.OK;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{ex}");
+            }
+            return false;
+        }
+
+        private static string FormatUrl(string url, string baseUrl) 
+        {
+            if(url.StartsWith("//")) { return ("http:" + url); }
+            else if (url.StartsWith("/")) { return (baseUrl + url); }
+
+            return url;
+        }
+
+        public static string RetrieveFavicon(string url) 
+        {
+            string returnFavicon = null;
+
+            // declare htmlweb and load html document
+            HtmlWeb web = new HtmlWeb();
+            var htmlDoc = web.Load(url);
+
+            //1. 处理 apple-touch-icon 的情况
+            var elementsAppleTouchIcon = htmlDoc.DocumentNode.SelectNodes("//link[contains(@rel, 'apple-touch-icon')]");
+            if (elementsAppleTouchIcon != null && elementsAppleTouchIcon.Any())
+            {
+                var favicon = elementsAppleTouchIcon.First();
+                var faviconUrl = FormatUrl(favicon.GetAttributeValue("href", null), url);
+                if (UrlExists(faviconUrl))
+                {
+                    return faviconUrl;
+                }
+            }
+
+            // 2. Try to get svg version
+            var el = htmlDoc.DocumentNode.SelectSingleNode("/html/head/link[@rel='icon' and @href]");
+            if (el != null)
+            {
+                try
+                {
+                    var faviconUrl = FormatUrl(el.Attributes["href"].Value, url);
+
+                    if (UrlExists(faviconUrl))
+                    {
+                        return faviconUrl;
+                    }
+                }
+                catch (System.Net.WebException ex)
+                {
+                    Debug.WriteLine($"{ex}");
+                }
+            }
+
+            // 3. 从页面的 HTML 中抓取
+            var elements = htmlDoc.DocumentNode.SelectNodes("//link[contains(@rel, 'icon')]");
+            if (elements != null && elements.Any())
+            {
+                var favicon = elements.First();
+                var faviconUrl = FormatUrl(favicon.GetAttributeValue("href", null), url);
+                if (UrlExists(faviconUrl))
+                {
+                    return faviconUrl;
+                }
+            }
+
+            // 4. 直接获取站点的根目录图标
+            try
+            {
+                var uri = new Uri(url);
+                if (uri.HostNameType == UriHostNameType.Dns)
+                {
+                    var faviconUrl = string.Format("{0}://{1}/favicon.ico", uri.Scheme == "https" ? "https" : "http", uri.Host);
+                    if (UrlExists(faviconUrl))
+                    {
+                        return faviconUrl;
+                    }
+                }
+            }
+            catch (System.UriFormatException ex) 
+            {
+                Debug.WriteLine($"{ex}");
+                return returnFavicon;
+            }
+
+            return returnFavicon;
+        }
+
+        [Theory]
+        [InlineData("http://github.com")]
+        [InlineData("http://www.baidu.com")]
+        [InlineData("https://mailchimp.com")]
+        [InlineData("http://www.youdao.com")]
+        [InlineData("http://whatsapp.com")]
+        [InlineData("https://soundcloud.com")]
+        [InlineData("http://www.cmbchina.com")]
+        // Test case 4: http://www.cmbchina.com
+        // Test case 2: http://www.baidu.com
+        // Test case 1: https://mailchimp.com
+        // Test case 3: http://www.youdao.com
+        // Test case 2: https://github.com
+        // Test case 3: http://whatsapp.com
+        public void GetIconTest(string url)
+        {
+            var faviconUrl = RetrieveFavicon(url);
+            if(faviconUrl != null) 
+            {
+                var imageFolder = "images";
+                try 
+                {
+                    DirectoryInfo di = new DirectoryInfo(imageFolder);
+                    try
+                    {
+                        // Determine whether the directory exists.
+                        if (!di.Exists)
+                        {
+                            di.Create();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("The process failed: {0}", e.ToString());
+                    }
+
+                    var uri = new Uri(faviconUrl);
+                    WebClient myWebClient = new WebClient();
+                    byte[] pb = myWebClient.DownloadData(faviconUrl);
+
+                    if (faviconUrl.EndsWith(".ico") || faviconUrl.EndsWith(".png"))
+                    {
+                        GfxUtil.SaveImage(GfxUtil.ScaleImage(GfxUtil.LoadImage(pb), 128, 128), $"{imageFolder}/{uri.Host}.png");
+                    }
+                    else if (faviconUrl.EndsWith(".svg"))
+                    {
+                        GfxUtil.SaveImage(GfxUtil.LoadSvgImage(pb), $"{imageFolder}/{uri.Host}.png");
+                    }
+                    Debug.WriteLine($"{imageFolder}/{uri.Host}.png");
+                }
+                catch (System.Net.WebException ex)
+                {
+                    Debug.WriteLine($"{ex}");
+                }
+            }
+            Assert.NotNull(faviconUrl);
+        }
+
+        [Theory]
+        [InlineData("https://favicon.io/tutorials/what-is-a-favicon/")]
+        public void NoFaviconTest(string url) 
+        {
+            Assert.Null(RetrieveFavicon(url));
+        }
+
+        [Fact]
+        public void PrintImageFormat() 
+        {
+            Debug.WriteLine($"The image format is {SKEncodedImageFormat.Png.ToString()}.");
+            Debug.WriteLine($"The image format is {SKEncodedImageFormat.Ico.ToString()}.");
         }
     }
 }
