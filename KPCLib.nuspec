@@ -14,7 +14,8 @@
 		<repository url="https://github.com/passxyz/KPCLib" />
 		<dependencies>
 		  <group targetFramework=".NETStandard2.0">
-			<dependency id="SkiaSharp" version="1.68.0" exclude="Build,Analyzers" />
+			<dependency id="SkiaSharp" version="2.80.2" exclude="Build,Analyzers" />
+			<dependency id="Svg.Skia" version="0.5.3" exclude="Build,Analyzers" />
 			<dependency id="PureOtp" version="1.0.0.8" exclude="Build,Analyzers" />
 		  </group>
 		</dependencies>

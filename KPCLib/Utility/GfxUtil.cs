@@ -27,6 +27,7 @@ using System.Text;
 #if KPCLib
 using SkiaSharp;
 using Image = SkiaSharp.SKBitmap;
+using Svg.Skia;
 #else
 #if !KeePassUAP
 using System.Drawing;
@@ -65,7 +66,36 @@ namespace KeePassLib.Utility
 #endif
 
 #if KPCLib
-        public static Image LoadImage(byte[] pb)
+		public static Image LoadSvgImage(byte[] pb, int w = 128, int h = 128) 
+		{
+			if (pb == null) { return null; }
+
+			using (var ms = new MemoryStream(pb, false))
+			{
+				var svg = new SKSvg();
+				svg.Load(ms);
+
+				var imageInfo = new SKImageInfo(w, h);
+				using (var surface = SKSurface.Create(imageInfo))
+				using (var canvas = surface.Canvas)
+				{
+					// calculate the scaling need to fit to screen
+					var scaleX = w / svg.Picture.CullRect.Width;
+					var scaleY = h / svg.Picture.CullRect.Height;
+					var matrix = SKMatrix.CreateScale((float)scaleX, (float)scaleY);
+
+					// draw the svg
+					canvas.Clear(SKColors.Transparent);
+					canvas.DrawPicture(svg.Picture, ref matrix);
+					canvas.Flush();
+
+					var data = surface.Snapshot();
+					return SKBitmap.FromImage(data);
+				}
+			}
+		}
+
+		public static Image LoadImage(byte[] pb)
         {
             if(pb == null) { return null; }
 
