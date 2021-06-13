@@ -417,11 +417,11 @@ namespace KeePassLib
 		public override string Description 
 		{ 
 			get { 
-				return $"PwEntry\t{LastModificationTime.ToString("yyyy'-'MM'-'dd")}"; 
+				return $"PwEntry | {LastModificationTime.ToString("yyyy'-'MM'-'dd")}";
 			} 
 		}
-
 		public override bool IsGroup => false;
+		public override Object ImgSource { get; set; }
 
 		/// <summary>
 		/// The name of this group. Cannot be <c>null</c>.

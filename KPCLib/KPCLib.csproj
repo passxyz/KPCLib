@@ -42,8 +42,4 @@
     <PackageReference Include="Svg.Skia" Version="0.5.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="PassXYZLib\" />
-  </ItemGroup>
-
 </Project>

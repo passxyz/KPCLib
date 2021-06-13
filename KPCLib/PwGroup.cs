@@ -33,7 +33,7 @@ namespace KeePassLib
 	/// <summary>
 	/// A group containing subgroups and entries.
 	/// </summary>
-	public sealed partial class PwGroup : Item, ITimeLogger, IStructureItem, IDeepCloneable<PwGroup>
+	public partial class PwGroup : Item, ITimeLogger, IStructureItem, IDeepCloneable<PwGroup>
 	{
 		public const bool DefaultAutoTypeEnabled = true;
 		public const bool DefaultSearchingEnabled = true;
@@ -120,9 +120,9 @@ namespace KeePassLib
 		}
 
 #if KPCLib
-        public override string Description => $"PwGroup\t{LastModificationTime:yyyy'-'MM'-'dd}\t{Notes}";
-
+        public override string Description => $"PwGroup | {LastModificationTime:yyyy'-'MM'-'dd} | {Notes}";
         public override bool IsGroup => true;
+		public override Object ImgSource { get; set; }
 
 		/// <summary>
 		/// Get a list of items in this group.

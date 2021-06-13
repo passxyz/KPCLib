@@ -9,6 +9,7 @@ using SkiaSharp;
 using Svg.Skia;
 
 using Xunit;
+using PassXYZLib;
 using KeePassLib.Utility;
 
 // Need to turn off test parallelization so we can validate the run order
@@ -127,111 +128,6 @@ namespace KPCLib.xunit
             SaveScaledImage(resizedFile, value, value);
         }
 
-        private static bool UrlExists(string url)
-        {
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(url))
-                {
-                    // Check URL format
-                    var uri = new Uri(url);
-                    if(uri.Scheme.Contains("http") || uri.Scheme.Contains("https")) 
-                    {
-                        var webRequest = WebRequest.Create(url);
-                        webRequest.Method = "HEAD";
-                        var webResponse = (HttpWebResponse)webRequest.GetResponse();
-                        return webResponse.StatusCode == HttpStatusCode.OK;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"{ex}");
-            }
-            return false;
-        }
-
-        private static string FormatUrl(string url, string baseUrl) 
-        {
-            if(url.StartsWith("//")) { return ("http:" + url); }
-            else if (url.StartsWith("/")) { return (baseUrl + url); }
-
-            return url;
-        }
-
-        public static string RetrieveFavicon(string url) 
-        {
-            string returnFavicon = null;
-
-            // declare htmlweb and load html document
-            HtmlWeb web = new HtmlWeb();
-            var htmlDoc = web.Load(url);
-
-            //1. 处理 apple-touch-icon 的情况
-            var elementsAppleTouchIcon = htmlDoc.DocumentNode.SelectNodes("//link[contains(@rel, 'apple-touch-icon')]");
-            if (elementsAppleTouchIcon != null && elementsAppleTouchIcon.Any())
-            {
-                var favicon = elementsAppleTouchIcon.First();
-                var faviconUrl = FormatUrl(favicon.GetAttributeValue("href", null), url);
-                if (UrlExists(faviconUrl))
-                {
-                    return faviconUrl;
-                }
-            }
-
-            // 2. Try to get svg version
-            var el = htmlDoc.DocumentNode.SelectSingleNode("/html/head/link[@rel='icon' and @href]");
-            if (el != null)
-            {
-                try
-                {
-                    var faviconUrl = FormatUrl(el.Attributes["href"].Value, url);
-
-                    if (UrlExists(faviconUrl))
-                    {
-                        return faviconUrl;
-                    }
-                }
-                catch (System.Net.WebException ex)
-                {
-                    Debug.WriteLine($"{ex}");
-                }
-            }
-
-            // 3. 从页面的 HTML 中抓取
-            var elements = htmlDoc.DocumentNode.SelectNodes("//link[contains(@rel, 'icon')]");
-            if (elements != null && elements.Any())
-            {
-                var favicon = elements.First();
-                var faviconUrl = FormatUrl(favicon.GetAttributeValue("href", null), url);
-                if (UrlExists(faviconUrl))
-                {
-                    return faviconUrl;
-                }
-            }
-
-            // 4. 直接获取站点的根目录图标
-            try
-            {
-                var uri = new Uri(url);
-                if (uri.HostNameType == UriHostNameType.Dns)
-                {
-                    var faviconUrl = string.Format("{0}://{1}/favicon.ico", uri.Scheme == "https" ? "https" : "http", uri.Host);
-                    if (UrlExists(faviconUrl))
-                    {
-                        return faviconUrl;
-                    }
-                }
-            }
-            catch (System.UriFormatException ex) 
-            {
-                Debug.WriteLine($"{ex}");
-                return returnFavicon;
-            }
-
-            return returnFavicon;
-        }
-
         [Theory]
         [InlineData("http://github.com")]
         [InlineData("http://www.baidu.com")]
@@ -248,7 +144,7 @@ namespace KPCLib.xunit
         // Test case 3: http://whatsapp.com
         public void GetIconTest(string url)
         {
-            var faviconUrl = RetrieveFavicon(url);
+            var faviconUrl = ItemExtensions.RetrieveFavicon(url);
             if(faviconUrl != null) 
             {
                 var imageFolder = "images";
@@ -294,7 +190,7 @@ namespace KPCLib.xunit
         [InlineData("https://favicon.io/tutorials/what-is-a-favicon/")]
         public void NoFaviconTest(string url) 
         {
-            Assert.Null(RetrieveFavicon(url));
+            Assert.Null(ItemExtensions.RetrieveFavicon(url));
         }
 
         [Fact]

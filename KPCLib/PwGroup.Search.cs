@@ -34,7 +34,7 @@ using KeePassLib.Utility;
 
 namespace KeePassLib
 {
-	public sealed partial class PwGroup
+	public partial class PwGroup
 	{
 		/// <summary>
 		/// Search this group and all subgroups for entries.

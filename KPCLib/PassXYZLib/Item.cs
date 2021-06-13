@@ -36,6 +36,7 @@ namespace KeePassLib
             }
         }
 
+        virtual public Object ImgSource { get; set; }
 
         #region INotifyPropertyChanged
         protected bool SetProperty<T>(ref T backingStore, T value,
