@@ -23,6 +23,10 @@
     <PackageReference Include="PassXYZ" Version="2.1.4.9" />
     <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
+    <PackageReference Include="Xamarin.Forms.FontAwesome.Brand" Version="1.0.0" />
+    <PackageReference Include="Xamarin.Forms.FontAwesome.Regular" Version="1.0.0" />
+    <PackageReference Include="Xamarin.Forms.FontAwesome.Solid" Version="1.0.0" />
+    <PackageReference Include="Xamarin.Forms.IconFontHelper" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

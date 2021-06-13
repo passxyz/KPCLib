@@ -85,6 +85,19 @@ namespace KPCLib.xunit
         }
 
         [Fact]
+        public void ListItemsTests() 
+        {
+            PwGroup pg = passxyz.PxDb.RootGroup;
+
+            List<Item> itemList = pg.GetItems();
+            foreach (var item in itemList) 
+            {
+                Debug.WriteLine($"\t{item.Name} : {item.ImgSource}");
+            }
+            Assert.NotNull(itemList);
+        }
+
+        [Fact]
         public void DeleteEmptyEntryTest()
         {
             try 

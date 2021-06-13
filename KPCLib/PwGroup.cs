@@ -173,7 +173,7 @@ namespace KeePassLib
 		/// being used (i.e. the icon specified by the <c>IconID</c> property
 		/// should be displayed).
 		/// </summary>
-		public PwUuid CustomIconUuid
+		public override PwUuid CustomIconUuid
 		{
 			get { return m_pwCustomIconID; }
 			set

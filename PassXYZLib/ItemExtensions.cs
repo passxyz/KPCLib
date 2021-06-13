@@ -12,6 +12,7 @@ using Xamarin.Forms;
 using Xamarin.Essentials;
 using SkiaSharp;
 
+using FontAwesome.Regular;
 using KeePassLib;
 using KeePassLib.Utility;
 
@@ -124,15 +125,57 @@ namespace PassXYZLib
             return returnFavicon;
         }
 
-        private static SKBitmap LoadImage(byte[] pb, int w, int h, string faviconUrl)
+        /// <summary>
+        /// Create a SKBitmap instance from a byte arrary
+        /// </summary>
+		/// <param name="pb">byte arraty</param>
+		/// <param name="url">This is the url using to retrieve icon.</param>
+        private static SKBitmap LoadImage(byte[] pb, string faviconUrl = null)
         {
-            if (faviconUrl.EndsWith(".ico") || faviconUrl.EndsWith(".png"))
+            int w = 96, h = 96;
+            if (DeviceInfo.Platform.Equals(DevicePlatform.Android))
+            {
+                w = 96; h = 96;
+            }
+            else if (DeviceInfo.Platform.Equals(DevicePlatform.iOS))
+            {
+                w = 64; h = 64;
+            }
+            else if (DeviceInfo.Platform.Equals(DevicePlatform.UWP))
+            {
+                w = 32; h = 32;
+            }
+
+            if (faviconUrl != null) 
+            {
+                if (faviconUrl.EndsWith(".ico") || faviconUrl.EndsWith(".png"))
+                {
+                    return GfxUtil.ScaleImage(GfxUtil.LoadImage(pb), w, h);
+                }
+                else if (faviconUrl.EndsWith(".svg"))
+                {
+                    return GfxUtil.LoadSvgImage(pb, w, h);
+                }
+                else { return null; }
+            }
+            else 
             {
                 return GfxUtil.ScaleImage(GfxUtil.LoadImage(pb), w, h);
             }
-            else if (faviconUrl.EndsWith(".svg"))
+
+        }
+
+        private static ImageSource GetImageSource(SKBitmap bitmap) 
+        {
+            if (bitmap != null)
             {
-                return GfxUtil.LoadSvgImage(pb, w, h);
+                SKImage image = SKImage.FromPixels(bitmap.PeekPixels());
+                // encode the image (defaults to PNG)
+                SKData encoded = image.Encode();
+                // get a stream over the encoded data
+                Stream stream = encoded.AsStream();
+                ImageSource imgSource = ImageSource.FromStream(() => stream);
+                return imgSource;
             }
             else { return null; }
         }
@@ -141,8 +184,8 @@ namespace PassXYZLib
         /// Extension method of KeePassLib.Item
         /// This method can be used to retrieve icon from a url.
         /// </summary>
-		/// <param name="item">Instance of Item</param>
-		/// <param name="url">This is the url using to retrieve icon.</param>
+        /// <param name="item">Instance of Item</param>
+        /// <param name="url">This is the url using to retrieve icon.</param>
         public static void UpdateIcon(this Item item, string url)
         {
             var faviconUrl = RetrieveFavicon(url);
@@ -153,31 +196,8 @@ namespace PassXYZLib
                 WebClient myWebClient = new WebClient();
                 byte[] pb = myWebClient.DownloadData(faviconUrl);
 
-                int w = 96, h = 96;
-                if(DeviceInfo.Platform.Equals(DevicePlatform.Android)) 
-                {
-                    w = 96; h = 96;
-                }
-                else if(DeviceInfo.Platform.Equals(DevicePlatform.iOS)) 
-                {
-                    w = 64; h = 64;
-                }
-                else if (DeviceInfo.Platform.Equals(DevicePlatform.UWP)) 
-                {
-                    w = 32; h = 32;
-                }
-
-                SKBitmap bitmap = LoadImage(pb, w, h, faviconUrl);
-                if(bitmap != null) 
-                {
-                    SKImage image = SKImage.FromPixels(bitmap.PeekPixels());
-                    // encode the image (defaults to PNG)
-                    SKData encoded = image.Encode();
-                    // get a stream over the encoded data
-                    Stream stream = encoded.AsStream();
-                    ImageSource imgSource = ImageSource.FromStream(() => stream);
-                    item.ImgSource = imgSource;
-                }
+                SKBitmap bitmap = LoadImage(pb, faviconUrl);
+                item.ImgSource = GetImageSource(bitmap);
             }
             catch (WebException ex)
             {
@@ -185,5 +205,43 @@ namespace PassXYZLib
             }
         }
 
+        public static void SetDefaultIcon(this Item item) 
+        {
+            var icon = new IconSource();
+
+            if (item.IsGroup) 
+            {
+                icon.Icon = Icon.Folder;
+            }
+            else 
+            {
+                icon.Icon = Icon.File;
+            }
+            item.ImgSource = icon;
+        }
+
+        public static void SetIcon(this Item item) 
+        {
+            if (item.CustomIconUuid != PwUuid.Zero)
+            {
+                PasswordDb db = PasswordDb.Instance;
+                if(db != null)
+                { 
+                    if(db.IsOpen) 
+                    {
+                        PwCustomIcon customIcon = db.GetPwCustomIcon(item.CustomIconUuid);
+                        if(customIcon != null) 
+                        {
+                            var pb = customIcon.ImageDataPng;
+                            SKBitmap bitmap = LoadImage(pb);
+                            item.ImgSource = GetImageSource(bitmap);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            SetDefaultIcon(item);
+        }
     }
 }

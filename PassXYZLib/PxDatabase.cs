@@ -237,8 +237,13 @@ namespace PassXYZLib
 		/// </summary>
 		public PxDatabase() : base()
 		{
+			Debug.WriteLine("PxDatabase: Created instance");
 		}
 
+		~PxDatabase() 
+		{
+			Debug.WriteLine("PxDatabase: Destory instance");
+		}
 
 		/// <summary>
 		/// Open database using a filename and password
@@ -620,5 +625,36 @@ namespace PassXYZLib
 		}
 
 		// The end of PxDatabase
+	}
+
+	public sealed class PasswordDb : PxDatabase 
+	{
+		private static PasswordDb instance = null;
+
+		private PasswordDb() { }
+		public static PasswordDb Instance 
+		{ 
+			get 
+			{ 
+				if(instance == null) 
+				{
+					instance = new PasswordDb();
+				}
+				return instance;
+			}
+		}
+
+		public PwCustomIcon GetPwCustomIcon(PwUuid pwIconId)
+		{
+			if (pwIconId != PwUuid.Zero) 
+			{
+				int nIndex = GetCustomIconIndex(pwIconId);
+				if (nIndex >= 0)
+					return CustomIcons[nIndex];
+				else { Debug.Assert(false); }
+			}
+
+			return null;
+		}
 	}
 }
