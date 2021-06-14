@@ -180,6 +180,26 @@ namespace PassXYZLib
             else { return null; }
         }
 
+        public static ImageSource GetImageByUrl(string url) 
+        {
+            var faviconUrl = RetrieveFavicon(url);
+
+            try
+            {
+                var uri = new Uri(faviconUrl);
+                WebClient myWebClient = new WebClient();
+                byte[] pb = myWebClient.DownloadData(faviconUrl);
+
+                SKBitmap bitmap = LoadImage(pb, faviconUrl);
+                return GetImageSource(bitmap);
+            }
+            catch (WebException ex)
+            {
+                Debug.WriteLine($"{ex}");
+            }
+            return null;
+        }
+
         /// <summary>
         /// Extension method of KeePassLib.Item
         /// This method can be used to retrieve icon from a url.
