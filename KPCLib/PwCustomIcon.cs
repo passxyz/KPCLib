@@ -116,7 +116,7 @@ namespace KeePassLib
 			return img;
 		}
 
-#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
+#if (!KeePassLibSD && !KeePassUAP)
 		/// <summary>
 		/// Get the icon as an <c>Image</c> (with the specified size).
 		/// </summary>
@@ -136,14 +136,17 @@ namespace KeePassLib
 			if(img == null) { Debug.Assert(false); return null; }
 
 			if((img.Width != w) || (img.Height != h))
+#if KPCLib
+				img = GfxUtil.ScaleImage(img, w, h);
+#else
 				img = GfxUtil.ScaleImage(img, w, h, ScaleTransformFlags.UIIcon);
-
+#endif // KPCLib
 			m_dImageCache[lKey] = img;
 			return img;
 		}
 #endif
 
-		internal PwCustomIcon Clone()
+				internal PwCustomIcon Clone()
 		{
 			PwCustomIcon ico = new PwCustomIcon(m_uuid, m_pbImageDataPng);
 

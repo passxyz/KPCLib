@@ -18,6 +18,9 @@ using KeePassLib.Utility;
 
 namespace PassXYZLib
 {
+    /// <summary>
+    /// ItemExtensions is a static class which defines a set of extension methods for Item.
+    /// </summary>
     public static class ItemExtensions
     {
         private static bool UrlExists(string url)
@@ -180,7 +183,7 @@ namespace PassXYZLib
             else { return null; }
         }
 
-        public static ImageSource GetImageByUrl(string url) 
+        public static SKBitmap GetBitmapByUrl(string url) 
         {
             var faviconUrl = RetrieveFavicon(url);
 
@@ -190,8 +193,22 @@ namespace PassXYZLib
                 WebClient myWebClient = new WebClient();
                 byte[] pb = myWebClient.DownloadData(faviconUrl);
 
-                SKBitmap bitmap = LoadImage(pb, faviconUrl);
-                return GetImageSource(bitmap);
+                return LoadImage(pb, faviconUrl);
+            }
+            catch (WebException ex)
+            {
+                Debug.WriteLine($"{ex}");
+            }
+            return null;
+        }
+
+        public static ImageSource GetImageByUrl(string url) 
+        {
+            SKBitmap bitmap = GetBitmapByUrl(url);
+
+            try
+            {
+                if (bitmap != null) { return GetImageSource(bitmap); }
             }
             catch (WebException ex)
             {
@@ -258,10 +275,56 @@ namespace PassXYZLib
                             return;
                         }
                     }
+                    else
+                    {
+                        Debug.WriteLine("SetIcon: PasswordDb is closed");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("SetIcon: No PasswordDb instance");
                 }
             }
 
             SetDefaultIcon(item);
+        }
+
+        /// <summary>
+        /// Add a new custom icon to the database and set the new icon as the icon for this item.
+        /// </summary>
+        /// <param name="item">an instance of Item. Must not be <c>null</c>.</param>	
+        /// <param name="url">Url used to retrieve the new icon.</param>	
+        public static void AddNewIcon(this Item item, string url) 
+        {
+            PasswordDb db = PasswordDb.Instance;
+            if (db != null)
+            {
+                if (db.IsOpen)
+                {
+                    Uri uri = new Uri(url);
+                    var old = db.GetCustomIcon(uri.Host);
+                    if (old == null) 
+                    {
+                        var bitmap = GetBitmapByUrl(url);
+                        var uuid = db.SaveCustomIcon(bitmap, uri.Host);
+                        item.CustomIconUuid = uuid;
+                        Debug.WriteLine($"AddNewIcon: hostname={uri.Host}");
+                    }
+                    else 
+                    {
+                        item.CustomIconUuid = old.Uuid;
+                        Debug.WriteLine($"AddNewIcon: Found an existing icon as {uri.Host}");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("AddNewIcon: PasswordDb is closed");
+                }
+            }
+            else 
+            {
+                Debug.WriteLine("AddNewIcon: No PasswordDb instance");
+            }
         }
     }
 }

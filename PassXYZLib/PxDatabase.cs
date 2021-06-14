@@ -4,6 +4,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Drawing;
 
+using SkiaSharp;
+
 using KeePassLib;
 using KeePassLib.Interfaces;
 using KeePassLib.Keys;
@@ -13,7 +15,11 @@ using PassXYZLib.Resources;
 
 namespace PassXYZLib
 {
-    public class PxDatabase : PwDatabase
+	/// <summary>
+	/// PxDatabase is a sub-class of PwDatabase. This class has more dependencies than PwDatabase with
+	/// Xamarin.Forms and SkiaSharp etc.
+	/// </summary>
+	public class PxDatabase : PwDatabase
     {
 		private PwGroup m_pwCurrentGroup = null;
 
@@ -627,6 +633,9 @@ namespace PassXYZLib
 		// The end of PxDatabase
 	}
 
+	/// <summary>
+	/// PasswordDb is a sub-class of PxDatabase. It is a singleton class.
+	/// </summary>
 	public sealed class PasswordDb : PxDatabase 
 	{
 		private static PasswordDb instance = null;
@@ -655,6 +664,78 @@ namespace PassXYZLib
 			}
 
 			return null;
+		}
+
+		public enum PxCustomIconSize
+		{
+			Min = 96,
+			Max = 216
+		}
+
+		/// <summary>
+		/// GetCustomIcon - find a custom icon by name
+		/// Please refer to the below implementation in PwDatabase.cs. We may move it to here.
+		///       public Image GetCustomIcon(PwUuid pwIconId)
+		/// </summary>
+		/// <param name="name">The custom icon name. This can be supported by KeePass 2.48 or above.</param>	
+		/// <returns>custom icon instance</returns>
+		public PwCustomIcon GetCustomIcon(string name) 
+		{
+			int n = CustomIcons.Count;
+			for (int i = 0; i < n; ++i)
+			{
+				PwCustomIcon ci = CustomIcons[i];
+				if (ci.Name.Equals(name)) return ci;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Save SKBitmap as a custom icon and return the uuid.
+		/// If the uuid is PwUuid.Zero, the icon is not saved due to error.
+		/// </summary>
+		/// <param name="img">SKBitmap image. Must not be <c>null</c>.</param>	
+		/// <param name="name">The custom icon name. This can be supported by KeePass 2.48 or above.</param>	
+		/// <returns>custom icon uuid</returns>
+		public PwUuid SaveCustomIcon(SKBitmap img, string name = "") 
+		{
+			PwUuid uuid = PwUuid.Zero;
+
+			if (img == null) { return PwUuid.Zero; }
+
+			if ((img.Width != img.Height) || (img.Width < (int)PxCustomIconSize.Min))
+			{
+				return PwUuid.Zero;
+			}
+
+			// If the image is not at PxCustomIconSize.Min, we need to resize it.
+			if (img.Width != (int)PxCustomIconSize.Min)
+			{
+				SKImageInfo resizeInfo = new SKImageInfo((int)PxCustomIconSize.Min, (int)PxCustomIconSize.Min);
+				using (SKBitmap resizedSKBitmap = img.Resize(resizeInfo, SKFilterQuality.High))
+				{
+					img = resizedSKBitmap;
+				}
+			}
+
+			using (var image = SKImage.FromBitmap(img))
+			{
+				using (var png = image.Encode(SKEncodedImageFormat.Png, 100))
+				{
+					using (var ms = new MemoryStream())
+					{
+						png.SaveTo(ms);
+                        PwCustomIcon pwci = new PwCustomIcon(new PwUuid(true), ms.ToArray())
+                        {
+                            Name = name
+                        };
+                        CustomIcons.Add(pwci);
+						uuid = pwci.Uuid;
+					}
+				}
+			}
+			return uuid;
 		}
 	}
 }

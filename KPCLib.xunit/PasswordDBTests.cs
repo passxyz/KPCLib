@@ -16,7 +16,7 @@ namespace KPCLib.xunit
 {
     public class PasswordDBFixture : IDisposable
     {
-        const string TEST_DB = "utdb.kdbx";
+        const string TEST_DB = "pass_d_E8f4pEk.xyz";
         const string TEST_DB_KEY = "12345";
 
         public PasswordDBFixture()
@@ -71,5 +71,26 @@ namespace KPCLib.xunit
             }
             Assert.NotNull(itemList);
         }
+
+        [Theory]
+        [InlineData("http://github.com")]
+        [InlineData("http://www.baidu.com")]
+        [InlineData("http://www.youdao.com")]
+        [InlineData("http://www.qq.com")]
+        [InlineData("http://www.hp.com")]
+        [InlineData("http://www.163.com")]
+        [InlineData("http://www.bing.com")]
+        public void CustomIconTests(string url) 
+        {
+            var entry = new PwEntry();
+            entry.AddNewIcon(url);
+            PwCustomIcon icon = passxyz.PxDb.GetPwCustomIcon(entry.CustomIconUuid);
+            entry.Name = icon.Name;
+            Debug.WriteLine($"{icon.Name} is stored at {passxyz.PxDb.CurrentPath}");
+            passxyz.PxDb.CurrentGroup.AddEntry(entry, true);
+            passxyz.PxDb.Save(null);
+            Assert.False(entry.CustomIconUuid.Equals(PwUuid.Zero));
+        }
+
     }
 }
