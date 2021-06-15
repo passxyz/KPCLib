@@ -213,9 +213,11 @@ namespace KeePassLib.Cryptography
 
 				fI32(Environment.ProcessorCount);
 
-#if !KeePassUAP
+#if (!KeePassUAP && !KPCLib)
 				fStr(Environment.CommandLine);
 				fI64(Environment.WorkingSet);
+#else
+				fStr(Environment.CommandLine);
 #endif
 			}
 			catch(Exception) { Debug.Assert(false); }
@@ -234,6 +236,12 @@ namespace KeePassLib.Cryptography
 			{
 #if KeePassUAP
 				f(DiagnosticsExt.GetProcessEntropy(), true);
+#elif KPCLib
+				using (var p1 = Process.GetCurrentProcess()) 
+				{
+					fI64(p1.Handle.ToInt64());
+					fI32(p1.Id);
+				}
 #elif !KeePassLibSD
 				using(Process p = Process.GetCurrentProcess())
 				{
