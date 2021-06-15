@@ -172,13 +172,12 @@ namespace PassXYZLib
         {
             if (bitmap != null)
             {
-                SKImage image = SKImage.FromPixels(bitmap.PeekPixels());
-                // encode the image (defaults to PNG)
-                SKData encoded = image.Encode();
-                // get a stream over the encoded data
-                Stream stream = encoded.AsStream();
-                ImageSource imgSource = ImageSource.FromStream(() => stream);
-                return imgSource;
+                //SKImage image = SKImage.FromPixels(bitmap.PeekPixels());
+                //SKData encoded = image.Encode();
+                //Stream stream = encoded.AsStream();
+                // There is a bug so we cannot use stream here. Please refer to the below link about the issue.
+                // https://github.cohttps://github.com/xamarin/Xamarin.Forms/issues/11495m/xamarin/Xamarin.Forms/issues/11495
+                return ImageSource.FromStream(() => SKImage.FromPixels(bitmap.PeekPixels()).Encode().AsStream());
             }
             else { return null; }
         }
