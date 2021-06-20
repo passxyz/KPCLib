@@ -210,7 +210,7 @@ namespace PassXYZLib
 					var group = CurrentGroup;
 					string path = group.Name + "/";
 
-					while (RootGroup.Uuid != group.Uuid)
+					while (!RootGroup.Uuid.Equals(group.Uuid))
 					{
 						group = group.ParentGroup;
 						path = group.Name + "/" + path;
