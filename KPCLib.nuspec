@@ -2,14 +2,17 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>KPCLib</id>
-        <version>1.2.4.0</version>
+        <version>1.2.5.0</version>
         <authors>Roger Ye</authors>
 		<owners>Roger Ye</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<license type="expression">LGPL-3.0-or-later</license>
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</description>
-		<releaseNotes>- Support OTP</releaseNotes>
+		<releaseNotes>
+			- Updated to KeePass 2.48.1
+			- Fixed an issue in CryptoRandom.cs
+		</releaseNotes>
 		<copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye updated and enhanced this library for .NET Standard.</copyright>
 		<repository url="https://github.com/passxyz/KPCLib" />
 		<dependencies>

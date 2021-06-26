@@ -630,6 +630,23 @@ namespace PassXYZLib
 			return GetEntryListByProperty(PxDefs.PxCustomDataOtpUrl);
 		}
 
+		public IEnumerable<PwEntry> GetAllEntries() 
+		{
+			List<PwEntry> resultsList = new List<PwEntry>();
+			LinkedList<PwGroup> flatGroupList = RootGroup.GetFlatGroupList();
+
+			foreach (PwEntry entry in RootGroup.Entries)
+			{
+				resultsList.Add(entry);
+			}
+
+			foreach (PwEntry entry in PwGroup.GetFlatEntryList(flatGroupList))
+			{
+				resultsList.Add(entry);
+			}
+			return resultsList;
+		}
+
 		// The end of PxDatabase
 	}
 
