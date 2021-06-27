@@ -131,17 +131,10 @@ namespace KPCLib.xunit
         [Theory]
         [InlineData("http://github.com")]
         [InlineData("http://www.baidu.com")]
-        [InlineData("https://mailchimp.com")]
+        [InlineData("https://www.bing.com/")]
         [InlineData("http://www.youdao.com")]
-        [InlineData("http://whatsapp.com")]
-        [InlineData("https://soundcloud.com")]
+        [InlineData("https://www.dell.com")]
         [InlineData("http://www.cmbchina.com")]
-        // Test case 4: http://www.cmbchina.com
-        // Test case 2: http://www.baidu.com
-        // Test case 1: https://mailchimp.com
-        // Test case 3: http://www.youdao.com
-        // Test case 2: https://github.com
-        // Test case 3: http://whatsapp.com
         public void GetIconTest(string url)
         {
             var faviconUrl = ItemExtensions.RetrieveFavicon(url);

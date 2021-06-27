@@ -416,8 +416,16 @@ namespace KeePassLib
 
 		public override string Description 
 		{ 
-			get { 
-				return $"PwEntry | {LastModificationTime.ToString("yyyy'-'MM'-'dd")}";
+			get {
+				string sub_type = CustomData.Get("PassXYZ_Type");
+				if(string.IsNullOrEmpty(sub_type)) 
+				{
+					return $"PwEntry | {LastModificationTime.ToString("yyyy'-'MM'-'dd")}";
+				}
+				else 
+				{
+					return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")}";
+				}
 			} 
 		}
 		public override bool IsGroup => false;

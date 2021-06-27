@@ -4,9 +4,11 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Text;
+using Xamarin.Forms;
 
 using PureOtp;
 
+using FontAwesome.Regular;
 using KeePassLib;
 using KeePassLib.Interfaces;
 
@@ -22,8 +24,16 @@ namespace PassXYZLib
         public string Value { get; set; }
         public bool IsProtected { get; set; }
 
+        public ImageSource ImgSource { get; set; }
+
         public Field(string key, string value, bool isProtected) 
         {
+            var icon = new IconSource
+            {
+                Icon = Icon.File
+            };
+            ImgSource = icon;
+
             Key = key;
             Value = value;
             IsProtected = isProtected;
@@ -53,13 +63,20 @@ namespace PassXYZLib
         public static bool IsNotes(this PwEntry entry) 
         {
             string subType = entry.CustomData.Get(PxDefs.PxCustomDataItemSubType);
-            if (subType.Equals(ItemSubType.Notes.ToString()))
+            if(string.IsNullOrEmpty(subType)) 
             {
-                return true;
+                return false;
             }
             else 
             {
-                return false;
+                if (subType.Equals(ItemSubType.Notes.ToString()))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
