@@ -8,7 +8,7 @@ using Xamarin.Forms;
 
 using PureOtp;
 
-using FontAwesome.Regular;
+using FontAwesome.Solid;
 using KeePassLib;
 using KeePassLib.Interfaces;
 
@@ -28,15 +28,24 @@ namespace PassXYZLib
 
         public Field(string key, string value, bool isProtected) 
         {
-            var icon = new IconSource
-            {
-                Icon = Icon.File
-            };
-            ImgSource = icon;
-
             Key = key;
             Value = value;
             IsProtected = isProtected;
+
+            try 
+            {
+                var icon = new IconSource();
+                icon.Icon = FieldIcons.Icons[key.ToLower()];
+                ImgSource = icon;
+            }
+            catch (KeyNotFoundException)
+            {
+                var icon = new IconSource
+                {
+                    Icon = Icon.File
+                };
+                ImgSource = icon;
+            }
         }
 
         #region INotifyPropertyChanged
@@ -132,5 +141,18 @@ namespace PassXYZLib
 
             return fields;
         }
+    }
+
+    public static class FieldIcons
+    {
+        public static Dictionary<string, Icon> Icons = new Dictionary<string, Icon>()
+        {
+            { "username", Icon.User },
+            { "url", Icon.Link },
+            { "email", Icon.Envelope },
+            { "password", Icon.Key },
+            { "mobile", Icon.Phone }
+        };
+
     }
 }
