@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Text;
@@ -8,7 +9,6 @@ using Xamarin.Forms;
 
 using PureOtp;
 
-using FontAwesome.Solid;
 using KeePassLib;
 using KeePassLib.Interfaces;
 
@@ -22,6 +22,7 @@ namespace PassXYZLib
     {
         public string Key { get; set; }
         public string Value { get; set; }
+        private string shadowValue = string.Empty;
         public bool IsProtected { get; set; }
 
         public ImageSource ImgSource { get; set; }
@@ -29,23 +30,21 @@ namespace PassXYZLib
         public Field(string key, string value, bool isProtected) 
         {
             Key = key;
-            Value = value;
             IsProtected = isProtected;
 
-            try 
-            {
-                var icon = new IconSource();
-                icon.Icon = FieldIcons.Icons[key.ToLower()];
-                ImgSource = icon;
+            if(IsProtected) 
+            { 
+                // If it is protected, we won't display the value directly.
+                shadowValue = value; 
+                Value = new string('*', shadowValue.Length);
             }
-            catch (KeyNotFoundException)
+            else 
             {
-                var icon = new IconSource
-                {
-                    Icon = Icon.File
-                };
-                ImgSource = icon;
+                Value = value;
             }
+
+            var lastWord = key.Split(' ').Last();
+            ImgSource = FieldIcons.GetImage(lastWord.ToLower());
         }
 
         #region INotifyPropertyChanged
@@ -145,14 +144,65 @@ namespace PassXYZLib
 
     public static class FieldIcons
     {
-        public static Dictionary<string, Icon> Icons = new Dictionary<string, Icon>()
+        public static Dictionary<string, FontAwesome.Regular.Icon> RegularIcons = new Dictionary<string, FontAwesome.Regular.Icon>()
         {
-            { "username", Icon.User },
-            { "url", Icon.Link },
-            { "email", Icon.Envelope },
-            { "password", Icon.Key },
-            { "mobile", Icon.Phone }
+            { "calendar", FontAwesome.Regular.Icon.CalendarAlt }
         };
 
+        public static Dictionary<string, FontAwesome.Solid.Icon> SolidIcons = new Dictionary<string, FontAwesome.Solid.Icon>()
+        {
+            { "address", FontAwesome.Solid.Icon.MapMarkerAlt },
+            { "card", FontAwesome.Solid.Icon.IdCard },
+            { "date", FontAwesome.Solid.Icon.CalendarAlt },
+            { "email", FontAwesome.Solid.Icon.Envelope },
+            { "mobile", FontAwesome.Solid.Icon.Phone },
+            { "name", FontAwesome.Solid.Icon.User },
+            { "password", FontAwesome.Solid.Icon.Key },
+            { "phone", FontAwesome.Solid.Icon.Phone },
+            { "pin", FontAwesome.Solid.Icon.Key },
+            { "url", FontAwesome.Solid.Icon.Link },
+            { "username", FontAwesome.Solid.Icon.User }
+        };
+
+        public static Dictionary<string, FontAwesome.Brand.Icon> BrandIcons = new Dictionary<string, FontAwesome.Brand.Icon>()
+        {
+            { "alipay", FontAwesome.Brand.Icon.Alipay },
+            { "qq", FontAwesome.Brand.Icon.Qq },
+            { "wechat", FontAwesome.Brand.Icon.Weixin }
+        };
+
+        public static ImageSource GetImage(string key) 
+        { 
+            if (BrandIcons.ContainsKey(key))
+            {
+                var brandIconSource = new FontAwesome.Brand.IconSource
+                {
+                    Icon = BrandIcons[key]
+                };
+                return brandIconSource;
+            }
+            else if (RegularIcons.ContainsKey(key)) 
+            {
+                var regularIconSource = new FontAwesome.Regular.IconSource
+                {
+                    Icon = RegularIcons[key]
+                };
+                return regularIconSource;
+            }
+            else 
+            {
+                var solidIconSource = new FontAwesome.Solid.IconSource
+                {
+                    Icon = FontAwesome.Solid.Icon.File
+                };
+
+                if (SolidIcons.ContainsKey(key))
+                {
+                    solidIconSource.Icon = SolidIcons[key];
+                }
+
+                return solidIconSource;
+            }
+        }
     }
 }
