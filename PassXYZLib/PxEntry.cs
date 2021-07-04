@@ -20,19 +20,65 @@ namespace PassXYZLib
     /// </summary>
     public class Field : INotifyPropertyChanged
     {
-        public string Key { get; set; }
-        public string Value { get; set; }
+        private string _key;
+        /// <summary>
+        /// This is the key used by Field. This Key should be decoded for PxEntry.
+        /// </summary>
+        public string Key
+        { 
+            get => _key;
+            set
+            {
+                _key = value;
+                OnPropertyChanged("Key");
+            }
+        }
+
+        /// <summary>
+        /// The EncodeKey is used by PxEntry. For PwEntry, this is an empty string.
+        /// </summary>
+        public string EncodedKey = string.Empty;
+
+        public bool IsEncoded { get => !string.IsNullOrEmpty(EncodedKey); }
+
+        private string _value;
         private string shadowValue = string.Empty;
-        public bool IsProtected { get; set; }
+        public string Value
+        {
+            get => _value;
+            set
+            {
+                _value = value;
+                OnPropertyChanged("Value");
+            }
+        }
+
+        private bool _isProtected = false;
+        public bool IsProtected
+        {
+            get => _isProtected;
+            set 
+            {
+                _isProtected = value;
+                OnPropertyChanged("IsProtected");
+            }
+        }
+
+        private bool _isHide = true;
+        public bool IsHide
+        {
+            get => _isHide;
+        }
 
         public ImageSource ImgSource { get; set; }
 
-        public Field(string key, string value, bool isProtected) 
+        public Field(string key, string value, bool isProtected, string encodedKey = "")
         {
             Key = key;
+            EncodedKey = encodedKey;
             IsProtected = isProtected;
 
-            if(IsProtected) 
+            if (IsProtected)
             { 
                 // If it is protected, we won't display the value directly.
                 shadowValue = value; 
@@ -45,6 +91,24 @@ namespace PassXYZLib
 
             var lastWord = key.Split(' ').Last();
             ImgSource = FieldIcons.GetImage(lastWord.ToLower());
+        }
+
+        public void ShowPassword()
+        {
+            if (IsProtected && !string.IsNullOrEmpty(shadowValue))
+            {
+                Value = shadowValue;
+                _isHide = false;
+            }
+        }
+
+        public void HidePassword()
+        {
+            if (IsProtected && !string.IsNullOrEmpty(shadowValue))
+            {
+                Value = new string('*', shadowValue.Length);
+                _isHide = true;
+            }
         }
 
         #region INotifyPropertyChanged
@@ -114,24 +178,36 @@ namespace PassXYZLib
 
             if (isPxEntry)
             {
-                // If this is an instance of PxEntry, we handle it here.
-                foreach (var field in entry.Strings)
+                // If this is an instance of PxEntry, we handle it here. We need to convert ProtectedString to Field.
+                foreach (var pstr in entry.Strings)
                 {
-                    if (!field.Key.Equals(PwDefs.TitleField) && !field.Key.Equals(PwDefs.NotesField))
+                    if (!pstr.Key.Equals(PwDefs.TitleField) && !pstr.Key.Equals(PwDefs.NotesField))
                     {
-                        fields.Add(new Field(PxDefs.DecodeKey(field.Key), entry.Strings.ReadSafe(field.Key), entry.Strings.GetSafe(field.Key).IsProtected));
+                        fields.Add(new Field(PxDefs.DecodeKey(pstr.Key), entry.Strings.ReadSafe(pstr.Key), entry.Strings.GetSafe(pstr.Key).IsProtected, pstr.Key));
                     }
                 }
             }
             else
             {
                 // If this is an instance of PwEntry, we handle it here.
-                fields.Add(new Field(PwDefs.UserNameField, entry.Strings.ReadSafe(PwDefs.UserNameField), entry.Strings.GetSafe(PwDefs.UserNameField).IsProtected));
-                fields.Add(new Field(PwDefs.PasswordField, entry.Strings.ReadSafe(PwDefs.PasswordField), entry.Strings.GetSafe(PwDefs.PasswordField).IsProtected));
-                fields.Add(new Field(PwDefs.UrlField, entry.Strings.ReadSafe(PwDefs.UrlField), entry.Strings.GetSafe(PwDefs.UrlField).IsProtected));
+                if(entry.Strings.Exists(PwDefs.UserNameField))
+                {
+                    fields.Add(new Field(PwDefs.UserNameField, entry.Strings.ReadSafe(PwDefs.UserNameField), entry.Strings.GetSafe(PwDefs.UserNameField).IsProtected));
+                }
+
+                if (entry.Strings.Exists(PwDefs.PasswordField))
+                {
+                    fields.Add(new Field(PwDefs.PasswordField, entry.Strings.ReadSafe(PwDefs.PasswordField), entry.Strings.GetSafe(PwDefs.PasswordField).IsProtected));
+                }
+
+                if (entry.Strings.Exists(PwDefs.UrlField))
+                {
+                    fields.Add(new Field(PwDefs.UrlField, entry.Strings.ReadSafe(PwDefs.UrlField), entry.Strings.GetSafe(PwDefs.UrlField).IsProtected));
+                }
+
                 foreach (var field in entry.Strings) 
                 { 
-                    if(!PwDefs.IsStandardField(field.Key)) 
+                    if (!PwDefs.IsStandardField(field.Key))
                     {
                         fields.Add(new Field(field.Key, entry.Strings.ReadSafe(field.Key), entry.Strings.GetSafe(field.Key).IsProtected));
                     }
