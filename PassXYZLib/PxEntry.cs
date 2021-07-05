@@ -11,6 +11,7 @@ using PureOtp;
 
 using KeePassLib;
 using KeePassLib.Interfaces;
+using KeePassLib.Security;
 
 namespace PassXYZLib
 {
@@ -155,6 +156,35 @@ namespace PassXYZLib
         public static bool IsPxEntry(this PwEntry entry) 
         { 
             return PxDefs.IsPxEntry(entry);
+        }
+
+        public static string EncodeKey(this PwEntry entry, string key)
+        {
+            if(PxDefs.IsPxEntry(entry))
+            {
+                string lastKey = string.Empty;
+                foreach (var pstr in entry.Strings)
+                {
+                    if (!pstr.Key.Equals(PwDefs.TitleField) && !pstr.Key.Equals(PwDefs.NotesField))
+                    {
+                        lastKey = pstr.Key;
+                    }
+                }
+
+                if(string.IsNullOrEmpty(lastKey)) 
+                { 
+                    return "000" + key; 
+                }
+                else 
+                {
+                    uint index = uint.Parse(lastKey.Substring(0, PxDefs.PxEntryKeyDigits));
+                    return PxDefs.EncodeKey(key, index + 1);
+                }
+            }
+            else 
+            {
+                return key;
+            }
         }
 
         public static string GetNotes(this PwEntry entry) 

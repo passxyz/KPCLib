@@ -71,8 +71,9 @@ namespace KPCLib.xunit
                 if (entry.IsPxEntry())
                 {
                     Debug.WriteLine($"Title: {entry.Name}");
+                    Debug.WriteLine($"{entry.EncodeKey("TestKey")}");
                     var fields = entry.GetFields();
-                    foreach (var field in fields) { Debug.WriteLine($"{field.Key}={field.Value}"); }
+                    foreach (var field in fields) { Debug.WriteLine($"{field.EncodedKey}={field.Value}"); }
                     Debug.WriteLine($"Notes: {entry.GetNotes()}");
                     Assert.True(true);
                     return;
