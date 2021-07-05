@@ -42,13 +42,21 @@ namespace PassXYZLib
         public bool IsEncoded { get => !string.IsNullOrEmpty(EncodedKey); }
 
         private string _value;
-        private string shadowValue = string.Empty;
+        private string _shadowValue = string.Empty;
         public string Value
         {
             get => _value;
             set
             {
-                _value = value;
+                if(IsProtected)
+                {
+                    _shadowValue = value;
+                    _value = new string('*', _shadowValue.Length);
+                }
+                else
+                {
+                    _value = value;
+                }
                 OnPropertyChanged("Value");
             }
         }
@@ -77,17 +85,7 @@ namespace PassXYZLib
             Key = key;
             EncodedKey = encodedKey;
             IsProtected = isProtected;
-
-            if (IsProtected)
-            { 
-                // If it is protected, we won't display the value directly.
-                shadowValue = value; 
-                Value = new string('*', shadowValue.Length);
-            }
-            else 
-            {
-                Value = value;
-            }
+            Value = value;
 
             var lastWord = key.Split(' ').Last();
             ImgSource = FieldIcons.GetImage(lastWord.ToLower());
@@ -95,19 +93,21 @@ namespace PassXYZLib
 
         public void ShowPassword()
         {
-            if (IsProtected && !string.IsNullOrEmpty(shadowValue))
+            if (IsProtected && !string.IsNullOrEmpty(_shadowValue))
             {
-                Value = shadowValue;
+                _value = _shadowValue;
                 _isHide = false;
+                OnPropertyChanged("Value");
             }
         }
 
         public void HidePassword()
         {
-            if (IsProtected && !string.IsNullOrEmpty(shadowValue))
+            if (IsProtected && !string.IsNullOrEmpty(_shadowValue))
             {
-                Value = new string('*', shadowValue.Length);
+                _value = new string('*', _shadowValue.Length);
                 _isHide = true;
+                OnPropertyChanged("Value");
             }
         }
 
