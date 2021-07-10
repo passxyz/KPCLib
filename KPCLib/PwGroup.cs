@@ -116,6 +116,7 @@ namespace KeePassLib
 			{
 				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_strName = value;
+				OnPropertyChanged("Name");
 			}
 		}
 
@@ -156,6 +157,7 @@ namespace KeePassLib
 			{
 				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_strNotes = value;
+				OnPropertyChanged("Description");
 			}
 		}
 

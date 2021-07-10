@@ -437,6 +437,7 @@ namespace KeePassLib
 				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				Strings.Set(PwDefs.NotesField, new ProtectedString(
 						false, value));
+				OnPropertyChanged("Description");
 			}
 		}
 
@@ -454,6 +455,7 @@ namespace KeePassLib
 				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				Strings.Set(PwDefs.TitleField, new ProtectedString(
 						false, value));
+				OnPropertyChanged("Name");
 			}
 		}
 
