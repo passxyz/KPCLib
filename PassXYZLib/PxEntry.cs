@@ -153,6 +153,21 @@ namespace PassXYZLib
             }
         }
 
+        /// <summary>
+        /// This is an extension method of PwEntry.
+        /// This method is used to set the sub-type of a PwEntry.
+        /// </summary>
+        /// <param name="entry">an instance of PwEntry</param>
+        /// <param name="itemSubType">sub-type of PwEntry</param>
+		/// <returns>A list of fields</returns>
+        public static void SetType(this PwEntry entry, ItemSubType itemSubType)
+        {
+            if (itemSubType != ItemSubType.None && itemSubType != ItemSubType.Group)
+            {
+                entry.CustomData.Set(PxDefs.PxCustomDataItemSubType, itemSubType.ToString());
+            }
+        }
+
         public static bool IsPxEntry(this PwEntry entry) 
         { 
             return PxDefs.IsPxEntry(entry);
