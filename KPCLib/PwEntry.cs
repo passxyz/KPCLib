@@ -420,19 +420,31 @@ namespace KeePassLib
 				string sub_type = CustomData.Get("PassXYZ_Type");
 				if(string.IsNullOrEmpty(sub_type)) 
 				{
-					return $"PwEntry | {LastModificationTime.ToString("yyyy'-'MM'-'dd")}";
+					sub_type = "PwEntry";
 				}
-				else 
-				{
-					return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")}";
-				}
-			} 
+				return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")} | {Notes}";
+			}
 		}
+
+		/// <summary>
+		/// The notes of this entry.
+		/// </summary>
+		public override string Notes
+		{ 
+			get => Strings.ReadSafe(PwDefs.NotesField);
+			set
+			{
+				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				Strings.Set(PwDefs.NotesField, new ProtectedString(
+						false, value));
+			}
+		}
+
 		public override bool IsGroup => false;
 		public override Object ImgSource { get; set; }
 
 		/// <summary>
-		/// The name of this group. Cannot be <c>null</c>.
+		/// The name of this entry. Cannot be <c>null</c>.
 		/// </summary>
 		public override string Name
 		{

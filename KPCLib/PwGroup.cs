@@ -149,7 +149,7 @@ namespace KeePassLib
 		/// <summary>
 		/// Comments about this group. Cannot be <c>null</c>.
 		/// </summary>
-		public string Notes
+		public override string Notes
 		{
 			get { return m_strNotes; }
 			set

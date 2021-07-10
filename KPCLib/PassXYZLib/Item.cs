@@ -19,6 +19,8 @@ namespace KeePassLib
 
         public abstract string Description { get;}
 
+        public abstract string Notes { get; set; }
+
         public abstract bool IsGroup { get; }
 
         public abstract PwUuid CustomIconUuid { get; set; }
