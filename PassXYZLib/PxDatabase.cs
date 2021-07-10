@@ -429,7 +429,7 @@ namespace PassXYZLib
 		/// <summary>
 		/// Delete a group.
 		/// </summary>
-		/// <param name="pg">Group to be added. Must not be <c>null</c>.</param>
+		/// <param name="pg">Group to be deleted. Must not be <c>null</c>.</param>
 		/// <param name="permanent">Permanent delete or move to recycle bin</param>
 		public void DeleteGroup(PwGroup pg, bool permanent = false)
 		{
