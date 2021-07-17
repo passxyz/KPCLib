@@ -291,6 +291,41 @@ namespace PassXYZLib
 			Open(ioc, cmpKey, logger);
 		}
 
+		/// <summary>
+		/// Open database with user information.
+		/// If the device lock is enabled, we need to set DefaultFolder first.
+		/// </summary>
+		/// <param name="user">an instance of PassXYZLib.User</param>
+		public void Open(PassXYZLib.User user)
+        {
+			if (user == null)
+			{ Debug.Assert(false); throw new ArgumentNullException("PassXYZLib.User"); }
+
+			var logger = new KPCLibLogger();
+
+			IOConnectionInfo ioc = IOConnectionInfo.FromPath(user.Path);
+			CompositeKey cmpKey = new CompositeKey();
+			cmpKey.AddUserKey(new KcpPassword(user.Password));
+
+			if (user.IsDeviceLockEnabled)
+			{
+				PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+				if (pxKeyProvider.IsInitialized)
+				{
+					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+					byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+					cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+				}
+				else
+				{
+					throw new KeePassLib.Keys.InvalidCompositeKeyException();
+				}
+			}
+
+			Open(ioc, cmpKey, logger);
+		}
+
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
 		{
 			if (pgRecycleBin == this.RootGroup)
