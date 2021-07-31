@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>KPCLib</id>
-        <version>1.2.5.0</version>
+        <version>1.3.0.0</version>
         <authors>Roger Ye</authors>
 		<owners>Roger Ye</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -26,6 +26,5 @@
     </metadata>
   <files>
     <file src="PassXYZLib/bin/Release/netstandard2.0/KPCLib.dll" target="lib/netstandard2.0/KPCLib.dll" />
-    <file src="PassXYZLib/bin/Release/netstandard2.0/PassXYZLib.dll" target="lib/netstandard2.0/PassXYZLib.dll" />
   </files>
 </package>

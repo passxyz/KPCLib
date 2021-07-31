@@ -30,7 +30,6 @@
         <summary>PassXYZLib added additional features for Xamarin Forms.</summary>
     </metadata>
   <files>
-    <file src="PassXYZLib/bin/Release/netstandard2.0/KPCLib.dll" target="lib/netstandard2.0/KPCLib.dll" />
     <file src="PassXYZLib/bin/Release/netstandard2.0/PassXYZLib.dll" target="lib/netstandard2.0/PassXYZLib.dll" />
   </files>
 </package>
