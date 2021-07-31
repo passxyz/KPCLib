@@ -2,24 +2,30 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.2.4.0</Version>
-    <AssemblyVersion>1.2.4.0</AssemblyVersion>
-    <FileVersion>1.2.4.0</FileVersion>
+    <Version>1.3.0.0</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
     <Company>PassXYZ Inc.</Company>
     <Authors>Roger Ye</Authors>
     <Copyright>Roger Ye</Copyright>
-    <PackageReleaseNotes>1.2.4.0 - See KeePassLib release notes
-1.2.2.8 - Support Device Lock
-1.2.0.1 - Added IsParentGroup, MoveEntry, MoveGroup
-1.2.0.0 - Updated to KeePassLib 2.4.7. Enhanced KeePassLib
-</PackageReleaseNotes>
+    <PackageReleaseNotes>- Generate icons from URL field
+- Using icons from FontAwesome
+- Fixed an issue in CurrentPath</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <Description>This is an extension of KPCLib.</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.34" />
     <PackageReference Include="PassXYZ" Version="2.1.4.9" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
+    <PackageReference Include="Xamarin.Forms.FontAwesome.Brand" Version="1.0.0" />
+    <PackageReference Include="Xamarin.Forms.FontAwesome.Regular" Version="1.0.0" />
+    <PackageReference Include="Xamarin.Forms.FontAwesome.Solid" Version="1.0.0" />
+    <PackageReference Include="Xamarin.Forms.IconFontHelper" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

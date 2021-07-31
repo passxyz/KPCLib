@@ -314,7 +314,8 @@ namespace PassXYZLib
         Group,
         Entry,
         Notes,
-        PxEntry
+        PxEntry,
+        None
     }
 
     /// <summary>

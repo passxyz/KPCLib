@@ -4,6 +4,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Drawing;
 
+using SkiaSharp;
+
 using KeePassLib;
 using KeePassLib.Interfaces;
 using KeePassLib.Keys;
@@ -13,7 +15,11 @@ using PassXYZLib.Resources;
 
 namespace PassXYZLib
 {
-    public class PxDatabase : PwDatabase
+	/// <summary>
+	/// PxDatabase is a sub-class of PwDatabase. This class has more dependencies than PwDatabase with
+	/// Xamarin.Forms and SkiaSharp etc.
+	/// </summary>
+	public class PxDatabase : PwDatabase
     {
 		private PwGroup m_pwCurrentGroup = null;
 
@@ -204,7 +210,7 @@ namespace PassXYZLib
 					var group = CurrentGroup;
 					string path = group.Name + "/";
 
-					while (RootGroup.Uuid != group.Uuid)
+					while (!RootGroup.Uuid.Equals(group.Uuid))
 					{
 						group = group.ParentGroup;
 						path = group.Name + "/" + path;
@@ -237,8 +243,13 @@ namespace PassXYZLib
 		/// </summary>
 		public PxDatabase() : base()
 		{
+			Debug.WriteLine("PxDatabase: Created instance");
 		}
 
+		~PxDatabase() 
+		{
+			Debug.WriteLine("PxDatabase: Destory instance");
+		}
 
 		/// <summary>
 		/// Open database using a filename and password
@@ -265,6 +276,41 @@ namespace PassXYZLib
 			{
 				var userName = PxDefs.GetUserNameFromDataFile(filename);
 				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(userName, false);
+				if (pxKeyProvider.IsInitialized)
+				{
+					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+					byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+					cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+				}
+				else
+				{
+					throw new KeePassLib.Keys.InvalidCompositeKeyException();
+				}
+			}
+
+			Open(ioc, cmpKey, logger);
+		}
+
+		/// <summary>
+		/// Open database with user information.
+		/// If the device lock is enabled, we need to set DefaultFolder first.
+		/// </summary>
+		/// <param name="user">an instance of PassXYZLib.User</param>
+		public void Open(PassXYZLib.User user)
+        {
+			if (user == null)
+			{ Debug.Assert(false); throw new ArgumentNullException("PassXYZLib.User"); }
+
+			var logger = new KPCLibLogger();
+
+			IOConnectionInfo ioc = IOConnectionInfo.FromPath(user.Path);
+			CompositeKey cmpKey = new CompositeKey();
+			cmpKey.AddUserKey(new KcpPassword(user.Password));
+
+			if (user.IsDeviceLockEnabled)
+			{
+				PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
 				if (pxKeyProvider.IsInitialized)
 				{
 					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
@@ -418,7 +464,7 @@ namespace PassXYZLib
 		/// <summary>
 		/// Delete a group.
 		/// </summary>
-		/// <param name="pg">Group to be added. Must not be <c>null</c>.</param>
+		/// <param name="pg">Group to be deleted. Must not be <c>null</c>.</param>
 		/// <param name="permanent">Permanent delete or move to recycle bin</param>
 		public void DeleteGroup(PwGroup pg, bool permanent = false)
 		{
@@ -619,6 +665,129 @@ namespace PassXYZLib
 			return GetEntryListByProperty(PxDefs.PxCustomDataOtpUrl);
 		}
 
+		public IEnumerable<PwEntry> GetAllEntries() 
+		{
+			List<PwEntry> resultsList = new List<PwEntry>();
+			LinkedList<PwGroup> flatGroupList = RootGroup.GetFlatGroupList();
+
+			foreach (PwEntry entry in RootGroup.Entries)
+			{
+				resultsList.Add(entry);
+			}
+
+			foreach (PwEntry entry in PwGroup.GetFlatEntryList(flatGroupList))
+			{
+				resultsList.Add(entry);
+			}
+			return resultsList;
+		}
+
 		// The end of PxDatabase
+	}
+
+	/// <summary>
+	/// PasswordDb is a sub-class of PxDatabase. It is a singleton class.
+	/// </summary>
+	public sealed class PasswordDb : PxDatabase 
+	{
+		private static PasswordDb instance = null;
+
+		private PasswordDb() { }
+		public static PasswordDb Instance 
+		{ 
+			get 
+			{ 
+				if(instance == null) 
+				{
+					instance = new PasswordDb();
+				}
+				return instance;
+			}
+		}
+
+		public PwCustomIcon GetPwCustomIcon(PwUuid pwIconId)
+		{
+			if (pwIconId != PwUuid.Zero) 
+			{
+				int nIndex = GetCustomIconIndex(pwIconId);
+				if (nIndex >= 0)
+					return CustomIcons[nIndex];
+				else { Debug.Assert(false); }
+			}
+
+			return null;
+		}
+
+		public enum PxCustomIconSize
+		{
+			Min = 96,
+			Max = 216
+		}
+
+		/// <summary>
+		/// GetCustomIcon - find a custom icon by name
+		/// Please refer to the below implementation in PwDatabase.cs. We may move it to here.
+		///       public Image GetCustomIcon(PwUuid pwIconId)
+		/// </summary>
+		/// <param name="name">The custom icon name. This can be supported by KeePass 2.48 or above.</param>	
+		/// <returns>custom icon instance</returns>
+		public PwCustomIcon GetCustomIcon(string name) 
+		{
+			int n = CustomIcons.Count;
+			for (int i = 0; i < n; ++i)
+			{
+				PwCustomIcon ci = CustomIcons[i];
+				if (ci.Name.Equals(name)) return ci;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Save SKBitmap as a custom icon and return the uuid.
+		/// If the uuid is PwUuid.Zero, the icon is not saved due to error.
+		/// </summary>
+		/// <param name="img">SKBitmap image. Must not be <c>null</c>.</param>	
+		/// <param name="name">The custom icon name. This can be supported by KeePass 2.48 or above.</param>	
+		/// <returns>custom icon uuid</returns>
+		public PwUuid SaveCustomIcon(SKBitmap img, string name = "") 
+		{
+			PwUuid uuid = PwUuid.Zero;
+
+			if (img == null) { return PwUuid.Zero; }
+
+			if ((img.Width != img.Height) || (img.Width < (int)PxCustomIconSize.Min))
+			{
+				return PwUuid.Zero;
+			}
+
+			// If the image is not at PxCustomIconSize.Min, we need to resize it.
+			if (img.Width != (int)PxCustomIconSize.Min)
+			{
+				SKImageInfo resizeInfo = new SKImageInfo((int)PxCustomIconSize.Min, (int)PxCustomIconSize.Min);
+				using (SKBitmap resizedSKBitmap = img.Resize(resizeInfo, SKFilterQuality.High))
+				{
+					img = resizedSKBitmap;
+				}
+			}
+
+			using (var image = SKImage.FromBitmap(img))
+			{
+				using (var png = image.Encode(SKEncodedImageFormat.Png, 100))
+				{
+					using (var ms = new MemoryStream())
+					{
+						png.SaveTo(ms);
+                        PwCustomIcon pwci = new PwCustomIcon(new PwUuid(true), ms.ToArray())
+                        {
+                            Name = name
+                        };
+                        CustomIcons.Add(pwci);
+						uuid = pwci.Uuid;
+					}
+				}
+			}
+			return uuid;
+		}
 	}
 }

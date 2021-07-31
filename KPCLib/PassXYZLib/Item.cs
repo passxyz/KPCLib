@@ -19,7 +19,11 @@ namespace KeePassLib
 
         public abstract string Description { get;}
 
+        public abstract string Notes { get; set; }
+
         public abstract bool IsGroup { get; }
+
+        public abstract PwUuid CustomIconUuid { get; set; }
 
         public string Id { get { return Uuid.ToHexString(); } }
 
@@ -36,6 +40,7 @@ namespace KeePassLib
             }
         }
 
+        virtual public Object ImgSource { get; set; }
 
         #region INotifyPropertyChanged
         protected bool SetProperty<T>(ref T backingStore, T value,

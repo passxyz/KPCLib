@@ -34,7 +34,7 @@ using KeePassLib.Utility;
 
 namespace KeePassLib
 {
-	public sealed partial class PwGroup
+	public partial class PwGroup
 	{
 		/// <summary>
 		/// Search this group and all subgroups for entries.
@@ -241,7 +241,7 @@ namespace KeePassLib
 
 			if(sp.SearchInTags)
 			{
-				foreach(string strTag in pe.Tags)
+				foreach(string strTag in pe.GetTagsInherited())
 				{
 					if(SrsmIsMatch(sp, rx, pe, strTag)) return true;
 				}
@@ -346,6 +346,7 @@ namespace KeePassLib
 			GroupHandler gh = delegate(PwGroup pg)
 			{
 				if(!sp.SearchInGroupNames) pg.Name = string.Empty;
+				if(!sp.SearchInTags) pg.Tags.Clear();
 
 				PwObjectList<PwEntry> l = pg.Entries;
 				for(int i = (int)l.UCount - 1; i >= 0; --i)

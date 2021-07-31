@@ -27,6 +27,7 @@ using System.Text;
 #if KPCLib
 using SkiaSharp;
 using Image = SkiaSharp.SKBitmap;
+using Svg.Skia;
 #else
 #if !KeePassUAP
 using System.Drawing;
@@ -39,6 +40,18 @@ namespace KeePassLib.Utility
 {
 	public static class GfxUtil
 	{
+		private const short ExifTypeUInt16 = 3;
+
+		private const int ExifOrientation = 274;
+		private const ushort ExifOrientationTL = 1;
+		private const ushort ExifOrientationTR = 2;
+		private const ushort ExifOrientationBR = 3;
+		private const ushort ExifOrientationBL = 4;
+		private const ushort ExifOrientationLT = 5;
+		private const ushort ExifOrientationRT = 6;
+		private const ushort ExifOrientationRB = 7;
+		private const ushort ExifOrientationLB = 8;
+
 #if (!KeePassLibSD && !KeePassUAP)
 		private sealed class GfxImage
 		{
@@ -65,7 +78,36 @@ namespace KeePassLib.Utility
 #endif
 
 #if KPCLib
-        public static Image LoadImage(byte[] pb)
+		public static Image LoadSvgImage(byte[] pb, int w = 128, int h = 128) 
+		{
+			if (pb == null) { return null; }
+
+			using (var ms = new MemoryStream(pb, false))
+			{
+				var svg = new SKSvg();
+				svg.Load(ms);
+
+				var imageInfo = new SKImageInfo(w, h);
+				using (var surface = SKSurface.Create(imageInfo))
+				using (var canvas = surface.Canvas)
+				{
+					// calculate the scaling need to fit to screen
+					var scaleX = w / svg.Picture.CullRect.Width;
+					var scaleY = h / svg.Picture.CullRect.Height;
+					var matrix = SKMatrix.CreateScale((float)scaleX, (float)scaleY);
+
+					// draw the svg
+					canvas.Clear(SKColors.Transparent);
+					canvas.DrawPicture(svg.Picture, ref matrix);
+					canvas.Flush();
+
+					var data = surface.Snapshot();
+					return SKBitmap.FromImage(data);
+				}
+			}
+		}
+
+		public static Image LoadImage(byte[] pb)
         {
             if(pb == null) { return null; }
 
@@ -136,9 +178,11 @@ namespace KeePassLib.Utility
 			{
 #if !KeePassLibSD
 				imgSrc = Image.FromStream(s);
+
+				NormalizeOrientation(imgSrc);
+
 				Bitmap bmp = new Bitmap(imgSrc.Width, imgSrc.Height,
 					PixelFormat.Format32bppArgb);
-
 				try
 				{
 					bmp.SetResolution(imgSrc.HorizontalResolution,
@@ -495,10 +539,10 @@ namespace KeePassLib.Utility
 				int[] v = new int[cp];
 				Marshal.Copy(bd.Scan0, v, 0, cp);
 
-				ulong u = (ulong)w * 0x50EF39EB5BE34CA9;
+				ulong u = (ulong)w * 0x50EF39EB5BE34CA9UL;
 				for(int i = 0; i < cp; ++i)
-					u = (u ^ (uint)v[i]) * 0x6E18585D2D174BD5;
-				return (u ^ (u >> 32));
+					u = (u ^ (uint)v[i]) * 0x6E18585D2D174BD5UL;
+				return ((u ^ (u >> 32)) * 0x636DA7436CB982B5UL);
 			}
 			catch(Exception) { Debug.Assert(false); }
 			finally
@@ -507,6 +551,65 @@ namespace KeePassLib.Utility
 			}
 
 			return 0;
+		}
+
+		private static void NormalizeOrientation(Image img)
+		{
+			if(img == null) { Debug.Assert(false); return; }
+
+			try
+			{
+				int[] v = img.PropertyIdList;
+				if(v == null) { Debug.Assert(false); return; }
+				if(Array.IndexOf<int>(v, ExifOrientation) < 0) return;
+
+				PropertyItem pi = img.GetPropertyItem(ExifOrientation);
+				if(pi == null) { Debug.Assert(false); return; }
+				if(pi.Type != ExifTypeUInt16) { Debug.Assert(false); return; }
+
+				byte[] pb = pi.Value;
+				if(pb == null) { Debug.Assert(false); return; }
+				if(pb.Length != 2) { Debug.Assert(false); return; }
+
+				// Exif supports both LE and BE; use arch.-dep. BitConverter
+				ushort u = BitConverter.ToUInt16(pb, 0);
+				bool bRemoveProp = true;
+
+				switch(u)
+				{
+					case ExifOrientationTL:
+						bRemoveProp = false;
+						break;
+					case ExifOrientationTR:
+						img.RotateFlip(RotateFlipType.RotateNoneFlipX);
+						break;
+					case ExifOrientationBR:
+						img.RotateFlip(RotateFlipType.Rotate180FlipNone);
+						break;
+					case ExifOrientationBL:
+						img.RotateFlip(RotateFlipType.RotateNoneFlipY);
+						break;
+					case ExifOrientationLT:
+						img.RotateFlip(RotateFlipType.Rotate90FlipX);
+						break;
+					case ExifOrientationRT:
+						img.RotateFlip(RotateFlipType.Rotate90FlipNone);
+						break;
+					case ExifOrientationRB:
+						img.RotateFlip(RotateFlipType.Rotate90FlipY);
+						break;
+					case ExifOrientationLB:
+						img.RotateFlip(RotateFlipType.Rotate270FlipNone);
+						break;
+					default:
+						Debug.Assert(false);
+						bRemoveProp = false;
+						break;
+				}
+
+				if(bRemoveProp) img.RemovePropertyItem(ExifOrientation);
+			}
+			catch(Exception) { Debug.Assert(false); }
 		}
 #endif // KPCLib
 	}
