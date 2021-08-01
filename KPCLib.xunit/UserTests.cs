@@ -63,7 +63,7 @@ namespace KPCLib.xunit
         [Fact]
         public void GetUserNameTest()
         {
-            PxDataFile.GetUsersList();
+            User.GetUsersList();
         }
 
         [Fact]

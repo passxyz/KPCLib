@@ -326,6 +326,74 @@ namespace PassXYZLib
 			Open(ioc, cmpKey, logger);
 		}
 
+		/// <summary>
+		/// Create a database with user information.
+		/// If the device lock is enabled, we need to set DefaultFolder first.
+		/// </summary>
+		/// <param name="user">an instance of PassXYZLib.User</param>
+		public void New(PassXYZLib.User user)
+		{
+			if (user == null) { Debug.Assert(false); throw new ArgumentNullException("PassXYZLib.User"); }
+
+			if (user.IsDeviceLockEnabled)
+			{
+				if(!CreateKeyFile(user))
+                {
+					throw new KeePassLib.Keys.InvalidCompositeKeyException();
+				}
+			}
+
+			IOConnectionInfo ioc = IOConnectionInfo.FromPath(user.Path);
+			CompositeKey cmpKey = new CompositeKey();
+			cmpKey.AddUserKey(new KcpPassword(user.Password));
+
+			if (user.IsDeviceLockEnabled)
+			{
+				PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+				if (pxKeyProvider.IsInitialized)
+				{
+					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+					byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+					cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+				}
+				else
+				{
+					throw new KeePassLib.Keys.InvalidCompositeKeyException();
+				}
+			}
+			New(ioc, cmpKey);
+
+			// Set the database name to the current user name
+			Name = user.Username;
+
+			// Set the name of root group to the user name
+			RootGroup.Name = user.Username;
+		}
+
+		/// <summary>
+		/// Create a key file from an PxKeyProvider instance or from the system
+		/// </summary>
+		/// <param name="kp">a key provider instance. If it is null, the key file is created from the 
+		/// current system.</param>
+		/// <returns>true - created key file, false - failed to create key file.</returns>
+		private bool CreateKeyFile(PassXYZLib.User user, PassXYZ.Services.PxKeyProvider kp = null)
+		{
+			PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+			PassXYZ.Utils.Settings.User.Username = user.Username;
+			PassXYZ.Services.PxKeyProvider pxKeyProvider;
+			if (kp == null)
+			{
+				pxKeyProvider = new PassXYZ.Services.PxKeyProvider();
+				return pxKeyProvider.CreateKeyFile(true);
+			}
+			else
+			{
+				pxKeyProvider = kp;
+				return pxKeyProvider.CreateKeyFile(false);
+			}
+		}
+
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
 		{
 			if (pgRecycleBin == this.RootGroup)
@@ -688,7 +756,7 @@ namespace PassXYZLib
 	/// <summary>
 	/// PasswordDb is a sub-class of PxDatabase. It is a singleton class.
 	/// </summary>
-	public sealed class PasswordDb : PxDatabase 
+	public sealed class PasswordDb : PxDatabase
 	{
 		private static PasswordDb instance = null;
 
