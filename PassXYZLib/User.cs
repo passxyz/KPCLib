@@ -70,26 +70,6 @@ namespace PassXYZLib
             return trimedName;
         }
 
-        /// <summary>
-        /// Get a list of existing users from the encoded data files
-        /// </summary>
-        /// <returns>user list</returns>
-        public static List<string> GetUsersList()
-        {
-            List<string> userList = new List<string>();
-
-            var dataFiles = Directory.EnumerateFiles(DataFilePath, PxDefs.all_xyz);
-            foreach (string currentFile in dataFiles)
-            {
-                string fileName = currentFile.Substring(DataFilePath.Length + 1);
-                string userName = GetUserName(fileName);
-                if (userName != string.Empty && !string.IsNullOrWhiteSpace(userName))
-                {
-                    userList.Add(userName);
-                }
-            }
-            return userList;
-        }
     }
 
     public class User
@@ -200,6 +180,27 @@ namespace PassXYZLib
             {
                 return PxDefs.head_xyz + Base58CheckEncoding.ToBase58String(_username) + PxDefs.xyz;
             }
+        }
+
+        /// <summary>
+        /// Get a list of existing users from the encoded data files
+        /// </summary>
+        /// <returns>user list</returns>
+        public static List<string> GetUsersList()
+        {
+            List<string> userList = new List<string>();
+
+            var dataFiles = Directory.EnumerateFiles(PxDataFile.DataFilePath, PxDefs.all_xyz);
+            foreach (string currentFile in dataFiles)
+            {
+                string fileName = currentFile.Substring(PxDataFile.DataFilePath.Length + 1);
+                string userName = PxDataFile.GetUserName(fileName);
+                if (userName != string.Empty && !string.IsNullOrWhiteSpace(userName))
+                {
+                    userList.Add(userName);
+                }
+            }
+            return userList;
         }
 
         public User()
