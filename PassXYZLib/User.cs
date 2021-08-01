@@ -75,21 +75,28 @@ namespace PassXYZLib
     public class User
     {
         private string _username;
-        public string Username 
+        public string Username
         {
             get => _username;
-            set 
+            set
             {
                 _username = value;
 
-                // Check whether Device Lock is enabled, but key file may not exist.
-                if (System.IO.File.Exists(System.IO.Path.Combine(PxDataFile.DataFilePath, GetFileName(true))))
-                {
-                    IsDeviceLockEnabled = true;
-                }
-                else
+                if(_username == null)
                 {
                     IsDeviceLockEnabled = false;
+                }
+                else 
+                {
+                    // Check whether Device Lock is enabled, but key file may not exist.
+                    if (System.IO.File.Exists(System.IO.Path.Combine(PxDataFile.DataFilePath, GetFileName(true))))
+                    {
+                        IsDeviceLockEnabled = true;
+                    }
+                    else
+                    {
+                        IsDeviceLockEnabled = false;
+                    }
                 }
             }
         }
@@ -100,7 +107,31 @@ namespace PassXYZLib
         /// Check whether Device Lock is enabled for this user.
         /// <c>true</c> - key file is enabled, <c>false</c> - key file is not enabled
         /// </summary>
-        public bool IsDeviceLockEnabled { get; set; }
+        public bool IsDeviceLockEnabled { get; set; } = false;
+
+        /// <summary>
+        /// Check whether the key file is existed.
+        /// true - key file is available, false - key file is not available
+        /// </summary>
+        public bool IsUserExist
+        {
+            get
+            {
+                if (_username == null)
+                {
+                    return false;
+                }
+
+                if (System.IO.File.Exists(Path))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         /// <summary>
         /// Check whether the key file is existed.
@@ -110,10 +141,14 @@ namespace PassXYZLib
         {
             get
             {
+                if (_username == null)
+                {
+                    return false;
+                }
+
                 if (IsDeviceLockEnabled)
                 {
-                    var keyFilePath = System.IO.Path.Combine(PxDataFile.KeyFilePath, KeyFileName);
-                    if (System.IO.File.Exists(keyFilePath))
+                    if (System.IO.File.Exists(System.IO.Path.Combine(PxDataFile.KeyFilePath, KeyFileName)))
                     {
                         return true;
                     }
@@ -141,6 +176,10 @@ namespace PassXYZLib
         {
             get
             {
+                if (_username == null)
+                {
+                    return null;
+                }
                 return System.IO.Path.Combine(PxDataFile.DataFilePath, FileName);
             }
         }
@@ -153,7 +192,12 @@ namespace PassXYZLib
         {
             get 
             {
-                if(IsDeviceLockEnabled) 
+                if (_username == null)
+                {
+                    return string.Empty;
+                }
+
+                if (IsDeviceLockEnabled) 
                 {
                     return PxDefs.head_k4xyz + Base58CheckEncoding.ToBase58String(Username) + PxDefs.k4xyz;
                 }
@@ -172,6 +216,11 @@ namespace PassXYZLib
         /// <returns>Data file name</returns>
         private string GetFileName(bool isDeviceLockEnabled = false)
         {
+            if (_username == null)
+            {
+                return null;
+            }
+
             if (isDeviceLockEnabled)
             {
                 return PxDefs.head_data + Base58CheckEncoding.ToBase58String(_username) + PxDefs.xyz;
