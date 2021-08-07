@@ -1,5 +1,8 @@
 ## Change log
 
+### Release 1.3.2
+ - Removed dependencies
+
 ### Release 1.2.2
  - Bug fixes
 
