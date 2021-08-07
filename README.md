@@ -1,6 +1,6 @@
 # KPCLib - KeePass Portable Class Library
 
-This is a port of KeePassLib to PCL and .netstandard. With **KPCLib** and Xamarin.Forms, we can build KeePass based applications on all major platforms. A command line application [KPCLibPy][1] is built using **KPCLib** and [Python.NET][2].
+This is a .NET Standard build of KeePassLib which is a library of KeePass. With **KPCLib** and Xamarin.Forms, we can build KeePass based applications on all major platforms. A command line application [KPCLibPy][1] is built using **KPCLib** and [Python.NET][2].
 
 **KPCLib** included two components:
 - **KeePassLib** - This is the port of the original KeePassLib under project `KPCLib`.

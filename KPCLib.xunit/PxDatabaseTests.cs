@@ -85,19 +85,6 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void ListItemsTests() 
-        {
-            PwGroup pg = passxyz.PxDb.RootGroup;
-
-            List<Item> itemList = pg.GetItems();
-            foreach (var item in itemList) 
-            {
-                Debug.WriteLine($"\t{item.Name} : {item.ImgSource}");
-            }
-            Assert.NotNull(itemList);
-        }
-
-        [Fact]
         public void DeleteEmptyEntryTest()
         {
             try 
@@ -392,7 +379,7 @@ namespace KPCLib.xunit
         public void PxLibVersion() 
         {
             Debug.WriteLine($"{PxLibInfo.Version}");
-            Assert.Equal(PxLibInfo.Version, new System.Version("1.3.1.0"));
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.3.2.0"));
         }
 
         [Fact]

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>PassXYZLib</id>
-        <version>1.3.1.0</version>
+        <version>1.3.2.0</version>
         <authors>Roger Ye</authors>
 		<owners>Roger Ye</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -10,22 +10,16 @@
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is an extension of KPCLib.</description>
 		<releaseNotes>
-			- Generate icons from URL field
-			- Using icons from FontAwesome
-			- Fixed an issue in CurrentPath
+			- Removed dependencies
 		</releaseNotes>
 		<copyright>Roger Ye</copyright>
 		<repository url="https://github.com/passxyz/KPCLib" />
 		<dependencies>
 		  <group targetFramework=".NETStandard2.0">
-			<dependency id="HtmlAgilityPack" version="1.11.34" exclude="Build,Analyzers" />
-			<dependency id="Xamarin.Forms" version="5.0.0.2012" exclude="Build,Analyzers" />
-			<dependency id="Xamarin.Forms.IconFontHelper" version="1.0.0" exclude="Build,Analyzers" />
-			<dependency id="Xamarin.Forms.FontAwesome.Brand" version="1.0.0" exclude="Build,Analyzers" />
-			<dependency id="Xamarin.Forms.FontAwesome.Regular" version="1.0.0" exclude="Build,Analyzers" />
-			<dependency id="Xamarin.Forms.FontAwesome.Solid" version="1.0.0" exclude="Build,Analyzers" />
-			<dependency id="KPCLib" version="1.3.1.0" exclude="Build,Analyzers" />
-		  </group>
+      <dependency id="PassXYZ" version="2.1.4.9" exclude="Build,Analyzers" />
+			<dependency id="KPCLib" version="1.3.2.0" exclude="Build,Analyzers" />
+      <dependency id="SkiaSharp" version="2.80.2" exclude="Build,Analyzers" />
+      </group>
 		</dependencies>
         <summary>PassXYZLib added additional features for Xamarin Forms.</summary>
     </metadata>
