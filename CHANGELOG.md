@@ -1,5 +1,9 @@
 ## Change log
 
+### Release 1.3.3
+ - Improved property `IsUserExist` in `User`
+ - Support KeePass key file
+
 ### Release 1.3.2
  - Removed dependencies
 

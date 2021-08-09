@@ -7,29 +7,57 @@ namespace PassXYZLib
 {
     public static class PxDataFile
     {
+        private static string _dataFilePath = string.Empty;
+        /// <summary>
+        /// The default data file path uses the stardard .NET setting. The default data file path doesn't need to be set.
+        /// In some cases, such as unit test, the data file path can be set. If the data file path is set, 
+        /// the data file and key file will be stored in the same folder.
+        /// </summary>
         public static string DataFilePath
         {
             get
             {
-                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "data");
-                if(!Directory.Exists(path)) 
+                if(!string.IsNullOrEmpty(_dataFilePath))
                 {
-                    Directory.CreateDirectory(path);
+                    return _dataFilePath;
                 }
-                return path;
+                else
+                {
+                    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "data");
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    return path;
+                }
+            }
+            set
+            {
+                _dataFilePath = value;
             }
         }
 
+        /// <summary>
+        /// The default key file path uses the stardard .NET setting. The default key file path doesn't need to be set.
+        /// If the data file path is set, the data file and key file will be stored in the same folder.
+        /// </summary>
         public static string KeyFilePath
         {
             get
-            { 
-                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "key");
-                if (!Directory.Exists(path))
+            {
+                if (!string.IsNullOrEmpty(_dataFilePath))
                 {
-                    Directory.CreateDirectory(path);
+                    return _dataFilePath;
                 }
-                return path;
+                else
+                {
+                    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "key");
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    return path;
+                }
             }
         }
 
@@ -75,6 +103,11 @@ namespace PassXYZLib
     public class User
     {
         private string _username;
+        /// <summary>
+        /// PassXYZ uses the concept of user instead of data file to manage password database.
+        /// This is because it is difficult to manage data file in mobile devices. The actual data file is encoded
+        /// using base58 encoding with information such as key file or device lock enabled.
+        /// </summary>
         public string Username
         {
             get => _username;
@@ -110,8 +143,8 @@ namespace PassXYZLib
         public bool IsDeviceLockEnabled { get; set; } = false;
 
         /// <summary>
-        /// Check whether the key file is existed.
-        /// true - key file is available, false - key file is not available
+        /// Check whether the username exist or not. 
+        /// <c>true</c> - user exist, <c>false</c> - user does not exist
         /// </summary>
         public bool IsUserExist
         {
@@ -122,14 +155,17 @@ namespace PassXYZLib
                     return false;
                 }
 
-                if (System.IO.File.Exists(Path))
+                var dataFiles = Directory.EnumerateFiles(PxDataFile.DataFilePath, PxDefs.all_xyz);
+                foreach (string currentFile in dataFiles)
                 {
-                    return true;
+                    string userName = PxDataFile.GetUserName(currentFile.Substring(PxDataFile.DataFilePath.Length + 1));
+                    if (userName != string.Empty && !string.IsNullOrWhiteSpace(userName))
+                    {
+                        if(userName.Equals(_username)) { return true; }
+                    }
                 }
-                else
-                {
-                    return false;
-                }
+
+                return false;
             }
         }
 
@@ -186,7 +222,7 @@ namespace PassXYZLib
 
         /// <summary>
         /// Get the key file name. The key file name is generated using base58 encoding from username.
-        /// If Device Lock is not enabled, return <c>string.Empty</c>.
+        /// If Device Lock is not enabled, the key file name is <c>string.Empty</c>.
         /// </summary>
         public string KeyFileName
         {
