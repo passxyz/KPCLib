@@ -74,7 +74,7 @@ namespace PassXYZLib
             {
                 trimedName = fileName.Substring(PxDefs.head_xyz.Length);
                 trimedName = trimedName.Substring(0, trimedName.LastIndexOf(PxDefs.xyz));
-                Debug.WriteLine($"PxDataFile: {fileName}, {trimedName} in GetUserName().");
+                // Debug.WriteLine($"PxDataFile: {fileName}, {trimedName} in GetUserName().");
             }
             else
             {
@@ -201,6 +201,14 @@ namespace PassXYZLib
         }
 
         /// <summary>
+        /// The date/time when this user was last accessed (read).
+        /// </summary>
+        public DateTime LastAccessTime
+        {
+            get { return File.GetLastAccessTime(this.Path); }
+        }
+
+        /// <summary>
         /// Data file name. Converted Username to file name
         /// </summary>
         public string FileName => GetFileName(IsDeviceLockEnabled);
@@ -233,7 +241,7 @@ namespace PassXYZLib
                     return string.Empty;
                 }
 
-                if (IsDeviceLockEnabled) 
+                if (IsDeviceLockEnabled)
                 {
                     return PxDefs.head_k4xyz + Base58CheckEncoding.ToBase58String(Username) + PxDefs.k4xyz;
                 }
@@ -241,6 +249,33 @@ namespace PassXYZLib
                 {
                     return string.Empty;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Key file path
+        /// </summary>
+        public string KeFilePath
+        {
+            get
+            {
+                if (_username == null)
+                {
+                    return null;
+                }
+                return System.IO.Path.Combine(PxDataFile.KeyFilePath, KeyFileName);
+            }
+        }
+
+        /// <summary>
+        /// Delete the current user
+        /// </summary>
+        public void Delete() 
+        {
+            File.Delete(Path);
+            if (IsDeviceLockEnabled) 
+            {
+                File.Delete(KeFilePath);
             }
         }
 

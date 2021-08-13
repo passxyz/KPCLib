@@ -50,7 +50,7 @@ namespace KPCLib.xunit
         {
             userFixture.user.Username = "test1";
             Debug.Print($"DataFilePath={PxDataFile.DataFilePath}");
-            Debug.Print($"FileName={userFixture.user.FileName}");
+            Debug.Print($"FileName={userFixture.user.FileName}, LastAccessTime: {userFixture.user.LastAccessTime}");
             Assert.NotNull(PxDataFile.DataFilePath);
             Assert.True(!userFixture.user.IsDeviceLockEnabled);
         }
