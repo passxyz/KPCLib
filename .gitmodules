@@ -1,0 +1,4 @@
+[submodule "PureOtp"]
+	path = PureOtp
+	url = https://github.com/shugaoye/PureOtp.git
+	branch = passxyz

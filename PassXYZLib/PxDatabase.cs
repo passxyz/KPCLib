@@ -309,17 +309,28 @@ namespace PassXYZLib
 
 			if (user.IsDeviceLockEnabled)
 			{
-				PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
-				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
-				if (pxKeyProvider.IsInitialized)
+				try 
 				{
-					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
-					byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
-					cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+					PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+					if (pxKeyProvider.IsInitialized)
+					{
+						KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+						byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+						cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+					}
+					else
+					{
+						throw new KeePassLib.Keys.InvalidCompositeKeyException();
+					}
 				}
-				else
-				{
-					throw new KeePassLib.Keys.InvalidCompositeKeyException();
+				catch (PassXYZ.Services.InvalidDeviceLockException ex)
+                {
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeyFileName)); }
+					catch (Exception exFile)
+					{
+						Debug.Write($"{exFile} in {ex}");
+					}
 				}
 			}
 

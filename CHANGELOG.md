@@ -1,5 +1,10 @@
 ## Change log
 
+### Release 1.3.3
+ - Improved property `IsUserExist` and Added `Delete` method in `User`
+ - Support KeePass key file
+ - Removed dependency on PureOtp
+
 ### Release 1.3.2
  - Removed dependencies
 
