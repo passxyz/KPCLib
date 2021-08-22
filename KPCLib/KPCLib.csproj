@@ -6,7 +6,7 @@
     <OutputType>Library</OutputType>
     <StartupObject />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.3.3</Version>
+    <Version>1.3.4</Version>
     <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
     <Description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</Description>
@@ -19,8 +19,8 @@
 - Removed dependency on PureOtp
 - Support KeePass key file</PackageReleaseNotes>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <AssemblyVersion>1.3.3.0</AssemblyVersion>
-    <FileVersion>1.3.3.0</FileVersion>
+    <AssemblyVersion>1.3.4.0</AssemblyVersion>
+    <FileVersion>1.3.4.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

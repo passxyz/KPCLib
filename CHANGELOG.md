@@ -1,5 +1,8 @@
 ## Change log
 
+### Release 1.3.4
+ - Bug fixes
+
 ### Release 1.3.3
  - Improved property `IsUserExist` and Added `Delete` method in `User`
  - Support KeePass key file

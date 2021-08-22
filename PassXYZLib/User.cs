@@ -108,7 +108,7 @@ namespace PassXYZLib
         /// This is because it is difficult to manage data file in mobile devices. The actual data file is encoded
         /// using base58 encoding with information such as key file or device lock enabled.
         /// </summary>
-        public string Username
+        virtual public string Username
         {
             get => _username;
             set
