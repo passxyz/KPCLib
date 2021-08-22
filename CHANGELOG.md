@@ -1,5 +1,7 @@
 ## Change log
 
+### Release 1.3.5
+
 ### Release 1.3.4
  - Bug fixes
 
