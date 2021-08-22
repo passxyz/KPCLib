@@ -7,7 +7,7 @@ using System.Drawing;
 using SkiaSharp;
 
 using KeePassLib;
-using KeePassLib.Interfaces;
+using KeePassLib.Delegates;
 using KeePassLib.Keys;
 using KeePassLib.Security;
 using KeePassLib.Serialization;
@@ -539,6 +539,33 @@ namespace PassXYZLib
 			}
 		}
 
+
+		/// <summary>
+		/// Find an entry by Uuid
+		/// </summary>
+		/// <param name="uuid">The entry uuid</param>	
+		/// <returns>Entry found or return <c>null</c> if the entry cannot be found</returns>
+		public PwEntry FindEntryById(string id)
+		{
+			PwEntry targetEntry = null;
+
+			EntryHandler eh = delegate (PwEntry pe)
+			{
+				PwUuid pu = pe.Uuid;
+				string hexStr = pu.ToHexString();
+				if (hexStr.Equals(id))
+				{
+					targetEntry = pe;
+					return false;
+				}
+
+				return true;
+			};
+
+			RootGroup.TraverseTree(TraversalMethod.PreOrder, null, eh);
+
+			return targetEntry;
+		}
 
 		/// <summary>
 		/// Delete a group.

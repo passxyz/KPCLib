@@ -10,8 +10,7 @@
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is an extension of KPCLib.</description>
 		<releaseNotes>
-      - Removed dependencies
-      - Added Delete function in Class User
+      - Added FindEntryById()
     </releaseNotes>
 		<copyright>Roger Ye</copyright>
 		<repository url="https://github.com/passxyz/KPCLib" />
