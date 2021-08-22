@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Drawing;
+using System.Text.RegularExpressions;
 
 using SkiaSharp;
 
@@ -782,6 +783,68 @@ namespace PassXYZLib
 			}
 
 			foreach (PwEntry entry in PwGroup.GetFlatEntryList(flatGroupList))
+			{
+				resultsList.Add(entry);
+			}
+			return resultsList;
+		}
+
+		/// <summary>
+		/// Search entries using a keyword
+		/// </summary>
+		/// <param name="strSearch">string to be searched</param>
+		/// <param name="itemGroup">within this group to be searched</param>
+		/// <returns>list of result</returns>
+		public IEnumerable<Item> SearchEntries(string strSearch, Item itemGroup = null)
+		{
+			List<Item> resultsList = new List<Item>();
+			string strGroupName = " (\"" + strSearch + "\") ";
+            PwGroup pg = new PwGroup(true, true, strGroupName, PwIcon.EMailSearch)
+            {
+                IsVirtual = true
+            };
+
+            SearchParameters sp = new SearchParameters();
+
+			if (strSearch.StartsWith(@"//") && strSearch.EndsWith(@"//") &&
+				(strSearch.Length > 4))
+			{
+				string strRegex = strSearch.Substring(2, strSearch.Length - 4);
+
+				try // Validate regular expression
+				{
+					Regex rx = new Regex(strRegex, RegexOptions.IgnoreCase);
+					rx.IsMatch("ABCD");
+				}
+				catch (Exception exReg)
+				{
+					Debug.WriteLine($"SearchEntriesAsync: Exception={exReg.Message}.");
+					return resultsList;
+				}
+
+				sp.SearchString = strRegex;
+				sp.RegularExpression = true;
+			}
+			else sp.SearchString = strSearch;
+
+			sp.SearchInTitles = sp.SearchInUserNames =
+				sp.SearchInUrls = sp.SearchInNotes = sp.SearchInOther =
+				sp.SearchInUuids = sp.SearchInGroupNames = sp.SearchInTags = true;
+			sp.SearchInPasswords = false;
+			sp.RespectEntrySearchingDisabled = true;
+			sp.ExcludeExpired = false;
+
+			// Search in root group by default
+			PwGroup pgRoot = RootGroup;
+
+			// If a search group is specified, try it.
+			if (itemGroup != null)
+			{
+				if(itemGroup.IsGroup) { pgRoot = itemGroup as PwGroup; }
+			}
+			pgRoot.SearchEntries(sp, pg.Entries);
+
+			foreach (PwEntry entry in pg.Entries)
 			{
 				resultsList.Add(entry);
 			}

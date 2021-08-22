@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 using Xunit;
@@ -370,6 +371,17 @@ namespace KPCLib.xunit
                 Debug.WriteLine($"Cannot move {srcPath} to {path}.");
             }
         }
+
+        [Theory]
+        [InlineData("G22E1")]
+        [InlineData("G22")]
+        [InlineData("kpclib")]
+        public void EntrySearchTests(string keyword)
+        {
+            var entries = passxyz.PxDb.SearchEntries(keyword);
+            Assert.True(entries.Any());
+        }
+
     }
 
 

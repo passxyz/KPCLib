@@ -1,6 +1,8 @@
 ## Change log
 
 ### Release 1.3.5
+**PassXYZLib**
+ - Added SearchEntries()
 
 ### Release 1.3.4
  - Bug fixes
