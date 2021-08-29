@@ -141,6 +141,20 @@ namespace KeePassLib.Collections
 		}
 
 		/// <summary>
+		/// Test if a named string exists.
+		/// </summary>
+		/// <param name="strName">Name of the string to try.</param>
+		/// <returns>Returns <c>true</c> if the string exists, otherwise <c>false</c>.</returns>
+		/// <exception cref="System.ArgumentNullException">Thrown if
+		/// <paramref name="strName" /> is <c>null</c>.</exception>
+		public bool Exists(string strName)
+		{
+			Debug.Assert(strName != null); if (strName == null) throw new ArgumentNullException("strName");
+
+			return m_vBinaries.ContainsKey(strName);
+		}
+
+		/// <summary>
 		/// Remove a binary object.
 		/// </summary>
 		/// <param name="strField">Identifier of the binary field to remove.</param>

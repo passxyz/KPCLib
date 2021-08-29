@@ -1,5 +1,12 @@
 ## Change log
 
+### Release 1.3.5
+**KPCLib**
+ - Added `Exists()` in `ProtectedBinaryDictionary`
+
+**PassXYZLib**
+ - Added `SearchEntries()`
+
 ### Release 1.3.4
  - Bug fixes
 
