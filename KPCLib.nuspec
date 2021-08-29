@@ -10,10 +10,7 @@
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is the build of KeePassLib in Xamarin Portable Class Library. Three platforms, UWP, Android and iOS, are supported and tested.</description>
 		<releaseNotes>
-      - Updated to KeePass 2.48.1
-      - Fixed an issue in CryptoRandom.cs
-      - Support KeePass key file
-      - Removed dependency on PureOtp
+      - Added Exists() in ProtectedBinaryDictionary
     </releaseNotes>
 		<copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye updated and enhanced this library for .NET Standard.</copyright>
 		<repository url="https://github.com/passxyz/KPCLib" />

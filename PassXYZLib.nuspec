@@ -10,7 +10,7 @@
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is an extension of KPCLib.</description>
 		<releaseNotes>
-      - Added FindEntryById()
+      Added SearchEntries()
     </releaseNotes>
 		<copyright>Roger Ye</copyright>
 		<repository url="https://github.com/passxyz/KPCLib" />
