@@ -3,6 +3,7 @@
 ### Release 1.3.6
 **PassXYZLib**
  - Added LogFilePath
+ - Added `ChangeMasterPassword()`
 
 ### Release 1.3.5
 **KPCLib**

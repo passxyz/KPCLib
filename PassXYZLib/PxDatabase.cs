@@ -338,6 +338,73 @@ namespace PassXYZLib
 			Open(ioc, cmpKey, logger);
 		}
 
+		public string GetDeviceLockData(PassXYZLib.User user)
+        {
+			if (user.IsDeviceLockEnabled)
+			{
+				try
+				{
+					PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+					if (pxKeyProvider.IsInitialized)
+					{
+						return PassXYZ.Services.PxKeyData.ToBase64String(pxKeyProvider.KeyData);
+					}
+				}
+				catch (PassXYZ.Services.InvalidDeviceLockException ex)
+				{
+					Debug.WriteLine($"{ex}");
+					return string.Empty;
+				}
+			}
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// Change master password
+		/// </summary>
+		/// <param name="newPassword">new master password</param>
+		/// <param name="user">the current user</param>
+		/// <returns>true - changed successfully, false - failed to change</returns>
+		public bool ChangeMasterPassword(string newPassword, PassXYZLib.User user)
+		{
+			CompositeKey cmpKey = new CompositeKey();
+
+			cmpKey.AddUserKey(new KcpPassword(newPassword));
+
+			if (user.IsDeviceLockEnabled)
+			{
+				try
+				{
+					PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+					if (pxKeyProvider.IsInitialized)
+					{
+						KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+						byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+						cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+					}
+					else
+					{
+						throw new KeePassLib.Keys.InvalidCompositeKeyException();
+					}
+				}
+				catch (PassXYZ.Services.InvalidDeviceLockException ex)
+				{
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeFilePath)); }
+					catch (Exception exFile)
+					{
+						Debug.Write($"{exFile} in {ex}");
+						return false;
+					}
+				}
+			}
+			MasterKey = cmpKey;
+			MasterKeyChanged = DateTime.UtcNow;
+
+			return true;
+		}
+
 		/// <summary>
 		/// Create a database with user information.
 		/// If the device lock is enabled, we need to set DefaultFolder first.
