@@ -473,6 +473,37 @@ namespace PassXYZLib
 			}
 		}
 
+		/// <summary>
+		/// Recreate a key file from a PxKeyData
+		/// </summary>
+		/// <param name="data">PxKeyData source</param>
+		/// <param name="username">username inside PxKeyData source</param>
+		/// <returns>true - created key file, false - failed to create key file.</returns>
+		public bool CreateKeyFile(string data, string username)
+		{
+			if (data.StartsWith(PxDefs.PxKeyFile))
+			{
+				PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+				PassXYZ.Utils.Settings.User.Username = username;
+
+				var msg = data.Substring(PxDefs.PxKeyFile.Length);
+				PassXYZ.Services.PxKeyData keyData = PassXYZ.Services.PxKeyData.FromBase64String(msg);
+				if (keyData != null)
+				{
+					PassXYZ.Services.PxKeyProvider pxKeyProvider = new PassXYZ.Services.PxKeyProvider(keyData);
+					if (pxKeyProvider.KeyData.Username == username)
+					{
+						if (pxKeyProvider.CreateKeyFile(false))
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
 		{
 			if (pgRecycleBin == this.RootGroup)
