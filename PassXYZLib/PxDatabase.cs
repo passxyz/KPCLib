@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 using SkiaSharp;
@@ -888,13 +889,25 @@ namespace PassXYZLib
 		}
 
 		/// <summary>
-		/// Search entries using a keyword
+		/// Search entries using a keyword. If the keyword is null or empty, 
+		/// a list of entries by LastModificationTime will be returned.
 		/// </summary>
 		/// <param name="strSearch">string to be searched</param>
 		/// <param name="itemGroup">within this group to be searched</param>
 		/// <returns>list of result</returns>
 		public IEnumerable<Item> SearchEntries(string strSearch, Item itemGroup = null)
 		{
+			if (string.IsNullOrEmpty(strSearch)) 
+			{
+				var entries = GetAllEntries();
+				// descending or ascending
+				IEnumerable<PwEntry> entriesByLastModificationTime =
+					from e in entries
+					orderby e.LastModificationTime descending
+					select e;
+				return entriesByLastModificationTime;
+			}
+
 			List<Item> resultsList = new List<Item>();
 			string strGroupName = " (\"" + strSearch + "\") ";
             PwGroup pg = new PwGroup(true, true, strGroupName, PwIcon.EMailSearch)

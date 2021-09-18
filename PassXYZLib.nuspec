@@ -10,7 +10,7 @@
 		<projectUrl>https://github.com/passxyz/KPCLib</projectUrl>
 		<description>This is an extension of KPCLib.</description>
 		<releaseNotes>
-      - Added SearchEntries()
+      - Improved SearchEntries()
       - Added ChangeMasterPassword()
     </releaseNotes>
 		<copyright>Roger Ye</copyright>

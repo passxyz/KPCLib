@@ -4,6 +4,7 @@
 **PassXYZLib**
  - Added LogFilePath
  - Added `ChangeMasterPassword()`
+ - Improved `SearchEntries()`
 
 ### Release 1.3.5
 **KPCLib**

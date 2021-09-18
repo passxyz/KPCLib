@@ -207,7 +207,7 @@ namespace KeePassLib
 		/// <summary>
 		/// The date/time when this group was last modified.
 		/// </summary>
-		public DateTime LastModificationTime
+		public override DateTime LastModificationTime
 		{
 			get { return m_tLastMod; }
 			set { m_tLastMod = value; }
