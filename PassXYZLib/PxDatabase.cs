@@ -1000,6 +1000,7 @@ namespace PassXYZLib
 
 		public enum PxCustomIconSize
 		{
+			Size = 32,
 			Min = 96,
 			Max = 216
 		}
@@ -1036,20 +1037,20 @@ namespace PassXYZLib
 
 			if (img == null) { return PwUuid.Zero; }
 
-			if ((img.Width != img.Height) || (img.Width < (int)PxCustomIconSize.Min))
+			if ((img.Width != img.Height) || (img.Width < (int)PxCustomIconSize.Size))
 			{
 				return PwUuid.Zero;
 			}
 
 			// If the image is not at PxCustomIconSize.Min, we need to resize it.
-			if (img.Width != (int)PxCustomIconSize.Min)
-			{
-				SKImageInfo resizeInfo = new SKImageInfo((int)PxCustomIconSize.Min, (int)PxCustomIconSize.Min);
-				using (SKBitmap resizedSKBitmap = img.Resize(resizeInfo, SKFilterQuality.High))
-				{
-					img = resizedSKBitmap;
-				}
-			}
+			//if (img.Width != (int)PxCustomIconSize.Min)
+			//{
+			//	SKImageInfo resizeInfo = new SKImageInfo((int)PxCustomIconSize.Min, (int)PxCustomIconSize.Min);
+			//	using (SKBitmap resizedSKBitmap = img.Resize(resizeInfo, SKFilterQuality.Medium))
+			//	{
+			//		img = resizedSKBitmap;
+			//	}
+			//}
 
 			using (var image = SKImage.FromBitmap(img))
 			{
