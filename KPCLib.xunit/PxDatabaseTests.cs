@@ -68,7 +68,6 @@ namespace KPCLib.xunit
             }
         }
 
-
         [Fact]
         public void ListEntriesTests()
         {
@@ -381,7 +380,24 @@ namespace KPCLib.xunit
             var entries = passxyz.PxDb.SearchEntries(keyword);
             Assert.True(entries.Any());
         }
+        
+        [Fact]
+        public void GetAllEntriesByLastModificationTimeTest() 
+        {
+            var entries = passxyz.PxDb.GetAllEntries();
+            // descending or ascending
+            IEnumerable<PwEntry> entriesByDate =
+                from e in entries
+                orderby e.LastModificationTime descending
+                select e;
 
+            Debug.WriteLine($"Found {entriesByDate.Count()} entries.");
+            foreach (var entry in entriesByDate) 
+            {
+                Debug.WriteLine($"{entry.Name} {entry.LastModificationTime}");
+            }
+        }
+        // Add new test cases here
     }
 
 
@@ -391,7 +407,7 @@ namespace KPCLib.xunit
         public void PxLibVersion() 
         {
             Debug.WriteLine($"{PxLibInfo.Version}");
-            Assert.Equal(PxLibInfo.Version, new System.Version("1.3.5.0"));
+            Assert.Equal(PxLibInfo.Version, new System.Version("1.3.6.0"));
         }
 
         [Fact]

@@ -7,6 +7,25 @@ namespace PassXYZLib
 {
     public static class PxDataFile
     {
+        private static string _logFilePath = string.Empty;
+        /// <summary>
+        /// The default log file path uses the stardard .NET setting. The default log file path is a readonly item.
+        /// </summary>
+        public static string LogFilePath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_logFilePath))
+                {
+                    return _logFilePath;
+                }
+                else
+                {
+                    return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "passxyz_log.txt");
+                }
+            }
+        }
+
         private static string _dataFilePath = string.Empty;
         /// <summary>
         /// The default data file path uses the stardard .NET setting. The default data file path doesn't need to be set.

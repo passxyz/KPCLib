@@ -15,6 +15,8 @@ namespace KeePassLib
     {
         private PwUuid m_uuid = PwUuid.Zero;
 
+        public abstract DateTime LastModificationTime { get; set; }
+
         public abstract string Name { get; set; }
 
         public abstract string Description { get;}

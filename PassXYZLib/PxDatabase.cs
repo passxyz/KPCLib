@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 using SkiaSharp;
@@ -338,6 +339,73 @@ namespace PassXYZLib
 			Open(ioc, cmpKey, logger);
 		}
 
+		public string GetDeviceLockData(PassXYZLib.User user)
+        {
+			if (user.IsDeviceLockEnabled)
+			{
+				try
+				{
+					PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+					if (pxKeyProvider.IsInitialized)
+					{
+						return PassXYZ.Services.PxKeyData.ToBase64String(pxKeyProvider.KeyData);
+					}
+				}
+				catch (PassXYZ.Services.InvalidDeviceLockException ex)
+				{
+					Debug.WriteLine($"{ex}");
+					return string.Empty;
+				}
+			}
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// Change master password
+		/// </summary>
+		/// <param name="newPassword">new master password</param>
+		/// <param name="user">the current user</param>
+		/// <returns>true - changed successfully, false - failed to change</returns>
+		public bool ChangeMasterPassword(string newPassword, PassXYZLib.User user)
+		{
+			CompositeKey cmpKey = new CompositeKey();
+
+			cmpKey.AddUserKey(new KcpPassword(newPassword));
+
+			if (user.IsDeviceLockEnabled)
+			{
+				try
+				{
+					PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+					if (pxKeyProvider.IsInitialized)
+					{
+						KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
+						byte[] pbProvKey = pxKeyProvider.GetKey(ctxKP);
+						cmpKey.AddUserKey(new KcpCustomKey(pxKeyProvider.Name, pbProvKey, true));
+					}
+					else
+					{
+						throw new KeePassLib.Keys.InvalidCompositeKeyException();
+					}
+				}
+				catch (PassXYZ.Services.InvalidDeviceLockException ex)
+				{
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeFilePath)); }
+					catch (Exception exFile)
+					{
+						Debug.Write($"{exFile} in {ex}");
+						return false;
+					}
+				}
+			}
+			MasterKey = cmpKey;
+			MasterKeyChanged = DateTime.UtcNow;
+
+			return true;
+		}
+
 		/// <summary>
 		/// Create a database with user information.
 		/// If the device lock is enabled, we need to set DefaultFolder first.
@@ -404,6 +472,37 @@ namespace PassXYZLib
 				pxKeyProvider = kp;
 				return pxKeyProvider.CreateKeyFile(false);
 			}
+		}
+
+		/// <summary>
+		/// Recreate a key file from a PxKeyData
+		/// </summary>
+		/// <param name="data">PxKeyData source</param>
+		/// <param name="username">username inside PxKeyData source</param>
+		/// <returns>true - created key file, false - failed to create key file.</returns>
+		public bool CreateKeyFile(string data, string username)
+		{
+			if (data.StartsWith(PxDefs.PxKeyFile))
+			{
+				PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+				PassXYZ.Utils.Settings.User.Username = username;
+
+				var msg = data.Substring(PxDefs.PxKeyFile.Length);
+				PassXYZ.Services.PxKeyData keyData = PassXYZ.Services.PxKeyData.FromBase64String(msg);
+				if (keyData != null)
+				{
+					PassXYZ.Services.PxKeyProvider pxKeyProvider = new PassXYZ.Services.PxKeyProvider(keyData);
+					if (pxKeyProvider.KeyData.Username == username)
+					{
+						if (pxKeyProvider.CreateKeyFile(false))
+						{
+							return true;
+						}
+					}
+				}
+			}
+
+			return false;
 		}
 
 		private void EnsureRecycleBin(ref PwGroup pgRecycleBin)
@@ -790,13 +889,25 @@ namespace PassXYZLib
 		}
 
 		/// <summary>
-		/// Search entries using a keyword
+		/// Search entries using a keyword. If the keyword is null or empty, 
+		/// a list of entries by LastModificationTime will be returned.
 		/// </summary>
 		/// <param name="strSearch">string to be searched</param>
 		/// <param name="itemGroup">within this group to be searched</param>
 		/// <returns>list of result</returns>
 		public IEnumerable<Item> SearchEntries(string strSearch, Item itemGroup = null)
 		{
+			if (string.IsNullOrEmpty(strSearch)) 
+			{
+				var entries = GetAllEntries();
+				// descending or ascending
+				IEnumerable<PwEntry> entriesByLastModificationTime =
+					from e in entries
+					orderby e.LastModificationTime descending
+					select e;
+				return entriesByLastModificationTime;
+			}
+
 			List<Item> resultsList = new List<Item>();
 			string strGroupName = " (\"" + strSearch + "\") ";
             PwGroup pg = new PwGroup(true, true, strGroupName, PwIcon.EMailSearch)
@@ -889,6 +1000,7 @@ namespace PassXYZLib
 
 		public enum PxCustomIconSize
 		{
+			Size = 32,
 			Min = 96,
 			Max = 216
 		}
@@ -925,20 +1037,20 @@ namespace PassXYZLib
 
 			if (img == null) { return PwUuid.Zero; }
 
-			if ((img.Width != img.Height) || (img.Width < (int)PxCustomIconSize.Min))
+			if ((img.Width != img.Height) || (img.Width < (int)PxCustomIconSize.Size))
 			{
 				return PwUuid.Zero;
 			}
 
 			// If the image is not at PxCustomIconSize.Min, we need to resize it.
-			if (img.Width != (int)PxCustomIconSize.Min)
-			{
-				SKImageInfo resizeInfo = new SKImageInfo((int)PxCustomIconSize.Min, (int)PxCustomIconSize.Min);
-				using (SKBitmap resizedSKBitmap = img.Resize(resizeInfo, SKFilterQuality.High))
-				{
-					img = resizedSKBitmap;
-				}
-			}
+			//if (img.Width != (int)PxCustomIconSize.Min)
+			//{
+			//	SKImageInfo resizeInfo = new SKImageInfo((int)PxCustomIconSize.Min, (int)PxCustomIconSize.Min);
+			//	using (SKBitmap resizedSKBitmap = img.Resize(resizeInfo, SKFilterQuality.Medium))
+			//	{
+			//		img = resizedSKBitmap;
+			//	}
+			//}
 
 			using (var image = SKImage.FromBitmap(img))
 			{

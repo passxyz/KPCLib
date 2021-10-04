@@ -164,7 +164,7 @@ namespace KeePassLib.Native
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool MoveFileEx(string lpExistingFileName,
 			string lpNewFileName, UInt32 dwFlags);
-
+#if !KPCLib
 		[DllImport("KtmW32.dll", CharSet = CharSet.Unicode, ExactSpelling = true,
 			SetLastError = true)]
 		internal static extern IntPtr CreateTransaction(IntPtr lpTransactionAttributes,
@@ -174,7 +174,7 @@ namespace KeePassLib.Native
 		[DllImport("KtmW32.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool CommitTransaction(IntPtr hTransaction);
-
+#endif // KPCLib
 		[DllImport("Kernel32.dll", CharSet = CharSet.Auto, ExactSpelling = false,
 			SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
@@ -186,7 +186,7 @@ namespace KeePassLib.Native
 		private static extern int SHGetKnownFolderPath(ref Guid rfid, uint dwFlags,
 			IntPtr hToken, out IntPtr ppszPath);
 
-#if (!KeePassLibSD && !KeePassUAP)
+#if (!KeePassLibSD && !KeePassUAP && !KPCLib)
 		[DllImport("ShlWApi.dll", CharSet = CharSet.Auto)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		internal static extern bool PathRelativePathTo([Out] StringBuilder pszPath,
