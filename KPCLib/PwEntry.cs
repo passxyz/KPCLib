@@ -398,6 +398,11 @@ namespace KeePassLib
 			}
 		}
 
+		public string GetOtpUrl()
+        {
+			return CustomData.Get(PassXYZLib.PxDefs.PxCustomDataOtpUrl);
+		}
+
 		/// <summary>
 		/// Update the OTP Url.
 		/// If it is new, create a PxOtpUrl key in CustomData.

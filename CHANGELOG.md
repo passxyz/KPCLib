@@ -1,5 +1,9 @@
 ## Change log
 
+### Release 1.3.7
+**KPCLib**
+ - Added `GetOtpUrl()`
+
 ### Release 1.3.6
 **PassXYZLib**
  - Added LogFilePath
