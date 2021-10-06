@@ -332,7 +332,7 @@ namespace PassXYZLib
 				}
 				catch (PassXYZ.Services.InvalidDeviceLockException ex)
                 {
-					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeFilePath)); }
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeyFilePath)); }
 					catch (Exception exFile)
 					{
 						Debug.Write($"{exFile} in {ex}");
@@ -396,7 +396,7 @@ namespace PassXYZLib
 				}
 				catch (PassXYZ.Services.InvalidDeviceLockException ex)
 				{
-					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeFilePath)); }
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeyFilePath)); }
 					catch (Exception exFile)
 					{
 						Debug.Write($"{exFile} in {ex}");

@@ -274,7 +274,7 @@ namespace PassXYZLib
         /// <summary>
         /// Key file path
         /// </summary>
-        public string KeFilePath
+        public string KeyFilePath
         {
             get
             {
@@ -294,7 +294,7 @@ namespace PassXYZLib
             File.Delete(Path);
             if (IsDeviceLockEnabled) 
             {
-                File.Delete(KeFilePath);
+                File.Delete(KeyFilePath);
             }
         }
 
