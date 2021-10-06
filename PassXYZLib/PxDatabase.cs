@@ -172,6 +172,8 @@ namespace PassXYZLib
 		public PwGroup CurrentGroup
 		{
 			get {
+				if (!IsOpen) { return null; }
+
 				if(RootGroup.Uuid == LastSelectedGroup || LastSelectedGroup.Equals(PwUuid.Zero))
 				{
 					LastSelectedGroup = RootGroup.Uuid;
@@ -203,9 +205,9 @@ namespace PassXYZLib
 		public string CurrentPath
 		{ 
 			get {
-				if(CurrentGroup == null) 
+				if(CurrentGroup == null)
 				{
-					return null;
+					return string.Empty;
 				}
 				else 
 				{
@@ -262,9 +264,9 @@ namespace PassXYZLib
 		/// <param name="password">The password of data file</param>
 		public void Open(string filename, string password)
 		{
-			if (filename == null || filename == String.Empty) 
+			if (filename == null || filename == String.Empty)
 			{ Debug.Assert(false); throw new ArgumentNullException("filename"); }
-			if (password == null || password == String.Empty) 
+			if (password == null || password == String.Empty)
 			{ Debug.Assert(false); throw new ArgumentNullException("password"); }
 
 			var logger = new KPCLibLogger();
@@ -302,6 +304,8 @@ namespace PassXYZLib
         {
 			if (user == null)
 			{ Debug.Assert(false); throw new ArgumentNullException("PassXYZLib.User"); }
+			if (user.Password == null || user.Password == String.Empty)
+			{ Debug.Assert(false); throw new ArgumentNullException("Password"); }
 
 			var logger = new KPCLibLogger();
 
