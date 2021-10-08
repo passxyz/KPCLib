@@ -81,6 +81,17 @@ namespace PassXYZLib
         }
 
         /// <summary>
+        /// The temporary file path.
+        /// </summary>
+        public static string TmpFilePath
+        {
+            get
+            {
+                return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "tmp");
+            }
+        }
+
+        /// <summary>
         /// Decode the username from filename
         /// </summary>
         /// <param name="fileName">File name used to decode username</param>
@@ -121,7 +132,7 @@ namespace PassXYZLib
 
     public class User
     {
-        private string _username;
+        private string _username = string.Empty;
         /// <summary>
         /// PassXYZ uses the concept of user instead of data file to manage password database.
         /// This is because it is difficult to manage data file in mobile devices. The actual data file is encoded
@@ -134,7 +145,7 @@ namespace PassXYZLib
             {
                 _username = value;
 
-                if(_username == null)
+                if(string.IsNullOrEmpty(_username))
                 {
                     IsDeviceLockEnabled = false;
                 }
@@ -169,7 +180,7 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
                     return false;
                 }
@@ -196,7 +207,7 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
                     return false;
                 }
@@ -239,9 +250,9 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
-                    return null;
+                    return string.Empty;
                 }
                 return System.IO.Path.Combine(PxDataFile.DataFilePath, FileName);
             }
@@ -255,7 +266,7 @@ namespace PassXYZLib
         {
             get 
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
                     return string.Empty;
                 }
@@ -278,9 +289,9 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
-                    return null;
+                    return string.Empty;
                 }
                 return System.IO.Path.Combine(PxDataFile.KeyFilePath, KeyFileName);
             }
@@ -306,9 +317,9 @@ namespace PassXYZLib
         /// <returns>Data file name</returns>
         private string GetFileName(bool isDeviceLockEnabled = false)
         {
-            if (_username == null)
+            if (string.IsNullOrEmpty(_username))
             {
-                return null;
+                return string.Empty;
             }
 
             if (isDeviceLockEnabled)
