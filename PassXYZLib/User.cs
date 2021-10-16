@@ -87,7 +87,28 @@ namespace PassXYZLib
         {
             get
             {
-                return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "tmp");
+                string tmpPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "tmp");
+                if (!Directory.Exists(tmpPath))
+                {
+                    Directory.CreateDirectory(tmpPath);
+                }
+                return tmpPath;
+            }
+        }
+
+        /// <summary>
+        /// The backup file path.
+        /// </summary>
+        public static string BakFilePath
+        {
+            get
+            {
+                string bakPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "bak");
+                if (!Directory.Exists(bakPath))
+                {
+                    Directory.CreateDirectory(bakPath);
+                }
+                return bakPath;
             }
         }
 
@@ -138,7 +159,7 @@ namespace PassXYZLib
         /// This is because it is difficult to manage data file in mobile devices. The actual data file is encoded
         /// using base58 encoding with information such as key file or device lock enabled.
         /// </summary>
-        virtual public string Username
+        public virtual string Username
         {
             get => _username;
             set

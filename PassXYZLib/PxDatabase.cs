@@ -532,6 +532,34 @@ namespace PassXYZLib
 		}
 
 		/// <summary>
+		/// Remove RecycleBin before merge. RecycleBin should be kept locally and should not be merged.
+		/// </summary>
+		/// <param name="pwDb"></param>
+		/// <returns></returns>
+		private bool DeleteRecycleBin(PwDatabase pwDb)
+		{
+			if (pwDb == null) { return false; }
+
+			PwGroup pgRecycleBin = pwDb.RootGroup.FindGroup(pwDb.RecycleBinUuid, true);
+
+			if (pgRecycleBin != null)
+			{
+				pwDb.RootGroup.Groups.Remove(pgRecycleBin);
+				pgRecycleBin.DeleteAllObjects(pwDb);
+				PwDeletedObject pdo = new PwDeletedObject(pgRecycleBin.Uuid, DateTime.UtcNow);
+				pwDb.DeletedObjects.Add(pdo);
+				Debug.WriteLine("DeleteRecycleBin successfully.");
+				return true;
+			}
+			else
+			{
+				Debug.WriteLine("DeleteRecycleBin failure.");
+				return false;
+			}
+		}
+
+
+		/// <summary>
 		/// Find an entry or a group.
 		/// </summary>
 		/// <param name="path">The path of an entry or a group. If it is null, return the root group</param>
@@ -964,6 +992,58 @@ namespace PassXYZLib
 				resultsList.Add(entry);
 			}
 			return resultsList;
+		}
+
+		public bool Merge(string path, PwMergeMethod mm)
+		{
+			var pwImp = new PwDatabase();
+			var ioInfo = IOConnectionInfo.FromPath(path);
+
+			var compositeKey = MasterKey;
+
+			KPCLibLogger swLogger = new KPCLibLogger();
+			try
+			{
+				swLogger.StartLogging("Merge: Opening database ...", true);
+				pwImp.Open(ioInfo, compositeKey, swLogger);
+				swLogger.EndLogging();
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine($"$Failed to open database: {e.Message}.");
+				return false;
+			}
+
+			// We only merge, if these are the same database with different versions.
+			if (RootGroup.EqualsGroup(pwImp.RootGroup, (PwCompareOptions.IgnoreLastBackup | 
+				PwCompareOptions.IgnoreHistory | PwCompareOptions.IgnoreParentGroup | 
+				PwCompareOptions.IgnoreTimes | PwCompareOptions.PropertiesOnly), MemProtCmpMode.None))
+			{
+				Debug.WriteLine($"Merge: Root group are the same. Merge method is {mm}.");
+			}
+			else
+			{
+				Debug.WriteLine($"Merge: Root group are different DBase={RootGroup}, pwImp={pwImp.RootGroup}.");
+				pwImp.Close();
+				return false;
+			}
+
+			try
+			{
+				// Need to remove RecycleBin first before merge.
+				DeleteRecycleBin(pwImp);
+
+				MergeIn(pwImp, mm, swLogger);
+				DescriptionChanged = DateTime.UtcNow;
+				Save(swLogger);
+				pwImp.Close();
+			}
+			catch (Exception exMerge)
+			{
+				Debug.WriteLine($"Merge failed {exMerge}");
+				return false;
+			}
+			return true;
 		}
 
 		// The end of PxDatabase
