@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace PassXYZLib
 {
@@ -113,6 +115,22 @@ namespace PassXYZLib
         }
 
         /// <summary>
+        /// The icon file path.
+        /// </summary>
+        public static string IconFilePath
+        {
+            get
+            {
+                string iconPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "icons");
+                if (!Directory.Exists(iconPath))
+                {
+                    _ = Directory.CreateDirectory(iconPath);
+                }
+                return iconPath;
+            }
+        }
+
+        /// <summary>
         /// Decode the username from filename
         /// </summary>
         /// <param name="fileName">File name used to decode username</param>
@@ -151,7 +169,7 @@ namespace PassXYZLib
 
     }
 
-    public class User
+    public class User : INotifyPropertyChanged
     {
         private string _username = string.Empty;
         /// <summary>
@@ -254,10 +272,7 @@ namespace PassXYZLib
         /// <summary>
         /// The date/time when this user was last accessed (read).
         /// </summary>
-        public DateTime LastAccessTime
-        {
-            get { return File.GetLastAccessTime(this.Path); }
-        }
+        public DateTime LastAccessTime => File.GetLastWriteTime(this.Path);
 
         /// <summary>
         /// Data file name. Converted Username to file name
@@ -321,10 +336,10 @@ namespace PassXYZLib
         /// <summary>
         /// Delete the current user
         /// </summary>
-        public void Delete() 
+        public void Delete()
         {
             File.Delete(Path);
-            if (IsDeviceLockEnabled) 
+            if (IsDeviceLockEnabled)
             {
                 File.Delete(KeyFilePath);
             }
@@ -378,5 +393,30 @@ namespace PassXYZLib
         {
             IsDeviceLockEnabled = false;
         }
+
+        #region INotifyPropertyChanged
+        protected bool SetProperty<T>(ref T backingStore, T value,
+            [CallerMemberName] string propertyName = "",
+            Action onChanged = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(backingStore, value))
+                return false;
+
+            backingStore = value;
+            onChanged?.Invoke();
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            var changed = PropertyChanged;
+            if (changed == null)
+                return;
+
+            changed.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
     }
 }
