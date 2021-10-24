@@ -172,6 +172,8 @@ namespace PassXYZLib
 		public PwGroup CurrentGroup
 		{
 			get {
+				if (!IsOpen) { return null; }
+
 				if(RootGroup.Uuid == LastSelectedGroup || LastSelectedGroup.Equals(PwUuid.Zero))
 				{
 					LastSelectedGroup = RootGroup.Uuid;
@@ -203,9 +205,9 @@ namespace PassXYZLib
 		public string CurrentPath
 		{ 
 			get {
-				if(CurrentGroup == null) 
+				if(CurrentGroup == null)
 				{
-					return null;
+					return string.Empty;
 				}
 				else 
 				{
@@ -262,9 +264,9 @@ namespace PassXYZLib
 		/// <param name="password">The password of data file</param>
 		public void Open(string filename, string password)
 		{
-			if (filename == null || filename == String.Empty) 
+			if (filename == null || filename == String.Empty)
 			{ Debug.Assert(false); throw new ArgumentNullException("filename"); }
-			if (password == null || password == String.Empty) 
+			if (password == null || password == String.Empty)
 			{ Debug.Assert(false); throw new ArgumentNullException("password"); }
 
 			var logger = new KPCLibLogger();
@@ -302,6 +304,8 @@ namespace PassXYZLib
         {
 			if (user == null)
 			{ Debug.Assert(false); throw new ArgumentNullException("PassXYZLib.User"); }
+			if (user.Password == null || user.Password == String.Empty)
+			{ Debug.Assert(false); throw new ArgumentNullException("Password"); }
 
 			var logger = new KPCLibLogger();
 
@@ -328,7 +332,7 @@ namespace PassXYZLib
 				}
 				catch (PassXYZ.Services.InvalidDeviceLockException ex)
                 {
-					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeFilePath)); }
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeyFilePath)); }
 					catch (Exception exFile)
 					{
 						Debug.Write($"{exFile} in {ex}");
@@ -392,7 +396,7 @@ namespace PassXYZLib
 				}
 				catch (PassXYZ.Services.InvalidDeviceLockException ex)
 				{
-					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeFilePath)); }
+					try { cmpKey.AddUserKey(new KcpKeyFile(user.KeyFilePath)); }
 					catch (Exception exFile)
 					{
 						Debug.Write($"{exFile} in {ex}");
@@ -526,6 +530,34 @@ namespace PassXYZLib
 			}
 			else { Debug.Assert(pgRecycleBin.Uuid.Equals(this.RecycleBinUuid)); }
 		}
+
+		/// <summary>
+		/// Remove RecycleBin before merge. RecycleBin should be kept locally and should not be merged.
+		/// </summary>
+		/// <param name="pwDb"></param>
+		/// <returns></returns>
+		private bool DeleteRecycleBin(PwDatabase pwDb)
+		{
+			if (pwDb == null) { return false; }
+
+			PwGroup pgRecycleBin = pwDb.RootGroup.FindGroup(pwDb.RecycleBinUuid, true);
+
+			if (pgRecycleBin != null)
+			{
+				pwDb.RootGroup.Groups.Remove(pgRecycleBin);
+				pgRecycleBin.DeleteAllObjects(pwDb);
+				PwDeletedObject pdo = new PwDeletedObject(pgRecycleBin.Uuid, DateTime.UtcNow);
+				pwDb.DeletedObjects.Add(pdo);
+				Debug.WriteLine("DeleteRecycleBin successfully.");
+				return true;
+			}
+			else
+			{
+				Debug.WriteLine("DeleteRecycleBin failure.");
+				return false;
+			}
+		}
+
 
 		/// <summary>
 		/// Find an entry or a group.
@@ -960,6 +992,58 @@ namespace PassXYZLib
 				resultsList.Add(entry);
 			}
 			return resultsList;
+		}
+
+		public bool Merge(string path, PwMergeMethod mm)
+		{
+			var pwImp = new PwDatabase();
+			var ioInfo = IOConnectionInfo.FromPath(path);
+
+			var compositeKey = MasterKey;
+
+			KPCLibLogger swLogger = new KPCLibLogger();
+			try
+			{
+				swLogger.StartLogging("Merge: Opening database ...", true);
+				pwImp.Open(ioInfo, compositeKey, swLogger);
+				swLogger.EndLogging();
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine($"$Failed to open database: {e.Message}.");
+				return false;
+			}
+
+			// We only merge, if these are the same database with different versions.
+			if (RootGroup.EqualsGroup(pwImp.RootGroup, (PwCompareOptions.IgnoreLastBackup | 
+				PwCompareOptions.IgnoreHistory | PwCompareOptions.IgnoreParentGroup | 
+				PwCompareOptions.IgnoreTimes | PwCompareOptions.PropertiesOnly), MemProtCmpMode.None))
+			{
+				Debug.WriteLine($"Merge: Root group are the same. Merge method is {mm}.");
+			}
+			else
+			{
+				Debug.WriteLine($"Merge: Root group are different DBase={RootGroup}, pwImp={pwImp.RootGroup}.");
+				pwImp.Close();
+				return false;
+			}
+
+			try
+			{
+				// Need to remove RecycleBin first before merge.
+				DeleteRecycleBin(pwImp);
+
+				MergeIn(pwImp, mm, swLogger);
+				DescriptionChanged = DateTime.UtcNow;
+				Save(swLogger);
+				pwImp.Close();
+			}
+			catch (Exception exMerge)
+			{
+				Debug.WriteLine($"Merge failed {exMerge}");
+				return false;
+			}
+			return true;
 		}
 
 		// The end of PxDatabase

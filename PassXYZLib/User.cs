@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace PassXYZLib
 {
@@ -81,6 +83,54 @@ namespace PassXYZLib
         }
 
         /// <summary>
+        /// The temporary file path.
+        /// </summary>
+        public static string TmpFilePath
+        {
+            get
+            {
+                string tmpPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "tmp");
+                if (!Directory.Exists(tmpPath))
+                {
+                    Directory.CreateDirectory(tmpPath);
+                }
+                return tmpPath;
+            }
+        }
+
+        /// <summary>
+        /// The backup file path.
+        /// </summary>
+        public static string BakFilePath
+        {
+            get
+            {
+                string bakPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "bak");
+                if (!Directory.Exists(bakPath))
+                {
+                    Directory.CreateDirectory(bakPath);
+                }
+                return bakPath;
+            }
+        }
+
+        /// <summary>
+        /// The icon file path.
+        /// </summary>
+        public static string IconFilePath
+        {
+            get
+            {
+                string iconPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "icons");
+                if (!Directory.Exists(iconPath))
+                {
+                    _ = Directory.CreateDirectory(iconPath);
+                }
+                return iconPath;
+            }
+        }
+
+        /// <summary>
         /// Decode the username from filename
         /// </summary>
         /// <param name="fileName">File name used to decode username</param>
@@ -119,22 +169,22 @@ namespace PassXYZLib
 
     }
 
-    public class User
+    public class User : INotifyPropertyChanged
     {
-        private string _username;
+        private string _username = string.Empty;
         /// <summary>
         /// PassXYZ uses the concept of user instead of data file to manage password database.
         /// This is because it is difficult to manage data file in mobile devices. The actual data file is encoded
         /// using base58 encoding with information such as key file or device lock enabled.
         /// </summary>
-        virtual public string Username
+        public virtual string Username
         {
             get => _username;
             set
             {
                 _username = value;
 
-                if(_username == null)
+                if(string.IsNullOrEmpty(_username))
                 {
                     IsDeviceLockEnabled = false;
                 }
@@ -169,7 +219,7 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
                     return false;
                 }
@@ -196,7 +246,7 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
                     return false;
                 }
@@ -222,10 +272,7 @@ namespace PassXYZLib
         /// <summary>
         /// The date/time when this user was last accessed (read).
         /// </summary>
-        public DateTime LastAccessTime
-        {
-            get { return File.GetLastAccessTime(this.Path); }
-        }
+        public DateTime LastAccessTime => File.GetLastWriteTime(this.Path);
 
         /// <summary>
         /// Data file name. Converted Username to file name
@@ -239,9 +286,9 @@ namespace PassXYZLib
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
-                    return null;
+                    return string.Empty;
                 }
                 return System.IO.Path.Combine(PxDataFile.DataFilePath, FileName);
             }
@@ -255,7 +302,7 @@ namespace PassXYZLib
         {
             get 
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
                     return string.Empty;
                 }
@@ -274,13 +321,13 @@ namespace PassXYZLib
         /// <summary>
         /// Key file path
         /// </summary>
-        public string KeFilePath
+        public string KeyFilePath
         {
             get
             {
-                if (_username == null)
+                if (string.IsNullOrEmpty(_username))
                 {
-                    return null;
+                    return string.Empty;
                 }
                 return System.IO.Path.Combine(PxDataFile.KeyFilePath, KeyFileName);
             }
@@ -289,12 +336,12 @@ namespace PassXYZLib
         /// <summary>
         /// Delete the current user
         /// </summary>
-        public void Delete() 
+        public void Delete()
         {
             File.Delete(Path);
-            if (IsDeviceLockEnabled) 
+            if (IsDeviceLockEnabled)
             {
-                File.Delete(KeFilePath);
+                File.Delete(KeyFilePath);
             }
         }
 
@@ -306,9 +353,9 @@ namespace PassXYZLib
         /// <returns>Data file name</returns>
         private string GetFileName(bool isDeviceLockEnabled = false)
         {
-            if (_username == null)
+            if (string.IsNullOrEmpty(_username))
             {
-                return null;
+                return string.Empty;
             }
 
             if (isDeviceLockEnabled)
@@ -346,5 +393,30 @@ namespace PassXYZLib
         {
             IsDeviceLockEnabled = false;
         }
+
+        #region INotifyPropertyChanged
+        protected bool SetProperty<T>(ref T backingStore, T value,
+            [CallerMemberName] string propertyName = "",
+            Action onChanged = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(backingStore, value))
+                return false;
+
+            backingStore = value;
+            onChanged?.Invoke();
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            var changed = PropertyChanged;
+            if (changed == null)
+                return;
+
+            changed.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
     }
 }
