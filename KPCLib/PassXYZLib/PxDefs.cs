@@ -133,6 +133,10 @@ namespace PassXYZLib
         public const string all_txt = "*.txt";
 
         public const string PxKeyFile = "pxkey://";
+        public const string PxJsonData = "pxdat://";
+        public const string PxJsonTemplate = "pxtem://";
+
+        public const int QR_CODE_MAX_LEN = 1152;
 
         /// <summary>
         /// PassXYZ customization data keys, please refer to chapter 17
@@ -208,12 +212,16 @@ namespace PassXYZLib
 
         public static bool IsDeviceLockEnabled(string filename)
         {
+            if (string.IsNullOrEmpty(filename)) { return false; }
+
             if (filename.StartsWith(head_data)) return true;
             else return false;
         }
 
         public static bool IsPxEntry(PwEntry entry)
         {
+            if (entry == null) { return false; }
+
             if (entry.CustomData.Get(PxCustomDataItemSubType) == ItemSubType.PxEntry.ToString())
                 return true;
             else
@@ -222,6 +230,8 @@ namespace PassXYZLib
 
         public static bool IsNotes(PwEntry entry)
         {
+            if (entry == null) { return false; }
+
             if (entry.CustomData.Get(PxCustomDataItemSubType) == ItemSubType.Notes.ToString())
                 return true;
             else
