@@ -1,5 +1,7 @@
 ## Change log
 
+### Release 1.3.8
+
 ### Release 1.3.7
 **KPCLib**
  - Added `GetOtpUrl()`
