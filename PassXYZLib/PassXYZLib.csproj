@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PassXYZ" Version="2.1.4.9" />
+    <PackageReference Include="PassXYZ" Version="2.1.4.11" />
   </ItemGroup>
 
   <ItemGroup>
