@@ -16,7 +16,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\PassXYZ\PassXYZ\PassXYZ\PassXYZ.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="PassXYZ" Version="2.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KeePassLib\KeePassLib.csproj" />
     <ProjectReference Include="..\KPCLib\KPCLib.csproj" />
     <ProjectReference Include="..\PureOtp\PureOtp\PureOtp.csproj" />
