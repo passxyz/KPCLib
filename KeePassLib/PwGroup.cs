@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
+using KPCLib;
+
 using KeePassLib.Collections;
 using KeePassLib.Delegates;
 using KeePassLib.Interfaces;
@@ -42,6 +44,7 @@ namespace KeePassLib
 		// to 0 after 256 nested nodes
 		private const uint MaxDepth = 126; // Depth 126 = level 127 < 256/2
 
+		private PwUuid m_uuid = PwUuid.Zero;
 		private PwGroup m_pParentGroup = null;
 		private DateTime m_tParentGroupLastMod = PwDefs.DtDefaultNow;
 		private PwUuid m_puPrevParentGroup = PwUuid.Zero;
@@ -74,6 +77,19 @@ namespace KeePassLib
 		private List<string> m_lTags = new List<string>();
 
 		private StringDictionaryEx m_dCustomData = new StringDictionaryEx();
+
+		/// <summary>
+		/// UUID of this group.
+		/// </summary>
+		public PwUuid Uuid
+		{
+			get { return m_uuid; }
+			set
+			{
+				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_uuid = value;
+			}
+		}
 
 		/// <summary>
 		/// Reference to the group to which this group belongs. May be <c>null</c>.
@@ -125,6 +141,8 @@ namespace KeePassLib
         public override bool IsGroup => true;
 		public override Object ImgSource { get; set; }
 
+		public override string Id => Uuid.ToHexString();
+
 		/// <summary>
 		/// Get a list of items in this group.
 		/// </summary>
@@ -175,7 +193,7 @@ namespace KeePassLib
 		/// being used (i.e. the icon specified by the <c>IconID</c> property
 		/// should be displayed).
 		/// </summary>
-		public override PwUuid CustomIconUuid
+		public PwUuid CustomIconUuid
 		{
 			get { return m_pwCustomIconID; }
 			set

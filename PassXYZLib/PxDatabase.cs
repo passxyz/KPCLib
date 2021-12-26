@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 
 using SkiaSharp;
 
+using KPCLib;
 using KeePassLib;
 using KeePassLib.Delegates;
 using KeePassLib.Keys;

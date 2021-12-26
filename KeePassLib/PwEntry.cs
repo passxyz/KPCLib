@@ -25,6 +25,7 @@ using System.Diagnostics;
 using System.Drawing;
 #endif
 
+using KPCLib;
 using PureOtp;
 
 using KeePassLib.Collections;
@@ -41,6 +42,7 @@ namespace KeePassLib
 	/// </summary>
 	public class PwEntry : Item, ITimeLogger, IStructureItem, IDeepCloneable<PwEntry>
 	{
+		private PwUuid m_uuid = PwUuid.Zero;
 		private PwGroup m_pParentGroup = null;
 		private DateTime m_tParentGroupLastMod = PwDefs.DtDefaultNow;
 		private PwUuid m_puPrevParentGroup = PwUuid.Zero;
@@ -69,6 +71,19 @@ namespace KeePassLib
 		private List<string> m_lTags = new List<string>();
 
 		private StringDictionaryEx m_dCustomData = new StringDictionaryEx();
+
+		/// <summary>
+		/// UUID of this entry.
+		/// </summary>
+		public PwUuid Uuid
+		{
+			get { return m_uuid; }
+			set
+			{
+				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_uuid = value;
+			}
+		}
 
 		/// <summary>
 		/// Reference to a group which contains the current entry.
@@ -166,7 +181,7 @@ namespace KeePassLib
 		/// being used (i.e. the icon specified by the <c>IconID</c> property
 		/// should be displayed).
 		/// </summary>
-		public override PwUuid CustomIconUuid
+		public PwUuid CustomIconUuid
 		{
 			get { return m_puCustomIcon; }
 			set
@@ -463,6 +478,8 @@ namespace KeePassLib
 				OnPropertyChanged("Name");
 			}
 		}
+
+		public override string Id => Uuid.ToHexString();
 
 		public PwEntry()
 		{
