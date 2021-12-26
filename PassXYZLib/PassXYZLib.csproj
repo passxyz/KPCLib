@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\..\PassXYZ\PassXYZ\PassXYZ\PassXYZ.csproj" />
     <ProjectReference Include="..\KeePassLib\KeePassLib.csproj" />
     <ProjectReference Include="..\KPCLib\KPCLib.csproj" />
+    <ProjectReference Include="..\PureOtp\PureOtp\PureOtp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

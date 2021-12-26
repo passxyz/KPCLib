@@ -87,7 +87,7 @@ namespace KPCLib.xunit
         /// </summary>
         public void TokenGenerateTests()
         {
-            var entry = new PwEntry();
+            var entry = new PxEntry();
             if (entry.Totp == null)
             {
                 entry.UpdateOtpUrl("otpauth://totp/Google%3Apxentry_test%40gmail.com?secret=JBSWY3DPEHPK3PXP&issuer=Google");

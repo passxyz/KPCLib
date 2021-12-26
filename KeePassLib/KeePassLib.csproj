@@ -34,7 +34,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KPCLib\KPCLib.csproj" />
-    <ProjectReference Include="..\PureOtp\PureOtp\PureOtp.csproj" />
   </ItemGroup>
 
 </Project>
