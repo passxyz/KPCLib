@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KPCLib\KPCLib.csproj" />
+    <ProjectReference Include="..\KPCLib\KeePassLib.csproj" />
     <ProjectReference Include="..\PassXYZLib\PassXYZLib.csproj" />
   </ItemGroup>
 
