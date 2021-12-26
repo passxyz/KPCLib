@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeePassLib", "KPCLib\KeePassLib.csproj", "{3F08B816-6E5F-4DB5-9BF5-4EDF9E662855}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeePassLib", "KeePassLib\KeePassLib.csproj", "{3F08B816-6E5F-4DB5-9BF5-4EDF9E662855}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KPCLib.xunit", "KPCLib.xunit\KPCLib.xunit.csproj", "{4764BB09-267A-4760-AE2D-6979BDA5FB88}"
 EndProject
