@@ -323,7 +323,7 @@ namespace KeePassLib
 				string sub_type = CustomData.Get("PassXYZ_Type");
 				if(string.IsNullOrEmpty(sub_type)) 
 				{
-					sub_type = "PwEntry";
+					sub_type = $"{GetType()}";
 				}
 				return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")} | {Notes}";
 			}

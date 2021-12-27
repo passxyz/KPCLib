@@ -37,13 +37,27 @@ namespace PassXYZLib
                 {
                     CustomData.Set(PxDefs.PxCustomDataItemSubType, fields.CustomDataType);
                 }
+				else if (fields.IsPxEntry)
+				{
+					CustomData.Set(PxDefs.PxCustomDataItemSubType, ItemSubType.PxEntry.ToString());
+				}
             }
         }
 
-        /// <summary>
-        /// Convert PxEntry instance to a JSON string.
-        /// </summary>
-        public override string ToString()
+		/// <summary>
+		/// Create a PxEntry instance from a PwEntry.
+		/// </summary>
+		/// <param name="entry">a PwEntry instance</param>
+		public PxEntry(PwEntry entry)
+		{
+			Uuid = entry.Uuid;
+			AssignProperties(entry, false, true, true);
+		}
+
+		/// <summary>
+		/// Convert PxEntry instance to a JSON string.
+		/// </summary>
+		public override string ToString()
         {
             var fields = new PxPlainFields(this);
             return fields.ToString();

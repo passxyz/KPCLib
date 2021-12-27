@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Diagnostics;
-using System.Text;
 
 using KPCLib;
 using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Interfaces;
 using KeePassLib.Security;
-using KeePassLib.Utility;
 
 namespace PassXYZLib
 {
@@ -97,19 +89,21 @@ namespace PassXYZLib
         /// <summary>
         /// Return the Notes field in HTML format. This is an extension method of PwEntry.
         /// </summary>
-        //TODO: Need to implement Markdown support here
-        //public static string GetNotesInHtml(this PwEntry entry)
-        //{
-        //    if (Device.RuntimePlatform == Device.iOS)
-        //    {
-        //        return Markdig.Markdown.ToHtml(entry.Strings.ReadSafe(PwDefs.NotesField));
-        //    }
-        //    else
-        //    {
-        //        var pipeline = new Markdig.MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-        //        return Markdig.Markdown.ToHtml(entry.Strings.ReadSafe(PwDefs.NotesField), pipeline);
-        //    }
-        //}
+        public static string GetNotesInHtml(this PwEntry entry)
+        {
+            return Markdig.Markdown.ToHtml(entry.Strings.ReadSafe(PwDefs.NotesField));
+
+            // TODO: need test on .NET MAUI, Xamarin.iOS cannot work well with version > 0.24
+            //if (Device.RuntimePlatform == Device.iOS)
+            //{
+            //    return Markdig.Markdown.ToHtml(entry.Strings.ReadSafe(PwDefs.NotesField));
+            //}
+            //else
+            //{
+            //    var pipeline = new Markdig.MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+            //    return Markdig.Markdown.ToHtml(entry.Strings.ReadSafe(PwDefs.NotesField), pipeline);
+            //}
+        }
 
         /// <summary>
         /// Convert ProtectedStringDictionary into a list of fields. TitleField and NotesField
@@ -170,19 +164,19 @@ namespace PassXYZLib
                 }
             }
 
-            //TODO: Need to setup field icons for binaries here
-            //foreach (var field in entry.Binaries)
-            //{
-            //    fields.Add(new Field(field.Key, $"{AppResources.label_id_attachment} {entry.Binaries.UCount}", false)
-            //    {
-            //        IsBinaries = true,
-            //        Binary = entry.Binaries.Get(field.Key),
-            //        ImgSource = new FontAwesome.Solid.IconSource
-            //        {
-            //            Icon = FontAwesome.Solid.Icon.Paperclip
-            //        }
-            //    });
-            //}
+            foreach (var field in entry.Binaries)
+            {
+                fields.Add(new Field(field.Key, $"Attachment {entry.Binaries.UCount}", false)
+                {
+                    IsBinaries = true,
+                    Binary = entry.Binaries.Get(field.Key),
+                    //TODO: Need to setup field icons for binaries here
+                    //ImgSource = new FontAwesome.Solid.IconSource
+                    //{
+                    //    Icon = FontAwesome.Solid.Icon.Paperclip
+                    //}
+                });
+            }
 
             return fields;
         }
