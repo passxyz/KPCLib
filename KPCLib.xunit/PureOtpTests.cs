@@ -9,7 +9,7 @@ using Xunit;
 
 using PureOtp;
 
-namespace KPCLib.xunit
+namespace xunit.PureOtp
 {
     public class PureOtpTests
     {

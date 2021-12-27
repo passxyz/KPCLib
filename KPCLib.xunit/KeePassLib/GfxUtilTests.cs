@@ -13,9 +13,9 @@ using KeePassLib.Utility;
 
 // Need to turn off test parallelization so we can validate the run order
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
-[assembly: TestCollectionOrderer("KPCLib.xunit.Orderers.DisplayNameOrderer", "KPCLib.xunit")]
+[assembly: TestCollectionOrderer("KPCLib.xunit.Orderers.DisplayNameOrderer", "xunit.KeePassLib")]
 
-namespace KPCLib.xunit
+namespace xunit.KeePassLib
 {
     [Collection("Z. GfxUtil Collection")]
     public class GfxUtilTests

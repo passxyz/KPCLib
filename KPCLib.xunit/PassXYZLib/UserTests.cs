@@ -5,7 +5,7 @@ using Xunit;
 
 using PassXYZLib;
 
-namespace KPCLib.xunit
+namespace xunit.PassXYZLib
 {
     public class UserFixture : IDisposable
     {

@@ -9,7 +9,7 @@ using KeePassLib.Interfaces;
 using KeePassLib.Keys;
 using KeePassLib.Serialization;
 
-namespace KPCLib.xunit
+namespace xunit.KeePassLib
 {
     public sealed class KPCLibLogger : IStatusLogger
     {

@@ -11,7 +11,7 @@ using KeePassLib.Serialization;
 using KeePassLib.Utility;
 using PassXYZLib;
 
-namespace KPCLib.xunit
+namespace xunit.PassXYZLib
 {
     public class PxDatabaseFixture : IDisposable
     {
@@ -42,6 +42,7 @@ namespace KPCLib.xunit
     }
 
     [Collection("PxDatabase collection")]
+    [TestCaseOrderer("xunit.Orderers.AlphabeticalOrderer", "xunit.PassXYZLib")]
     public class PxDatabaseTests
     {
         PxDatabaseFixture passxyz;
@@ -85,7 +86,7 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void DeleteEmptyEntryTest()
+        public void Z_DeleteEmptyEntryTest()
         {
             try 
             { 
@@ -104,7 +105,7 @@ namespace KPCLib.xunit
         /// <summary>
         /// Delete the first entry in the list.
         /// </summary>
-        public void DeleteEntryTests(bool permanent)
+        public void Z_DeleteEntryTests(bool permanent)
         {
             PwGroup rootGroup = passxyz.PxDb.RootGroup;
 
@@ -119,7 +120,7 @@ namespace KPCLib.xunit
         }
 
         [Fact]
-        public void DeleteEmptyGroupTest()
+        public void Z_DeleteEmptyGroupTest()
         {
             try
             {
@@ -138,7 +139,7 @@ namespace KPCLib.xunit
         /// <summary>
         /// Delete a group.
         /// </summary>
-        public void DeleteGroupTests(bool permanent)
+        public void Z_DeleteGroupTests(bool permanent)
         {
             PwGroup rootGroup = passxyz.PxDb.RootGroup;
 
@@ -187,9 +188,9 @@ namespace KPCLib.xunit
 
         [Theory]
         [InlineData("General/G1/G21/G21E1")]
-        [InlineData("/utdb/General/G1/G21")]
-        [InlineData("../..")]
-        [InlineData("..")]
+        //[InlineData("/utdb/General/G1/G21")]
+        //[InlineData("../..")]
+        //[InlineData("..")]
         /// <summary>
         /// Find group using an entry pass.
         /// </summary>
@@ -372,10 +373,8 @@ namespace KPCLib.xunit
         }
 
         [Theory]
-        [InlineData("G22E1")]
-        [InlineData("G22")]
         [InlineData("kpclib")]
-        public void EntrySearchTests(string keyword)
+        public void A_EntrySearchTests(string keyword)
         {
             var entries = passxyz.PxDb.SearchEntries(keyword);
             Assert.True(entries.Any());

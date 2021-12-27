@@ -10,9 +10,8 @@ using KeePassLib.Security;
 using KeePassLib.Serialization;
 using KeePassLib.Utility;
 using PassXYZLib;
-//using PassXYZ.Services;
 
-namespace KPCLib.xunit
+namespace xunit.PassXYZ
 {
     public class DeviceLockFixture : IDisposable
     {
@@ -21,7 +20,7 @@ namespace KPCLib.xunit
 
         public DeviceLockFixture()
         {
-            PxDb = new PassXYZLib.PxDatabase();
+            PxDb = new PxDatabase();
             PxDatabase.DefaultFolder = "../../..";
             PxDb.Open(TEST_DB, TEST_DB_KEY);
         }
@@ -31,7 +30,7 @@ namespace KPCLib.xunit
             PxDb.Close();
         }
 
-        public PassXYZLib.PxDatabase PxDb { get; private set; }
+        public PxDatabase PxDb { get; private set; }
 
         public string Username
         {
