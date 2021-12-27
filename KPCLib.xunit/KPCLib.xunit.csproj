@@ -26,6 +26,10 @@
     <ProjectReference Include="..\PassXYZLib\PassXYZLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="PassXYZ\" />
+  </ItemGroup>
+
   <Target Name="CopyDataFiles" AfterTargets="Build">
     <ItemGroup>
       <DataFiles Include="$(ProjectDir)\utdb.kdbx" />

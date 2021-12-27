@@ -122,16 +122,19 @@ namespace KPCLib
         /// <summary>
         /// Create a field instance, GetImage is delegate to set field icon
         /// </summary>
-        public Field(string key, string value, bool isProtected, Func<string, Object> GetImage, string encodedKey = "")
+        public Field(string key, string value, bool isProtected, Func<string, Object> GetImage = null, string encodedKey = "")
         {
             Key = key;
             EncodedKey = encodedKey;
             IsProtected = isProtected;
             Value = value;
 
-            string lastWord = key.Split(' ').Last();
-            // ImgSource = FieldIcons.GetImage(lastWord.ToLower());
-            ImgSource = GetImage(lastWord.ToLower());
+            if (GetImage != null)
+            {
+                string lastWord = key.Split(' ').Last();
+                // ImgSource = FieldIcons.GetImage(lastWord.ToLower());
+                ImgSource = GetImage(lastWord.ToLower());
+            }
         }
 
         public object ShowContextAction { get; set; }

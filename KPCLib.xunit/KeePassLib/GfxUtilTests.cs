@@ -9,7 +9,6 @@ using SkiaSharp;
 using Svg.Skia;
 
 using Xunit;
-using PassXYZLib;
 using KeePassLib.Utility;
 
 // Need to turn off test parallelization so we can validate the run order
