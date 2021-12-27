@@ -101,33 +101,37 @@ namespace KPCLib
             }
         }
 
-        //private ProtectedBinary _binary = null;
+        private Object _binary = null;
         /// <summary>
         /// Binary data in the attachment
         /// </summary>
-        //public ProtectedBinary Binary
-        //{
-        //    get => _binary;
-        //    set
-        //    {
-        //        _binary = value;
-        //        OnPropertyChanged("Binary");
-        //    }
-        //}
+        public Object Binary
+        {
+            get => _binary;
+            set
+            {
+                _binary = value;
+                OnPropertyChanged("Binary");
+            }
+        }
 
         public bool IsHide { get; private set; } = true;
 
         public Object ImgSource { get; set; }
 
-        public Field(string key, string value, bool isProtected, string encodedKey = "")
+        /// <summary>
+        /// Create a field instance, GetImage is delegate to set field icon
+        /// </summary>
+        public Field(string key, string value, bool isProtected, Func<string, Object> GetImage, string encodedKey = "")
         {
             Key = key;
             EncodedKey = encodedKey;
             IsProtected = isProtected;
             Value = value;
 
-            // string lastWord = key.Split(' ').Last();
+            string lastWord = key.Split(' ').Last();
             // ImgSource = FieldIcons.GetImage(lastWord.ToLower());
+            ImgSource = GetImage(lastWord.ToLower());
         }
 
         public object ShowContextAction { get; set; }

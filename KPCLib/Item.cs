@@ -23,6 +23,7 @@ namespace KPCLib
 
         public abstract bool IsGroup { get; }
 
+        // TODO: do we need this ?
         // public abstract PwUuid CustomIconUuid { get; set; }
 
         public abstract string Id { get; }
@@ -30,6 +31,7 @@ namespace KPCLib
         /// <summary>
         /// UUID of this item.
         /// </summary>
+        // TODO: need to decouple this
         //public PwUuid Uuid
         //{
         //    get { return m_uuid; }

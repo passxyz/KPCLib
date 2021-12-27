@@ -79,7 +79,7 @@ namespace KeePassLib
 			get { return m_uuid; }
 			set
 			{
-				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_uuid = value;
 			}
 		}
@@ -385,7 +385,7 @@ namespace KeePassLib
 		/// and last access times will be set to the current system time.</param>
 		public PwEntry(bool bCreateNewUuid, bool bSetTimes)
 		{
-			if(bCreateNewUuid) Uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -413,7 +413,7 @@ namespace KeePassLib
 		{
 			m_pParentGroup = pwParentGroup;
 
-			if(bCreateNewUuid) Uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -443,7 +443,7 @@ namespace KeePassLib
 		{
 			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.Uuid = Uuid; // PwUuid is immutable
+			peNew.m_uuid = m_uuid; // PwUuid is immutable
 			peNew.m_pParentGroup = m_pParentGroup;
 			peNew.m_tParentGroupLastMod = m_tParentGroupLastMod;
 			peNew.m_puPrevParentGroup = m_puPrevParentGroup;
@@ -480,7 +480,7 @@ namespace KeePassLib
 		{
 			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.Uuid = Uuid; // PwUuid is immutable
+			peNew.m_uuid = m_uuid; // PwUuid is immutable
 			peNew.m_tParentGroupLastMod = m_tParentGroupLastMod;
 			// Do not assign m_pParentGroup
 
@@ -530,7 +530,7 @@ namespace KeePassLib
 			bool bIgnoreLastMod = ((pwOpt & PwCompareOptions.IgnoreLastMod) !=
 				PwCompareOptions.None);
 
-			if(!Uuid.Equals(pe.Uuid)) return false;
+			if(!m_uuid.Equals(pe.m_uuid)) return false;
 			if((pwOpt & PwCompareOptions.IgnoreParentGroup) == PwCompareOptions.None)
 			{
 				if(m_pParentGroup != pe.m_pParentGroup) return false;
@@ -618,8 +618,8 @@ namespace KeePassLib
 				return;
 
 			// Template UUID should be the same as the current one
-			Debug.Assert(Uuid.Equals(peTemplate.Uuid));
-			Uuid = peTemplate.Uuid;
+			Debug.Assert(m_uuid.Equals(peTemplate.m_uuid));
+			m_uuid = peTemplate.m_uuid;
 
 			if(bAssignLocationChanged)
 			{
@@ -783,7 +783,7 @@ namespace KeePassLib
 			if(pwSettings == null) { Debug.Assert(false); return false; }
 
 			// Fix UUIDs of history entries; should not be necessary
-			PwUuid pu = Uuid;
+			PwUuid pu = m_uuid;
 			foreach(PwEntry pe in m_lHistory)
 			{
 				if(!pe.Uuid.Equals(pu)) { Debug.Assert(false); pe.Uuid = pu; }
@@ -839,6 +839,7 @@ namespace KeePassLib
 			if(idxRemove != uint.MaxValue) m_lHistory.RemoveAt(idxRemove);
 		}
 
+		// Cf. AutoType.GetEnabledText
 		public bool GetAutoTypeEnabled()
 		{
 			if(!m_cfgAutoType.Enabled) return false;
@@ -947,7 +948,7 @@ namespace KeePassLib
 
 			// this.Tags normalizes
 			return this.Tags.Remove(StrUtil.NormalizeTag(strTag));
-			}
+		}
 
 		internal List<string> GetTagsInherited()
 		{

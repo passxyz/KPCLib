@@ -86,7 +86,7 @@ namespace KeePassLib
 			get { return m_uuid; }
 			set
 			{
-				if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
 				m_uuid = value;
 			}
 		}
@@ -378,7 +378,7 @@ namespace KeePassLib
 		/// <param name="bSetTimes">Set creation, last access and last modification times to the current time.</param>
 		public PwGroup(bool bCreateNewUuid, bool bSetTimes)
 		{
-			if(bCreateNewUuid) Uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -399,7 +399,7 @@ namespace KeePassLib
 		/// <param name="pwIcon">Icon of the new group.</param>
 		public PwGroup(bool bCreateNewUuid, bool bSetTimes, string strName, PwIcon pwIcon)
 		{
-			if(bCreateNewUuid) Uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -432,7 +432,7 @@ namespace KeePassLib
 		{
 			PwGroup pg = new PwGroup(false, false);
 
-			pg.Uuid = Uuid; // PwUuid is immutable
+			pg.m_uuid = m_uuid; // PwUuid is immutable
 
 			pg.m_listGroups = m_listGroups.CloneDeep();
 			pg.m_listEntries = m_listEntries.CloneDeep();
@@ -476,7 +476,7 @@ namespace KeePassLib
 		{
 			PwGroup pg = new PwGroup(false, false);
 
-			pg.Uuid = Uuid; // PwUuid is immutable
+			pg.m_uuid = m_uuid; // PwUuid is immutable
 			pg.m_tParentGroupLastMod = m_tParentGroupLastMod;
 			// Do not assign m_pParentGroup
 
@@ -499,7 +499,7 @@ namespace KeePassLib
 			bool bIgnoreLastMod = ((pwOpt & PwCompareOptions.IgnoreLastMod) !=
 				PwCompareOptions.None);
 
-			if(!Uuid.Equals(pg.Uuid)) return false;
+			if(!m_uuid.Equals(pg.m_uuid)) return false;
 			if((pwOpt & PwCompareOptions.IgnoreParentGroup) == PwCompareOptions.None)
 			{
 				if(m_pParentGroup != pg.m_pParentGroup) return false;
@@ -584,8 +584,8 @@ namespace KeePassLib
 				return;
 
 			// Template UUID should be the same as the current one
-			Debug.Assert(Uuid.Equals(pgTemplate.Uuid));
-			Uuid = pgTemplate.Uuid;
+			Debug.Assert(m_uuid.Equals(pgTemplate.m_uuid));
+			m_uuid = pgTemplate.m_uuid;
 
 			if(bAssignLocationChanged)
 			{
@@ -865,18 +865,18 @@ namespace KeePassLib
 		}
 
 		internal List<string> BuildEntryTagsList(bool bSort, bool bGroupTags)
-				{
+		{
 			Dictionary<string, bool> d = new Dictionary<string, bool>();
 
 			GroupHandler gh = null;
 			if(bGroupTags)
-					{
+			{
 				gh = delegate(PwGroup pg)
-						{
+				{
 					foreach(string strTag in pg.Tags) d[strTag] = true;
 					return true;
 				};
-				}
+			}
 
 			EntryHandler eh = delegate(PwEntry pe)
 			{
@@ -971,7 +971,7 @@ namespace KeePassLib
 		public PwGroup FindGroup(PwUuid uuid, bool bSearchRecursive)
 		{
 			// Do not assert on PwUuid.Zero
-			if(Uuid.Equals(uuid)) return this;
+			if(m_uuid.Equals(uuid)) return this;
 
 			if(bSearchRecursive)
 			{
@@ -986,7 +986,7 @@ namespace KeePassLib
 			{
 				foreach(PwGroup pg in m_listGroups)
 				{
-					if(pg.Uuid.Equals(uuid))
+					if(pg.m_uuid.Equals(uuid))
 						return pg;
 				}
 			}
