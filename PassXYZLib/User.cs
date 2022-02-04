@@ -203,7 +203,7 @@ namespace PassXYZLib
             }
         }
 
-        public string Password { get; set; }
+        public virtual string Password { get; set; }
 
         /// <summary>
         /// Check whether Device Lock is enabled for this user.
