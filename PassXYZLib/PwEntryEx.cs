@@ -117,7 +117,7 @@ namespace PassXYZLib
         /// <param name="entry">an instance of PwEntry</param>
         /// <param name="encodeKey">true - decode key, false - does not decode key</param>
 		/// <returns>A list of fields</returns>
-        public static List<Field> GetFields(this PwEntry entry, bool encodeKey = false, Func<string, Object> GetImage = null)
+        public static List<Field> GetFields(this PwEntry entry, bool encodeKey = false)
         {
             List<Field> fields = new List<Field>();
             bool isPxEntry = PxDefs.IsPxEntry(entry);
@@ -131,11 +131,11 @@ namespace PassXYZLib
                     {
                         if (encodeKey)
                         {
-                            fields.Add(new Field(pstr.Key, entry.Strings.ReadSafe(pstr.Key), entry.Strings.GetSafe(pstr.Key).IsProtected, GetImage));
+                            fields.Add(new Field(pstr.Key, entry.Strings.ReadSafe(pstr.Key), entry.Strings.GetSafe(pstr.Key).IsProtected));
                         }
                         else
                         {
-                            fields.Add(new Field(PxDefs.DecodeKey(pstr.Key), entry.Strings.ReadSafe(pstr.Key), entry.Strings.GetSafe(pstr.Key).IsProtected, GetImage, pstr.Key));
+                            fields.Add(new Field(PxDefs.DecodeKey(pstr.Key), entry.Strings.ReadSafe(pstr.Key), entry.Strings.GetSafe(pstr.Key).IsProtected, pstr.Key));
                         }
                     }
                 }
@@ -145,24 +145,24 @@ namespace PassXYZLib
                 // If this is an instance of PwEntry, we handle it here.
                 if (entry.Strings.Exists(PwDefs.UserNameField))
                 {
-                    fields.Add(new Field(PwDefs.UserNameField, entry.Strings.ReadSafe(PwDefs.UserNameField), entry.Strings.GetSafe(PwDefs.UserNameField).IsProtected, GetImage));
+                    fields.Add(new Field(PwDefs.UserNameField, entry.Strings.ReadSafe(PwDefs.UserNameField), entry.Strings.GetSafe(PwDefs.UserNameField).IsProtected));
                 }
 
                 if (entry.Strings.Exists(PwDefs.PasswordField))
                 {
-                    fields.Add(new Field(PwDefs.PasswordField, entry.Strings.ReadSafe(PwDefs.PasswordField), entry.Strings.GetSafe(PwDefs.PasswordField).IsProtected, GetImage));
+                    fields.Add(new Field(PwDefs.PasswordField, entry.Strings.ReadSafe(PwDefs.PasswordField), entry.Strings.GetSafe(PwDefs.PasswordField).IsProtected));
                 }
 
                 if (entry.Strings.Exists(PwDefs.UrlField))
                 {
-                    fields.Add(new Field(PwDefs.UrlField, entry.Strings.ReadSafe(PwDefs.UrlField), entry.Strings.GetSafe(PwDefs.UrlField).IsProtected, GetImage));
+                    fields.Add(new Field(PwDefs.UrlField, entry.Strings.ReadSafe(PwDefs.UrlField), entry.Strings.GetSafe(PwDefs.UrlField).IsProtected));
                 }
 
                 foreach (var field in entry.Strings)
                 {
                     if (!PwDefs.IsStandardField(field.Key))
                     {
-                        fields.Add(new Field(field.Key, entry.Strings.ReadSafe(field.Key), entry.Strings.GetSafe(field.Key).IsProtected, GetImage));
+                        fields.Add(new Field(field.Key, entry.Strings.ReadSafe(field.Key), entry.Strings.GetSafe(field.Key).IsProtected));
                     }
                 }
             }
