@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Microsoft.Maui;
+using Microsoft.Maui.Controls;
+
 using KPCLib;
 using KeePassLib;
 using KeePassLib.Security;
@@ -170,11 +173,12 @@ namespace PassXYZLib
                 {
                     IsBinaries = true,
                     Binary = entry.Binaries.Get(field.Key),
-                    //TODO: Need to setup field icons for binaries here
-                    //ImgSource = new FontAwesome.Solid.IconSource
-                    //{
-                    //    Icon = FontAwesome.Solid.Icon.Paperclip
-                    //}
+                    // We use hard code Glyph value here, since we want to put this extension here.
+                    ImgSource = new FontImageSource
+                    {
+                        FontFamily = "FontAwesomeSolid",
+                        Glyph = "\uf0c6"
+                    }
                 });
             }
 
