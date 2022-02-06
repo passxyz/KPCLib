@@ -180,36 +180,47 @@ namespace PassXYZLib
         public virtual string Username
         {
             get => _username;
-            set
-            {
-                _username = value;
-
-                if(string.IsNullOrEmpty(_username))
-                {
-                    IsDeviceLockEnabled = false;
-                }
-                else 
-                {
-                    // Check whether Device Lock is enabled, but key file may not exist.
-                    if (System.IO.File.Exists(System.IO.Path.Combine(PxDataFile.DataFilePath, GetFileName(true))))
-                    {
-                        IsDeviceLockEnabled = true;
-                    }
-                    else
-                    {
-                        IsDeviceLockEnabled = false;
-                    }
-                }
-            }
+            set => SetProperty(ref _username, value);
         }
 
-        public virtual string Password { get; set; } = string.Empty;
+        private string _password = string.Empty;
+        public virtual string Password
+        {
+            get => _password;
+            set => SetProperty(ref _password, value);
+        }
 
+        private string _password2 = string.Empty;
+        public string Password2
+        {
+            get => _password2;
+            set => SetProperty(ref _password2, value);
+        }
+
+        private bool _isDeviceLockEnabled = false;
         /// <summary>
         /// Check whether Device Lock is enabled for this user.
         /// <c>true</c> - key file is enabled, <c>false</c> - key file is not enabled
         /// </summary>
-        public bool IsDeviceLockEnabled { get; set; } = false;
+        public bool IsDeviceLockEnabled
+        { 
+            get
+            {
+                if (!_isDeviceLockEnabled && !string.IsNullOrEmpty(_username))
+                {
+                    if (System.IO.File.Exists(System.IO.Path.Combine(PxDataFile.DataFilePath, GetFileName(true))))
+                    {
+                        _isDeviceLockEnabled = true;
+                    }
+                }
+
+                return _isDeviceLockEnabled;
+            }
+            set
+            {
+                _isDeviceLockEnabled = value;
+            }
+        }
 
         /// <summary>
         /// Check whether the username exist or not. 
