@@ -39,7 +39,13 @@ namespace xunit.PassXYZLib
     public class UserTests
     {
         readonly UserFixture userFixture;
-
+        /// <summary>
+        /// Three built-in users are:
+        /// <c>test1</c> - user without Device Lock.
+        /// <c>kpclibpy</c> - user with Device Lock.
+        /// <c>user1</c> user with a normal key file.
+        /// </summary>
+        /// <param name="fixture"></param>
         public UserTests(UserFixture fixture)
         {
             this.userFixture = fixture;
@@ -66,16 +72,25 @@ namespace xunit.PassXYZLib
         [Fact]
         public void GetUserNameTest()
         {
-            User.GetUsersList();
+            var users = User.GetUsersList();
+            foreach(var user in users) 
+            {
+                Debug.WriteLine($"username={user}");
+            }
         }
 
+        /// <summary>
+        /// Testing <c>IsKeyFileExist</c> and <c>IsUserExist</c>
+        /// </summary>
         [Fact]
         public void FileNameTest()
         {
             userFixture.user.Username = "kpclibpy";
             PxDataFile.DataFilePath = System.IO.Directory.GetCurrentDirectory();
             Debug.Print($"FileName={userFixture.user.FileName}");
-            if(userFixture.user.IsKeyFileExist) 
+            Assert.True(userFixture.user.IsKeyFileExist);
+            Assert.True(userFixture.user.IsUserExist);
+            if (userFixture.user.IsKeyFileExist) 
             {
                 Debug.WriteLine($"FileNameTest: Found key file {userFixture.user.KeyFileName}");
             }
@@ -91,8 +106,8 @@ namespace xunit.PassXYZLib
             PxDataFile.DataFilePath = System.IO.Directory.GetCurrentDirectory();
             userFixture.user.Username = "user1";
             userFixture.user.Password = "123123";
+            Debug.WriteLine($"KeePassKeyFileTest: {userFixture.user.Path}");
             userFixture.PxDb.Open(userFixture.user);
-            Debug.WriteLine($"Database: {userFixture.PxDb.Name}");
             Assert.True(userFixture.PxDb.IsOpen);
         }
     }
