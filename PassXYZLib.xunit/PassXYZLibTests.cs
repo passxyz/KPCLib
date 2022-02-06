@@ -11,7 +11,7 @@ using KeePassLib.Serialization;
 using KeePassLib.Utility;
 using PassXYZLib;
 
-namespace xunit.PassXYZLib
+namespace PassXYZLib.xunit
 {
     public class PassXYZLibFixture : IDisposable
     {

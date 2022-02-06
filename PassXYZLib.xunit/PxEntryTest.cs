@@ -10,7 +10,7 @@ using Xunit;
 using KeePassLib;
 using PassXYZLib;
 
-namespace xunit.PassXYZLib
+namespace PassXYZLib.xunit
 {
     [Collection("PxDatabase collection")]
     public class PxEntryTest
