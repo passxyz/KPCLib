@@ -135,7 +135,7 @@ namespace PassXYZLib
         /// </summary>
         /// <param name="fileName">File name used to decode username</param>
         /// <returns>Decoded username</returns>
-        public static string GetUserName(string fileName)
+        public static string? GetUserName(string fileName)
         {
             string trimedName;
             
@@ -203,7 +203,7 @@ namespace PassXYZLib
             }
         }
 
-        public virtual string Password { get; set; }
+        public virtual string Password { get; set; } = string.Empty;
 
         /// <summary>
         /// Check whether Device Lock is enabled for this user.
@@ -227,7 +227,7 @@ namespace PassXYZLib
                 var dataFiles = Directory.EnumerateFiles(PxDataFile.DataFilePath, PxDefs.all_xyz);
                 foreach (string currentFile in dataFiles)
                 {
-                    string userName = PxDataFile.GetUserName(currentFile.Substring(PxDataFile.DataFilePath.Length + 1));
+                    string? userName = PxDataFile.GetUserName(currentFile.Substring(PxDataFile.DataFilePath.Length + 1));
                     if (userName != string.Empty && !string.IsNullOrWhiteSpace(userName))
                     {
                         if(userName.Equals(_username)) { return true; }
@@ -380,7 +380,7 @@ namespace PassXYZLib
             foreach (string currentFile in dataFiles)
             {
                 string fileName = currentFile.Substring(PxDataFile.DataFilePath.Length + 1);
-                string userName = PxDataFile.GetUserName(fileName);
+                string? userName = PxDataFile.GetUserName(fileName);
                 if (userName != string.Empty && !string.IsNullOrWhiteSpace(userName))
                 {
                     userList.Add(userName);
@@ -397,7 +397,7 @@ namespace PassXYZLib
         #region INotifyPropertyChanged
         protected bool SetProperty<T>(ref T backingStore, T value,
             [CallerMemberName] string propertyName = "",
-            Action onChanged = null)
+            Action? onChanged = null)
         {
             if (EqualityComparer<T>.Default.Equals(backingStore, value))
                 return false;
@@ -408,7 +408,7 @@ namespace PassXYZLib
             return true;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             var changed = PropertyChanged;

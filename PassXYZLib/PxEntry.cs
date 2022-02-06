@@ -1,20 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using Microsoft.Maui;
-using Microsoft.Maui.Controls;
 
-using Newtonsoft.Json;
-
-using Markdig;
+using PureOtp;
 
 using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Interfaces;
 using KeePassLib.Security;
 using KeePassLib.Utility;
 using Image = SkiaSharp.SKBitmap;
@@ -24,167 +13,6 @@ using PassXYZLib.Resources;
 
 namespace PassXYZLib
 {
-    /// <summary>
-    /// A class representing a field in PwEntry. A field is stored in ProtectedStringDictionary.
-    /// We convert key value pair into a field so that it can be used by the user interface.
-    /// </summary>
-    public class Field : INotifyPropertyChanged
-    {
-        private string _key;
-        /// <summary>
-        /// This is the key used by Field. This Key should be decoded for PxEntry.
-        /// </summary>
-        public string Key
-        {
-            get => _key;
-            set
-            {
-                _key = value;
-                OnPropertyChanged("Key");
-            }
-        }
-
-        /// <summary>
-        /// The EncodeKey is used by PxEntry. For PwEntry, this is an empty string.
-        /// </summary>
-        public string EncodedKey = string.Empty;
-
-        public bool IsEncoded => !string.IsNullOrEmpty(EncodedKey);
-
-        private string _value;
-        private string _shadowValue = string.Empty;
-        /// <summary>
-        /// This is the value Field for display.
-        /// </summary>
-        public string Value
-        {
-            get => _value;
-            set
-            {
-                if(IsProtected)
-                {
-                    _shadowValue = value;
-                    _value = new string('*', _shadowValue.Length);
-                }
-                else
-                {
-                    _value = value;
-                }
-                OnPropertyChanged("Value");
-            }
-        }
-
-        /// <summary>
-        /// This is the value Field for editing purpose.
-        /// </summary>
-        public string EditValue
-        {
-            get => IsProtected ? _shadowValue : _value;
-
-            set
-            {
-                if (IsProtected)
-                {
-                    _shadowValue = value;
-                    _value = new string('*', _shadowValue.Length);
-                }
-                else
-                {
-                    _value = value;
-                }
-                OnPropertyChanged("Value");
-            }
-        }
-
-        private bool _isProtected = false;
-        public bool IsProtected
-        {
-            get => _isProtected;
-            set
-            {
-                _isProtected = value;
-                OnPropertyChanged("IsProtected");
-            }
-        }
-
-        private bool _isBinaries = false;
-        /// <summary>
-        /// Whether this field is an attachment
-        /// </summary>
-        public bool IsBinaries
-        {
-            get => _isBinaries;
-            set
-            {
-                _isBinaries = value;
-                OnPropertyChanged("IsProtected");
-            }
-        }
-
-        private ProtectedBinary _binary = null;
-        /// <summary>
-        /// Binary data in the attachment
-        /// </summary>
-        public ProtectedBinary Binary
-        {
-            get => _binary;
-            set
-            {
-                _binary = value;
-                OnPropertyChanged("Binary");
-            }
-        }
-
-        public bool IsHide { get; private set; } = true;
-
-        public ImageSource ImgSource { get; set; }
-
-        public Field(string key, string value, bool isProtected, string encodedKey = "")
-        {
-            Key = key;
-            EncodedKey = encodedKey;
-            IsProtected = isProtected;
-            Value = value;
-
-            string lastWord = key.Split(' ').Last();
-            ImgSource = FieldIcons.GetImage(lastWord.ToLower());
-        }
-
-        public object ShowContextAction { get; set; }
-
-        public void ShowPassword()
-        {
-            if (IsProtected && !string.IsNullOrEmpty(_shadowValue))
-            {
-                _value = _shadowValue;
-                IsHide = false;
-                OnPropertyChanged("Value");
-            }
-        }
-
-        public void HidePassword()
-        {
-            if (IsProtected && !string.IsNullOrEmpty(_shadowValue))
-            {
-                _value = new string('*', _shadowValue.Length);
-                IsHide = true;
-                OnPropertyChanged("Value");
-            }
-        }
-
-        #region INotifyPropertyChanged
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
-        {
-            var changed = PropertyChanged;
-            if (changed == null)
-                return;
-
-            changed.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-        #endregion
-    }
-
     public class PxEntry : PwEntry
     {
         public PxEntry(bool bCreateNewUuid, bool bSetTimes) : base(bCreateNewUuid, bSetTimes) { }
@@ -196,7 +24,7 @@ namespace PassXYZLib
         /// </summary>
         /// <param name="str">JSON data</param>
         /// <param name="password">Password of PwEntry</param>
-        public PxEntry(string str, string password = null) : base(true, true)
+        public PxEntry(string str, string? password = null) : base(true, true)
         {
             PxPlainFields fields = new PxPlainFields(str, password);
 
@@ -212,17 +40,146 @@ namespace PassXYZLib
                 {
                     CustomData.Set(PxDefs.PxCustomDataItemSubType, fields.CustomDataType);
                 }
+				else if (fields.IsPxEntry)
+				{
+					CustomData.Set(PxDefs.PxCustomDataItemSubType, ItemSubType.PxEntry.ToString());
+				}
             }
         }
 
-        /// <summary>
-        /// Convert PxEntry instance to a JSON string.
-        /// </summary>
-        public override string ToString()
+		/// <summary>
+		/// Create a PxEntry instance from a PwEntry.
+		/// </summary>
+		/// <param name="entry">a PwEntry instance</param>
+		public PxEntry(PwEntry entry)
+		{
+			Uuid = entry.Uuid;
+			AssignProperties(entry, false, true, true);
+		}
+
+		/// <summary>
+		/// Convert PxEntry instance to a JSON string.
+		/// </summary>
+		public override string ToString()
         {
             var fields = new PxPlainFields(this);
             return fields.ToString();
         }
+
+        #region PxEntrySupportOTP
+        // Update progress every 3 seconds
+        public const int TimerStep = 3;
+
+        string m_TotpDescription = string.Empty;
+        public string TotpDescription
+        {
+            get { return m_TotpDescription; }
+            set { m_TotpDescription = value; }
+        }
+
+        Totp? m_totp = null;
+        public Totp? Totp
+        {
+            get
+            {
+                if (m_totp == null) { SetupTotp(); }
+                return m_totp;
+            }
+
+            set { m_totp = value; }
+        }
+
+        void SetupTotp()
+        {
+            if (this.CustomData != null && this.CustomData.Exists(PassXYZLib.PxDefs.PxCustomDataOtpUrl))
+            {
+                var rawUrl = this.CustomData.Get(PassXYZLib.PxDefs.PxCustomDataOtpUrl);
+                var otp = KeyUrl.FromUrl(rawUrl);
+                if (otp is Totp totp)
+                {
+                    var url = new Uri(rawUrl);
+                    m_TotpDescription = url.LocalPath.Substring(1);
+
+                    Totp = totp;
+                    Token = totp.ComputeTotp();
+                }
+            }
+        }
+
+        double m_increment = 0.1;
+
+        double m_progress = 0;
+        public double Progress
+        {
+            get
+            {
+                if (m_totp == null) { SetupTotp(); }
+                return m_progress;
+            }
+
+            set
+            {
+                SetProperty(ref m_progress, value, nameof(Progress));
+            }
+        }
+
+        string? m_token = string.Empty;
+        public string? Token
+        {
+            get
+            {
+                if (m_token == string.Empty) { SetupTotp(); }
+                UpdateToken();
+                return m_token;
+            }
+
+            set
+            {
+                SetProperty(ref m_token, value, nameof(Token), () => {
+                    var remaining = (Totp == null) ? 0 : Totp.RemainingSeconds();
+                    Progress = 0;
+                    if (remaining > TimerStep)
+                    {
+                        m_increment = (double)TimerStep / remaining;
+                    }
+
+                    Debug.WriteLine($"New Token={Token} RemainingSeconds={remaining}, increment={m_increment}");
+                });
+            }
+        }
+
+        public void UpdateToken()
+        {
+            if (Totp != null)
+            {
+                Token = Totp.ComputeTotp();
+                if (Progress <= 1)
+                {
+                    Progress += m_increment;
+                }
+            }
+        }
+
+        public string GetOtpUrl()
+        {
+            return CustomData.Get(PassXYZLib.PxDefs.PxCustomDataOtpUrl);
+        }
+
+        /// <summary>
+        /// Update the OTP Url.
+        /// If it is new, create a PxOtpUrl key in CustomData.
+        /// Since CustomData is readonly, it can only be set at this level.
+        /// </summary>
+        /// <param name="url">OTP Url which cannot be <c>null</c>.</param>
+        /// <returns>true - success, false - failure</returns>
+        public void UpdateOtpUrl(string url)
+        {
+            if (url == null) { Debug.Assert(false); throw new ArgumentNullException("url"); }
+
+            this.CustomData.Set(PassXYZLib.PxDefs.PxCustomDataOtpUrl, url);
+        }
+
+        #endregion
     }
 
     public static class FieldIcons

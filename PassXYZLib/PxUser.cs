@@ -289,7 +289,7 @@ namespace PassXYZLib
         /// <summary>
         /// Load local users
         /// </summary>
-        public static async Task<IEnumerable<PxUser>> LoadLocalUsersAsync(bool isBusyToLoadUsers)
+        public static async Task<IEnumerable<PxUser>?> LoadLocalUsersAsync(bool isBusyToLoadUsers)
         {
             if (isBusyToLoadUsers)
             {
@@ -464,17 +464,33 @@ namespace PassXYZLib
 
     public class PxUserComparer : IEqualityComparer<PxUser>
     {
-        bool IEqualityComparer<PxUser>.Equals(PxUser x, PxUser y)
+        bool IEqualityComparer<PxUser>.Equals(PxUser? x, PxUser? y)
         {
-            return (x.Username.Equals(y.Username));
+            if ( x != null && y != null) 
+            {
+                return (x.Username.Equals(y.Username));
+            }
+            else { return false; }
         }
 
-        int IEqualityComparer<PxUser>.GetHashCode(PxUser obj)
+        int IEqualityComparer<PxUser>.GetHashCode(PxUser? obj)
         {
-            if (obj is null)
+            if (obj is null) 
+            {
                 return 0;
-
-            return obj.ToString().GetHashCode();
+            }
+            else 
+            {
+                var str = obj.ToString();
+                if (string.IsNullOrEmpty(str)) 
+                {
+                    return 0;
+                }
+                else 
+                {
+                    return str.GetHashCode();
+                }
+            }
         }
     }
 }

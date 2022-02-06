@@ -53,9 +53,9 @@ namespace PassXYZLib
             return url;
         }
 
-        public static string RetrieveFavicon(string url)
+        public static string? RetrieveFavicon(string url)
         {
-            string returnFavicon = null;
+            string? returnFavicon = null;
 
             // declare htmlweb and load html document
             HtmlWeb web = new HtmlWeb();
@@ -131,7 +131,7 @@ namespace PassXYZLib
         /// </summary>
 		/// <param name="pb">byte arraty</param>
 		/// <param name="url">This is the url using to retrieve icon.</param>
-        public static SKBitmap LoadImage(byte[] pb, string faviconUrl = null)
+        public static SKBitmap? LoadImage(byte[] pb, string? faviconUrl = null)
         {
             int w = 96, h = 96;
             if (DeviceInfo.Platform.Equals(DevicePlatform.Android))
@@ -166,7 +166,7 @@ namespace PassXYZLib
 
         }
 
-        public static ImageSource GetImageSource(SKBitmap bitmap)
+        public static ImageSource? GetImageSource(SKBitmap bitmap)
         {
             if (bitmap != null)
             {
@@ -180,16 +180,19 @@ namespace PassXYZLib
             else { return null; }
         }
 
-        public static SKBitmap GetBitmapByUrl(string url) 
+        public static SKBitmap? GetBitmapByUrl(string url) 
         {
             try
             {
-                string faviconUrl = RetrieveFavicon(url);
-                Uri uri = new Uri(faviconUrl);
-                WebClient myWebClient = new WebClient();
-                byte[] pb = myWebClient.DownloadData(faviconUrl);
+                string? faviconUrl = RetrieveFavicon(url);
+                if (faviconUrl != null) 
+                {
+                    Uri uri = new Uri(faviconUrl);
+                    WebClient myWebClient = new WebClient();
+                    byte[] pb = myWebClient.DownloadData(faviconUrl);
 
-                return LoadImage(pb, faviconUrl);
+                    return LoadImage(pb, faviconUrl);
+                }
             }
             catch (Exception ex)
             {
@@ -198,9 +201,9 @@ namespace PassXYZLib
             return null;
         }
 
-        public static ImageSource GetImageByUrl(string url) 
+        public static ImageSource? GetImageByUrl(string url) 
         {
-            SKBitmap bitmap = GetBitmapByUrl(url);
+            SKBitmap? bitmap = GetBitmapByUrl(url);
 
             try
             {
@@ -220,7 +223,7 @@ namespace PassXYZLib
         /// Since we cannot define Uuid in KPCLib.Item, we add extension methods here.
         /// </summary>
 		/// <returns>Uuid</returns>
-        public static PwUuid GetUuid(this Item item)
+        public static PwUuid? GetUuid(this Item item)
         {
             if (item is PwGroup group)
             {
@@ -419,14 +422,16 @@ namespace PassXYZLib
         /// <param name="item">an instance of Item. Must not be <c>null</c>.</param>	
         /// <param name="url">Url used to retrieve the new icon.</param>	
 		/// <returns>an instance of PxIcon</returns>
-        public static PxIcon AddNewIcon(this Item item, string url = null)
+        public static PxIcon? AddNewIcon(this Item item, string? url = null)
         {
             PasswordDb db = PasswordDb.Instance;
             if (url == null && !item.IsGroup)
             {
                 // If the url is null, we try to get the url from the URL field in the item.
-                PwEntry entry = item as PwEntry;
-                url = entry.GetUrlField();
+                if (item is PwEntry entry)
+                {
+                    url = entry.GetUrlField();
+                }
             }
 
             if (db != null && !string.IsNullOrEmpty(url))
@@ -439,7 +444,7 @@ namespace PassXYZLib
                         PwCustomIcon old = db.GetCustomIcon(uri.Host);
                         if (old == null)
                         {
-                            SKBitmap bitmap = GetBitmapByUrl(url);
+                            SKBitmap? bitmap = GetBitmapByUrl(url);
                             if (bitmap != null)
                             {
                                 PwUuid uuid = db.SaveCustomIcon(bitmap, uri.Host);

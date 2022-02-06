@@ -24,7 +24,7 @@ namespace PassXYZLib
         /// <summary>
         /// Create an instance of PxPlainFields from a JSON string
         /// </summary>
-        public PxPlainFields(string str, string password = null)
+        public PxPlainFields(string str, string? password = null)
         {
             string decryptedMessage;
             if (str.StartsWith(PxDefs.PxJsonTemplate))
@@ -49,11 +49,14 @@ namespace PassXYZLib
 
             try
             {
-                PxPlainFields fields = JsonConvert.DeserializeObject<PxPlainFields>(decryptedMessage);
-                IsPxEntry = fields.IsPxEntry;
-                IsGroup = fields.IsGroup;
-                Strings = fields.Strings;
-                CustomDataType = fields.CustomDataType;
+                PxPlainFields? fields = JsonConvert.DeserializeObject<PxPlainFields>(decryptedMessage);
+                if (fields != null) 
+                {
+                    IsPxEntry = fields.IsPxEntry;
+                    IsGroup = fields.IsGroup;
+                    Strings = fields.Strings;
+                    CustomDataType = fields.CustomDataType;
+                }
             }
             catch (JsonReaderException ex)
             {
@@ -99,7 +102,7 @@ namespace PassXYZLib
             CustomDataType = entry.CustomData.Get(PxDefs.PxCustomDataItemSubType);
         }
 
-        private PxFieldValue FindPasswordField(SortedDictionary<string, PxFieldValue> fields)
+        private static PxFieldValue? FindPasswordField(SortedDictionary<string, PxFieldValue> fields)
         {
             foreach (var field in fields)
             {
@@ -114,7 +117,7 @@ namespace PassXYZLib
 
         public override string ToString()
         {
-            PxFieldValue fieldV = FindPasswordField(Strings);
+            PxFieldValue? fieldV = PxPlainFields.FindPasswordField(Strings);
 
             if (fieldV != null && !string.IsNullOrEmpty(fieldV.Value))
             {
