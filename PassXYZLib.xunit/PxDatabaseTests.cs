@@ -30,7 +30,6 @@ namespace PassXYZLib.xunit
         }
 
         public PxDatabase PxDb { get; private set; }
-        public KPCLibLogger Logger { get; private set; }
     }
 
     [CollectionDefinition("PxDatabase collection")]
@@ -53,6 +52,22 @@ namespace PassXYZLib.xunit
         }
 
         [Fact]
+        public void OpenNonExistDBTest()
+        {
+            User user = new();
+            user.Username = "nonexist";
+            user.Password = "password";
+            PxDatabase db = new();
+            try { db.Open(user); }
+            catch (System.IO.FileNotFoundException ex) 
+            {
+                Assert.IsType<System.IO.FileNotFoundException>(ex);
+                Debug.WriteLine($"{ex}");
+            }
+            Assert.False(db.IsOpen);
+        }
+
+        [Fact]
         public void IsOpenDbTest() 
         {
             Debug.WriteLine($"{passxyz.PxDb}");
@@ -63,6 +78,7 @@ namespace PassXYZLib.xunit
         public void ListGroupsTests()
         {
             PwGroup pg = passxyz.PxDb.RootGroup;
+            Assert.Contains("utdb", pg.Name);
             foreach (var group in pg.Groups)
             {
                 Debug.WriteLine($"Name={group.Name}, Note={group.Notes}");

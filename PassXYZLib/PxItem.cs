@@ -21,6 +21,7 @@ namespace PassXYZLib
     /// </summary>
     public static class PxItem
     {
+        #region ItemIcon
         private static bool UrlExists(string url)
         {
             try
@@ -215,15 +216,23 @@ namespace PassXYZLib
             }
             return null;
         }
+        #endregion
 
         #region Item extensions
 
+        public static Guid GetUuid(this Item item) 
+        {
+            PwUuid uuid = GetPwUuid(item);
+
+            return (uuid != PwUuid.Zero) ? uuid.GetGuid() : default;
+        }
+
         /// <summary>
-        /// Get the Uuid from the Item instance.
-        /// Since we cannot define Uuid in KPCLib.Item, we add extension methods here.
+        /// Get the PwUuid from the Item instance.
+        /// Since we cannot define PwUuid in KPCLib.Item, we add extension methods here.
         /// </summary>
 		/// <returns>Uuid</returns>
-        public static PwUuid? GetUuid(this Item item)
+        public static PwUuid GetPwUuid(this Item item)
         {
             if (item is PwGroup group)
             {
@@ -244,7 +253,7 @@ namespace PassXYZLib
         /// Since we cannot define Uuid in KPCLib.Item, we add extension methods here.
         /// </summary>
         /// <param name="uuid">Uuid of the item</param>
-        public static void SetUuid(this Item item, PwUuid uuid)
+        public static void SetPwUuid(this Item item, PwUuid uuid)
         {
             if (item is PwGroup group)
             {

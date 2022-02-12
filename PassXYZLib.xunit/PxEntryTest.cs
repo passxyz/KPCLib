@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Xunit;
 
+using KPCLib;
 using KeePassLib;
 using PassXYZLib;
 
@@ -20,6 +21,18 @@ namespace PassXYZLib.xunit
         public PxEntryTest(PxDatabaseFixture passXYZFixture)
         {
             this.passxyz = passXYZFixture;
+        }
+
+        [Fact]
+        public void PxEntryConstructorTest()
+        {
+            PxEntry entry = new("Name1", "Description1", false);
+            Item item = entry;
+            Guid guid1 = item.GetUuid();
+            Guid guid2 = new(guid1.ToString());
+            int result = guid1.CompareTo(guid2);
+            Assert.Equal(0, result);
+            Debug.WriteLine($"Id={item.Id}, Name={item.Name}, Desc={item.Description}, Time={item.LastModificationTime}");
         }
 
         [Theory]

@@ -325,7 +325,8 @@ namespace KeePassLib
 				{
 					sub_type = $"{GetType()}";
 				}
-				return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")} | {Notes}";
+				
+				return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")} | {Notes}".Truncate(PwDefs.UIUpdateDelay);
 			}
 		}
 
@@ -362,7 +363,14 @@ namespace KeePassLib
 			}
 		}
 
-		public override string Id => Uuid.ToHexString();
+		public override string Id
+		{
+			get 
+			{
+				Guid uid = new Guid(Uuid.UuidBytes);
+				return uid.ToString();
+			} 
+		}
 
 		public PwEntry()
 		{

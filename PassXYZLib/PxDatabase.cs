@@ -307,6 +307,8 @@ namespace PassXYZLib
 			{ Debug.Assert(false); throw new ArgumentNullException("PassXYZLib.User"); }
 			if (user.Password == null || user.Password == String.Empty)
 			{ Debug.Assert(false); throw new ArgumentNullException("Password"); }
+			if (!user.IsUserExist)
+			{ throw new FileNotFoundException("User doesn't exist."); }
 
 			var logger = new KPCLibLogger();
 

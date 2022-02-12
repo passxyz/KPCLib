@@ -141,7 +141,14 @@ namespace KeePassLib
         public override bool IsGroup => true;
 		public override Object ImgSource { get; set; }
 
-		public override string Id => Uuid.ToHexString();
+		public override string Id
+		{
+			get
+			{
+				Guid uid = new Guid(Uuid.UuidBytes);
+				return uid.ToString();
+			}
+		}
 
 		/// <summary>
 		/// Get a list of items in this group.

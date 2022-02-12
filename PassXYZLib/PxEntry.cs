@@ -24,26 +24,35 @@ namespace PassXYZLib
         /// </summary>
         /// <param name="str">JSON data</param>
         /// <param name="password">Password of PwEntry</param>
-        public PxEntry(string str, string? password = null) : base(true, true)
+        public PxEntry(string str, string? password = null, bool isJson = true) : base(true, true)
         {
-            PxPlainFields fields = new PxPlainFields(str, password);
-
-            if (fields.Strings.Count > 0)
+            if (isJson)
             {
-                foreach (var itemInDict in fields.Strings)
-                {
-                    PxFieldValue data = itemInDict.Value;
-                    Strings.Set(itemInDict.Key, new ProtectedString(data.IsProtected, data.Value));
-                }
+                PxPlainFields fields = new PxPlainFields(str, password);
 
-                if (!string.IsNullOrEmpty(fields.CustomDataType))
+                if (fields.Strings.Count > 0)
                 {
-                    CustomData.Set(PxDefs.PxCustomDataItemSubType, fields.CustomDataType);
+                    foreach (var itemInDict in fields.Strings)
+                    {
+                        PxFieldValue data = itemInDict.Value;
+                        Strings.Set(itemInDict.Key, new ProtectedString(data.IsProtected, data.Value));
+                    }
+
+                    if (!string.IsNullOrEmpty(fields.CustomDataType))
+                    {
+                        CustomData.Set(PxDefs.PxCustomDataItemSubType, fields.CustomDataType);
+                    }
+                    else if (fields.IsPxEntry)
+                    {
+                        CustomData.Set(PxDefs.PxCustomDataItemSubType, ItemSubType.PxEntry.ToString());
+                    }
                 }
-				else if (fields.IsPxEntry)
-				{
-					CustomData.Set(PxDefs.PxCustomDataItemSubType, ItemSubType.PxEntry.ToString());
-				}
+            }
+            else 
+            {
+                // If the first parameter is not a JSON string, we just set the name and description.
+                Name = str;
+                Notes = password;
             }
         }
 

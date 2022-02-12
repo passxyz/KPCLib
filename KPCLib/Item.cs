@@ -23,24 +23,14 @@ namespace KPCLib
 
         public abstract bool IsGroup { get; }
 
-        // TODO: do we need this ?
+        // using extenstion method to support this
         // public abstract PwUuid CustomIconUuid { get; set; }
 
-        public abstract string Id { get; }
-
         /// <summary>
-        /// UUID of this item.
+        /// PwUUID of this item in string.
+        /// The extention method <c>PwUuid? GetUuid(this Item item)</c> can be used to retrieve PwUuid.
         /// </summary>
-        // TODO: need to decouple this
-        //public PwUuid Uuid
-        //{
-        //    get { return m_uuid; }
-        //    set
-        //    {
-        //        if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
-        //        m_uuid = value;
-        //    }
-        //}
+        public abstract string Id { get; }
 
         virtual public Object ImgSource { get; set; }
 
