@@ -280,7 +280,8 @@ namespace PassXYZLib
 			if(PxDefs.IsDeviceLockEnabled(filename))
 			{
 				var userName = PxDefs.GetUserNameFromDataFile(filename);
-				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(userName, false);
+				User user = new() { Username = userName };
+				var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(userName, user.KeyFilePath);
 				if (pxKeyProvider.IsInitialized)
 				{
 					KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
@@ -320,8 +321,8 @@ namespace PassXYZLib
 			{
 				try 
 				{
-					PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
-					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, false);
+					//PassXYZ.Utils.Settings.DefaultFolder = PxDataFile.KeyFilePath;
+					var pxKeyProvider = new PassXYZ.Services.PxKeyProvider(user.Username, user.KeyFilePath);
 					if (pxKeyProvider.IsInitialized)
 					{
 						KeyProviderQueryContext ctxKP = new KeyProviderQueryContext(new IOConnectionInfo(), false, false);
@@ -346,7 +347,7 @@ namespace PassXYZLib
 			Open(ioc, cmpKey, logger);
 		}
 
-		public string GetDeviceLockData(PassXYZLib.User user)
+		public static string GetDeviceLockData(PassXYZLib.User user)
         {
 			if (user.IsDeviceLockEnabled)
 			{

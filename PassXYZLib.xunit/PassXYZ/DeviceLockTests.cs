@@ -21,7 +21,8 @@ namespace xunit.PassXYZ
         public DeviceLockFixture()
         {
             PxDb = new PxDatabase();
-            PxDatabase.DefaultFolder = "../../..";
+            // PxDatabase.DefaultFolder = "../../..";
+            PxDatabase.DefaultFolder = "../../../../KPCLib.xunit";
             PxDb.Open(TEST_DB, TEST_DB_KEY);
         }
 
