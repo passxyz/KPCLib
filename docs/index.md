@@ -8,7 +8,7 @@ In 2.x.x releases, I split it into three separate libraries.
 - `PassXYZLib` - This is an extension of `KeePassLib` for .NET MAUI.
 
 The below diagram shows the relationship of three libraries.
-![image01](images/kpclib01.PNG)
+![image01](images/kpclib01.png)
 
 Even though there are three libraries above, we have only two packages published in NuGet.
 - [KPCLib][6] package includes both `KPCLib` and `KeePassLib`. I could not publish the .NET standard version of `KeePassLib` to NuGet, since [dlech][8] published a .NET Framework version of [KeePassLib][5] already. It is an outdated version 2.30.0 published on Sep 13, 2015.
