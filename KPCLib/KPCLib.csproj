@@ -3,6 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>2.0.0</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://passxyz.github.io</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
+    <Company>PassXYZ</Company>
+    <Authors>Roger Ye</Authors>
+    <Copyright>Roger Ye</Copyright>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <RootNamespace>PassXYZLib</RootNamespace>
   </PropertyGroup>
 
 </Project>

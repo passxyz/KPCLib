@@ -7,11 +7,11 @@
     <Version>2.0.0</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <FileVersion>2.0.0.0</FileVersion>
-    <Company>PassXYZ Inc.</Company>
+    <Company>PassXYZ</Company>
     <Authors>Roger Ye</Authors>
     <Copyright>Roger Ye</Copyright>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
+    <PackageProjectUrl>https://passxyz.github.io</PackageProjectUrl>
     <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
     <Description>This is an extension of KPCLib.</Description>
@@ -24,6 +24,7 @@
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
