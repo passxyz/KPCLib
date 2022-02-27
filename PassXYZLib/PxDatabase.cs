@@ -347,7 +347,7 @@ namespace PassXYZLib
 			Open(ioc, cmpKey, logger);
 		}
 
-		public static string GetDeviceLockData(PassXYZLib.User user)
+		public string GetDeviceLockData(PassXYZLib.User user)
         {
 			if (user.IsDeviceLockEnabled)
 			{
@@ -679,16 +679,18 @@ namespace PassXYZLib
 		/// <summary>
 		/// Find an entry by Uuid
 		/// </summary>
-		/// <param name="uuid">The entry uuid</param>	
+		/// <param name="id">The entry uuid</param>	
 		/// <returns>Entry found or return <c>null</c> if the entry cannot be found</returns>
-		public PwEntry FindEntryById(string id)
+		public PwEntry? FindEntryById(string id)
 		{
-			PwEntry targetEntry = null;
+			PwEntry? targetEntry = null;
 
 			EntryHandler eh = delegate (PwEntry pe)
 			{
 				PwUuid pu = pe.Uuid;
-				string hexStr = pu.ToHexString();
+				//string hexStr = pu.ToHexString();
+				Guid guid = pu.GetGuid();
+				string hexStr = guid.ToString();
 				if (hexStr.Equals(id))
 				{
 					targetEntry = pe;

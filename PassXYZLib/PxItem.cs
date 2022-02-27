@@ -424,6 +424,36 @@ namespace PassXYZLib
             SetDefaultIcon(item);
         }
 
+        public static string GetCustomIcon(this Item item)
+        {
+            if (item.GetCustomIconUuid() != PwUuid.Zero)
+            {
+                PasswordDb db = PasswordDb.Instance;
+                if (db != null)
+                {
+                    if (db.IsOpen)
+                    {
+                        PwCustomIcon customIcon = db.GetPwCustomIcon(item.GetCustomIconUuid());
+                        if (customIcon != null)
+                        {
+                            var pb = customIcon.ImageDataPng;
+                            return "data:image/png;base64," +
+                                    Convert.ToBase64String(pb, Base64FormattingOptions.None);
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("SetIcon: PasswordDb is closed");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("SetIcon: No PasswordDb instance");
+                }
+            }
+            return string.Empty;
+        }
+
         /// <summary>
         /// Add a new custom icon to the database and set the new icon as the icon for this item.
         /// If the url is null, try to get the url from the URL field in the item.
