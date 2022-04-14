@@ -1,42 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-		<TargetFrameworks>net6.0;net6.0-ios;net6.0-android;net6.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">$(TargetFrameworks);net6.0-windows10.0.19041</TargetFrameworks>
-		<TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
-    <Version>2.0.0</Version>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
-    <Company>PassXYZ</Company>
-    <Authors>Roger Ye</Authors>
-    <Copyright>Roger Ye</Copyright>
-    <PackageReleaseNotes></PackageReleaseNotes>
-    <PackageProjectUrl>https://passxyz.github.io</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
-    <NeutralLanguage>en-US</NeutralLanguage>
-    <Description>This is an extension of KPCLib.</Description>
-		<Nullable>enable</Nullable>
-		<UseMaui>true</UseMaui>
-		<SingleProject>true</SingleProject>
-		<RootNamespace>PassXYZLib</RootNamespace>
+    <TargetFrameworks>net6.0;net6.0-android;net6.0-ios;net6.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) and '$(MSBuildRuntimeType)' == 'Full'">$(TargetFrameworks);net6.0-windows10.0.19041</TargetFrameworks>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
 
-		<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-ios'">14.2</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-android'">21.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-ios'">14.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="'$(TargetFramework)' == 'net6.0-android'">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</TargetPlatformMinVersion>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+    <Version>2.0.1-preview.3</Version>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
-    <PackageReference Include="Markdig" Version="0.26.0" />
+    <PackageReference Include="Markdig" Version="0.23.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="PassXYZ" Version="2.1.5.21" />
+    <PackageReference Include="PassXYZ" Version="2.1.5.22" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KeePassLib\KeePassLib.csproj" />
-    <ProjectReference Include="..\KPCLib\KPCLib.csproj" />
     <ProjectReference Include="..\PureOtp\PureOtp\PureOtp.csproj" />
   </ItemGroup>
 
