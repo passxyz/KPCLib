@@ -5,10 +5,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Microsoft.Maui.Essentials;
-
-// using PassXYZ.Vault.Resx;
-
 namespace PassXYZLib
 {
 #if PASSXYZ_CLOUD_SERVICE
