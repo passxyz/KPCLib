@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>KPCLib</id>
-        <version>2.0.1</version>
+        <version>2.0.3</version>
         <authors>Roger Ye</authors>
 		<owners>Roger Ye</owners>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -16,8 +16,8 @@
 		<repository url="https://github.com/passxyz/KPCLib" />
 		<dependencies>
 		  <group targetFramework=".NETStandard2.0">
-			<dependency id="SkiaSharp" version="2.80.2" exclude="Build,Analyzers" />
-			<dependency id="Svg.Skia" version="0.5.3" exclude="Build,Analyzers" />
+			<dependency id="SkiaSharp" version="2.88.0" exclude="Build,Analyzers" />
+			<dependency id="Svg.Skia" version="0.5.14" exclude="Build,Analyzers" />
 		  </group>
 		</dependencies>
         <summary>KeePassLib built as .NET Standard Library</summary>
