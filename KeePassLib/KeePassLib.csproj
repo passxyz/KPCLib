@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>2.48.1</Version>
+    <PackageProjectUrl>https://github.com/passxyz/KPCLib</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/passxyz/KPCLib</RepositoryUrl>
+    <Description>This is the build of KeePassLib in .NET standard Library.</Description>
+    <Copyright>Dominik Reichl is the author of the original KeePassLib on Windows platform. Roger Ye created this for UWP, Android and iOS platforms.</Copyright>
+    <Authors>Dominik Reichl, Roger Ye</Authors>
+    <Company></Company>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <AssemblyVersion>2.48.1.0</AssemblyVersion>
+    <FileVersion>2.48.1.0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;KPCLib;NETSTANDARD2_0</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;KPCLib;RELEASE;NETSTANDARD2_0</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
+    <PackageReference Include="Svg.Skia" Version="1.0.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KPCLib\KPCLib.csproj" />
+  </ItemGroup>
+
+</Project>

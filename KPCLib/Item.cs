@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace KeePassLib
+namespace KPCLib
 {
     /// <summary>
     /// A class representing an item. An item can be an entry or a group.
@@ -13,8 +13,6 @@ namespace KeePassLib
     /// </summary>
     public abstract class Item : INotifyPropertyChanged
     {
-        private PwUuid m_uuid = PwUuid.Zero;
-
         public abstract DateTime LastModificationTime { get; set; }
 
         public abstract string Name { get; set; }
@@ -25,22 +23,14 @@ namespace KeePassLib
 
         public abstract bool IsGroup { get; }
 
-        public abstract PwUuid CustomIconUuid { get; set; }
-
-        public string Id { get { return Uuid.ToHexString(); } }
+        // using extenstion method to support this
+        // public abstract PwUuid CustomIconUuid { get; set; }
 
         /// <summary>
-        /// UUID of this item.
+        /// PwUUID of this item in string.
+        /// The extention method <c>PwUuid? GetUuid(this Item item)</c> can be used to retrieve PwUuid.
         /// </summary>
-        public PwUuid Uuid
-        {
-            get { return m_uuid; }
-            set
-            {
-                if (value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
-                m_uuid = value;
-            }
-        }
+        public abstract string Id { get; }
 
         virtual public Object ImgSource { get; set; }
 

@@ -25,7 +25,7 @@ using System.Diagnostics;
 using System.Drawing;
 #endif
 
-using PureOtp;
+using KPCLib;
 
 using KeePassLib.Collections;
 using KeePassLib.Interfaces;
@@ -41,6 +41,7 @@ namespace KeePassLib
 	/// </summary>
 	public class PwEntry : Item, ITimeLogger, IStructureItem, IDeepCloneable<PwEntry>
 	{
+		private PwUuid m_uuid = PwUuid.Zero;
 		private PwGroup m_pParentGroup = null;
 		private DateTime m_tParentGroupLastMod = PwDefs.DtDefaultNow;
 		private PwUuid m_puPrevParentGroup = PwUuid.Zero;
@@ -69,6 +70,19 @@ namespace KeePassLib
 		private List<string> m_lTags = new List<string>();
 
 		private StringDictionaryEx m_dCustomData = new StringDictionaryEx();
+
+		/// <summary>
+		/// UUID of this entry.
+		/// </summary>
+		public PwUuid Uuid
+		{
+			get { return m_uuid; }
+			set
+			{
+				if(value == null) { Debug.Assert(false); throw new ArgumentNullException("value"); }
+				m_uuid = value;
+			}
+		}
 
 		/// <summary>
 		/// Reference to a group which contains the current entry.
@@ -166,7 +180,7 @@ namespace KeePassLib
 		/// being used (i.e. the icon specified by the <c>IconID</c> property
 		/// should be displayed).
 		/// </summary>
-		public override PwUuid CustomIconUuid
+		public PwUuid CustomIconUuid
 		{
 			get { return m_puCustomIcon; }
 			set
@@ -303,131 +317,16 @@ namespace KeePassLib
 		public EventHandler<ObjectTouchedEventArgs> Touched;
 
 #if KPCLib
-
-		#region PxEntrySupportOTP
-		// Update progress every 3 seconds
-		public const int TimerStep = 3;
-
-		string m_TotpDescription = string.Empty;
-		public string TotpDescription
-		{
-			get { return m_TotpDescription; }
-			set { m_TotpDescription = value; }
-		}
-
-		Totp m_totp = null;
-		public Totp Totp
-		{
-			get
-			{
-				if (m_totp == null) { SetupTotp(); }
-				return m_totp;
-			}
-
-			set { m_totp = value; }
-		}
-
-		void SetupTotp()
-		{
-			if (this.CustomData != null && this.CustomData.Exists(PassXYZLib.PxDefs.PxCustomDataOtpUrl))
-			{
-				var rawUrl = this.CustomData.Get(PassXYZLib.PxDefs.PxCustomDataOtpUrl);
-				var otp = KeyUrl.FromUrl(rawUrl);
-				if (otp is Totp totp)
-				{
-					var url = new Uri(rawUrl);
-					m_TotpDescription = url.LocalPath.Substring(1);
-
-					Totp = totp;
-					Token = totp.ComputeTotp();
-				}
-			}
-		}
-
-		double m_increment = 0.1;
-
-		double m_progress = 0;
-		public double Progress
-		{
-			get
-			{
-				if (m_totp == null) { SetupTotp(); }
-				return m_progress;
-			}
-
-			set
-			{
-				SetProperty(ref m_progress, value, "Progress");
-			}
-		}
-
-		string m_token = string.Empty;
-		public string Token
-		{
-			get
-			{
-				if (m_token == string.Empty) { SetupTotp(); }
-				UpdateToken();
-				return m_token;
-			}
-
-			set
-			{
-				SetProperty(ref m_token, value, "Token", () => {
-					var remaining = Totp.RemainingSeconds();
-					Progress = 0;
-					if (remaining > TimerStep)
-					{
-						m_increment = (double)TimerStep / remaining;
-					}
-
-					Debug.WriteLine($"New Token={Token} RemainingSeconds={remaining}, increment={m_increment}");
-				});
-			}
-		}
-
-		public void UpdateToken()
-		{
-			if (Totp != null)
-			{
-				Token = Totp.ComputeTotp();
-				if (Progress <= 1)
-				{
-					Progress += m_increment;
-				}
-			}
-		}
-
-		public string GetOtpUrl()
-        {
-			return CustomData.Get(PassXYZLib.PxDefs.PxCustomDataOtpUrl);
-		}
-
-		/// <summary>
-		/// Update the OTP Url.
-		/// If it is new, create a PxOtpUrl key in CustomData.
-		/// Since CustomData is readonly, it can only be set at this level.
-		/// </summary>
-		/// <param name="url">OTP Url which cannot be <c>null</c>.</param>
-		/// <returns>true - success, false - failure</returns>
-		public void UpdateOtpUrl(string url)
-		{
-			if (url == null) { Debug.Assert(false); throw new ArgumentNullException("url"); }
-
-			this.CustomData.Set(PassXYZLib.PxDefs.PxCustomDataOtpUrl, url);
-		}
-
-		#endregion
-
 		public override string Description 
 		{ 
 			get {
 				string sub_type = CustomData.Get("PassXYZ_Type");
 				if(string.IsNullOrEmpty(sub_type)) 
 				{
-					sub_type = "PwEntry";
+					sub_type = $"{GetType()}";
 				}
-				return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")} | {Notes}";
+				
+				return $"{sub_type} | {LastModificationTime.ToString("yyyy'-'MM'-'dd")} | {Notes}".Truncate(PwDefs.UIUpdateDelay);
 			}
 		}
 
@@ -464,6 +363,15 @@ namespace KeePassLib
 			}
 		}
 
+		public override string Id
+		{
+			get 
+			{
+				Guid uid = new Guid(Uuid.UuidBytes);
+				return uid.ToString();
+			} 
+		}
+
 		public PwEntry()
 		{
 			DateTime dtNow = DateTime.UtcNow;
@@ -485,7 +393,7 @@ namespace KeePassLib
 		/// and last access times will be set to the current system time.</param>
 		public PwEntry(bool bCreateNewUuid, bool bSetTimes)
 		{
-			if(bCreateNewUuid) Uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -513,7 +421,7 @@ namespace KeePassLib
 		{
 			m_pParentGroup = pwParentGroup;
 
-			if(bCreateNewUuid) Uuid = new PwUuid(true);
+			if(bCreateNewUuid) m_uuid = new PwUuid(true);
 
 			if(bSetTimes)
 			{
@@ -543,7 +451,7 @@ namespace KeePassLib
 		{
 			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.Uuid = Uuid; // PwUuid is immutable
+			peNew.m_uuid = m_uuid; // PwUuid is immutable
 			peNew.m_pParentGroup = m_pParentGroup;
 			peNew.m_tParentGroupLastMod = m_tParentGroupLastMod;
 			peNew.m_puPrevParentGroup = m_puPrevParentGroup;
@@ -580,7 +488,7 @@ namespace KeePassLib
 		{
 			PwEntry peNew = new PwEntry(false, false);
 
-			peNew.Uuid = Uuid; // PwUuid is immutable
+			peNew.m_uuid = m_uuid; // PwUuid is immutable
 			peNew.m_tParentGroupLastMod = m_tParentGroupLastMod;
 			// Do not assign m_pParentGroup
 
@@ -630,7 +538,7 @@ namespace KeePassLib
 			bool bIgnoreLastMod = ((pwOpt & PwCompareOptions.IgnoreLastMod) !=
 				PwCompareOptions.None);
 
-			if(!Uuid.Equals(pe.Uuid)) return false;
+			if(!m_uuid.Equals(pe.m_uuid)) return false;
 			if((pwOpt & PwCompareOptions.IgnoreParentGroup) == PwCompareOptions.None)
 			{
 				if(m_pParentGroup != pe.m_pParentGroup) return false;
@@ -718,8 +626,8 @@ namespace KeePassLib
 				return;
 
 			// Template UUID should be the same as the current one
-			Debug.Assert(Uuid.Equals(peTemplate.Uuid));
-			Uuid = peTemplate.Uuid;
+			Debug.Assert(m_uuid.Equals(peTemplate.m_uuid));
+			m_uuid = peTemplate.m_uuid;
 
 			if(bAssignLocationChanged)
 			{
@@ -883,7 +791,7 @@ namespace KeePassLib
 			if(pwSettings == null) { Debug.Assert(false); return false; }
 
 			// Fix UUIDs of history entries; should not be necessary
-			PwUuid pu = Uuid;
+			PwUuid pu = m_uuid;
 			foreach(PwEntry pe in m_lHistory)
 			{
 				if(!pe.Uuid.Equals(pu)) { Debug.Assert(false); pe.Uuid = pu; }
@@ -939,6 +847,7 @@ namespace KeePassLib
 			if(idxRemove != uint.MaxValue) m_lHistory.RemoveAt(idxRemove);
 		}
 
+		// Cf. AutoType.GetEnabledText
 		public bool GetAutoTypeEnabled()
 		{
 			if(!m_cfgAutoType.Enabled) return false;
@@ -1047,7 +956,7 @@ namespace KeePassLib
 
 			// this.Tags normalizes
 			return this.Tags.Remove(StrUtil.NormalizeTag(strTag));
-			}
+		}
 
 		internal List<string> GetTagsInherited()
 		{

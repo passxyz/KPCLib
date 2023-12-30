@@ -3,13 +3,21 @@ using System.Linq;
 
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
-namespace KPCLib.xunit.Orderers
+namespace xunit.Orderers
 {
-    class DisplayNameOrderer : ITestCollectionOrderer
+    public class DisplayNameOrderer : ITestCollectionOrderer
     {
         public IEnumerable<ITestCollection> OrderTestCollections(
             IEnumerable<ITestCollection> testCollections) =>
             testCollections.OrderBy(collection => collection.DisplayName);
+    }
+
+    public class AlphabeticalOrderer : ITestCaseOrderer
+    {
+        public IEnumerable<TTestCase> OrderTestCases<TTestCase>(
+            IEnumerable<TTestCase> testCases) where TTestCase : ITestCase =>
+            testCases.OrderBy(testCase => testCase.TestMethod.Method.Name);
     }
 }
