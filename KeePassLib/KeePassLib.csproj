@@ -28,8 +28,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="2.88.0" />
-    <PackageReference Include="Svg.Skia" Version="0.5.14" />
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
+    <PackageReference Include="Svg.Skia" Version="1.0.0.9" />
   </ItemGroup>
 
   <ItemGroup>
